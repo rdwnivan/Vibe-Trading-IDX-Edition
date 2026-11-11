@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import os
 import threading
+import time
+from types import SimpleNamespace
 
 import pytest
 
@@ -37,9 +39,11 @@ def _run(rid: str = "r") -> SwarmRun:
 
 
 @pytest.fixture(autouse=True)
-def _no_sleep(monkeypatch):
+def _no_sleep(monkeypatch, request):
     # Keep retry tests instant + deterministic.
-    monkeypatch.setattr(store_mod.time, "sleep", lambda *_a, **_k: None)
+    if request.node.name.startswith("test_concurrent"):
+        return
+    monkeypatch.setattr(store_mod, "time", SimpleNamespace(**{**vars(time), "sleep": lambda *_a, **_k: None}))
 
 
 def test_replace_retries_transient_winerror_then_succeeds(tmp_path, monkeypatch):
@@ -194,6 +198,30 @@ def test_concurrent_task_stores_saving_one_task_do_not_crash(tmp_path):
     assert not errors, f"concurrent save_task raised: {errors[:3]!r}"
     assert TaskStore(tmp_path).load_task("t1").id == "t1"
     assert not list((tmp_path / "tasks").glob("*.tmp")), "a temp file was left behind"
+
+
+@pytest.mark.parametrize("code", [5, 32])
+def test_task_store_retries_windows_replace_contention(tmp_path, monkeypatch, code):
+    from pathlib import Path
+    from src.swarm.models import SwarmTask
+    from src.swarm.task_store import TaskStore
+
+    original = Path.replace
+    attempts = []
+
+    def replace(source, target):
+        attempts.append(source)
+        if len(attempts) < 3:
+            raise _winerr(code)
+        return original(source, target)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "replace", replace)
+        TaskStore(tmp_path).save_task(SwarmTask(id="t1", agent_id="analyst", prompt_template="do x"))
+
+    assert TaskStore(tmp_path).load_task("t1").agent_id == "analyst"
+    assert len(attempts) == 3
+    assert not list((tmp_path / "tasks").glob("*.tmp"))
 
 
 def test_posix_oserror_is_not_treated_transient():

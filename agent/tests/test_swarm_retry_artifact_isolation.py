@@ -100,13 +100,13 @@ def test_agent_artifact_dir_rejects_path_shaped_task_ids(
         agent_artifact_dir(tmp_path / "run-x", "analyst", task_id)
 
 
-def test_agent_artifact_dir_rejects_canonical_symlink_escape(tmp_path: Path) -> None:
+def test_agent_artifact_dir_rejects_canonical_symlink_escape(tmp_path: Path, make_symlink) -> None:
     run_dir = tmp_path / "run-x"
     artifact_root = run_dir / "artifacts"
     (artifact_root / "analyst").mkdir(parents=True)
     outside = tmp_path / "outside"
     outside.mkdir()
-    (artifact_root / "analyst" / "task-1").symlink_to(outside, target_is_directory=True)
+    make_symlink(artifact_root / "analyst" / "task-1", outside, target_is_directory=True)
 
     with pytest.raises(ValueError, match="agent/task id"):
         agent_artifact_dir(run_dir, "analyst", "task-1")

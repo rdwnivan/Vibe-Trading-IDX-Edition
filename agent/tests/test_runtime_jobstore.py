@@ -81,20 +81,53 @@ def test_save_completes_short_writes(live_runtime, monkeypatch) -> None:
 
 
 def test_concurrent_saves_use_distinct_temporary_files(live_runtime, monkeypatch) -> None:
+    from threading import local
+    from src.live.runtime import jobstore
+    from tests.module_os_helpers import patch_module_os
+
     store = JobStore()
     barrier = Barrier(2)
     real_replace = os.replace
+    first_call = local()
 
     def replace(src, dst):
-        barrier.wait(timeout=2)
+        if not getattr(first_call, "entered", False):
+            first_call.entered = True
+            barrier.wait(timeout=2)
         real_replace(src, dst)
 
-    monkeypatch.setattr("src.live.runtime.jobstore.os.replace", replace)
+    patch_module_os(monkeypatch, jobstore, replace=replace)
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = [pool.submit(store.save, [_job(name)]) for name in ("a", "b")]
         for result in results:
             result.result(timeout=3)
     assert store.load()[0].id in {"a", "b"}
+    assert list(runtime_dir().glob(".*tmp")) == []
+
+
+@pytest.mark.parametrize("code", [5, 32])
+def test_save_retries_windows_replace_contention(live_runtime, monkeypatch, code) -> None:
+    from src.live.runtime import jobstore
+    from tests.module_os_helpers import patch_module_os
+
+    store = JobStore()
+    store.save([_job("before")])
+    original = os.replace
+    attempts = []
+
+    def replace(source, target):
+        attempts.append(source)
+        if len(attempts) < 3:
+            error = PermissionError("simulated contention")
+            error.winerror = code
+            raise error
+        return original(source, target)
+
+    patch_module_os(monkeypatch, jobstore, replace=replace)
+    store.save([_job("after")])
+
+    assert [job.id for job in store.load()] == ["after"]
+    assert len(attempts) == 3
     assert list(runtime_dir().glob(".*tmp")) == []
 
 

@@ -105,7 +105,7 @@ def test_scoped_refresh_retains_parent_and_reports_childs_own_quality(context):
 
 
 @pytest.mark.parametrize("mutation", ["other-run", "dates", "codes", "description", "code", "equity", "failed", "no-card", "symlink"])
-def test_alternate_or_changed_run_cannot_be_adopted(context, tmp_path, mutation):
+def test_alternate_or_changed_run_cannot_be_adopted(context, tmp_path, mutation, make_symlink):
     result = prepare(context)
     root = seal_fixture(result)
     if mutation == "other-run":
@@ -130,7 +130,7 @@ def test_alternate_or_changed_run_cannot_be_adopted(context, tmp_path, mutation)
         path = root / "artifacts/equity.csv"
         other = tmp_path / "elsewhere.csv"
         path.rename(other)
-        path.symlink_to(other)
+        make_symlink(path, other)
     before = context[1].get_rows()
     output = refresh_strategy_evidence_core(runs=[{"strategy_id": result["strategy_id"], "run_dir": str(root)}], scope="strategies")
     assert output["rows"] == 0 and output["skipped"], output

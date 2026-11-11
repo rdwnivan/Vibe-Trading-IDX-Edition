@@ -51,7 +51,7 @@ class TestIsPathWithin:
 
         assert is_path_within(wandering, root) is True
 
-    def test_symlink_pointing_outside_root_is_rejected(self, tmp_path: Path) -> None:
+    def test_symlink_pointing_outside_root_is_rejected(self, tmp_path: Path, make_symlink) -> None:
         """resolve() follows the symlink before the containment check, so a
         link inside the workspace that targets something outside it must
         not be treated as contained.
@@ -62,6 +62,6 @@ class TestIsPathWithin:
         outside.mkdir()
         (outside / "secret.txt").write_text("secret", encoding="utf-8")
         link = root / "link"
-        link.symlink_to(outside, target_is_directory=True)
+        make_symlink(link, outside, target_is_directory=True)
 
         assert is_path_within(link / "secret.txt", root) is False

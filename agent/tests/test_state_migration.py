@@ -114,13 +114,13 @@ def test_one_failing_directory_does_not_block_the_rest(tmp_path: Path) -> None:
     assert len(moved) == 1
 
 
-def test_symlinked_destination_receives_children(tmp_path: Path) -> None:
+def test_symlinked_destination_receives_children(tmp_path: Path, make_symlink) -> None:
     legacy = tmp_path / "install"
     root = tmp_path / "runtime"
     target = tmp_path / "bigdisk-runs"
     target.mkdir()
     root.mkdir()
-    (root / "runs").symlink_to(target)
+    make_symlink(root / "runs", target)
     _seed(legacy / "runs")
     _seed(legacy / "uploads")
 

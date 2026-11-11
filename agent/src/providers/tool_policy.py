@@ -81,6 +81,39 @@ def _hidden_path(token: str) -> bool:
     return any(part.startswith(".") and part != "." for part in Path(token).parts)
 
 
+def _windows_quoted_command(tokens: list[str]) -> str:
+    def quote(argument: str) -> str:
+        encoded = subprocess.list2cmdline([argument])
+        if encoded.startswith('"') and encoded.endswith('"'):
+            return encoded
+        # list2cmdline doubles trailing slashes only when it adds outer quotes.
+        trailing = len(argument) - len(argument.rstrip("\\"))
+        return '"' + encoded + "\\" * trailing + '"'
+
+    return " ".join(quote(token) for token in tokens)
+
+
+def _windows_argv(command: str) -> list[str]:
+    """Decode native argv, freeing the block allocated by CommandLineToArgvW."""
+    import ctypes
+
+    parse = ctypes.WinDLL("shell32", use_last_error=True).CommandLineToArgvW
+    parse.argtypes = [ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_int)]
+    parse.restype = ctypes.POINTER(ctypes.c_wchar_p)
+    release = ctypes.WinDLL("kernel32", use_last_error=True).LocalFree
+    release.argtypes = [ctypes.c_void_p]
+    release.restype = ctypes.c_void_p
+    count = ctypes.c_int()
+    values = parse(command, ctypes.byref(count))
+    if not values:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        return [values[index] for index in range(count.value)]
+    finally:
+        if release(ctypes.cast(values, ctypes.c_void_p)):
+            raise ctypes.WinError(ctypes.get_last_error())
+
+
 def check_bash_command(command: str) -> tuple[Optional[str], Optional[str]]:
     """Apply the ``python-only`` policy to one shell command.
 
@@ -92,14 +125,27 @@ def check_bash_command(command: str) -> tuple[Optional[str], Optional[str]]:
         An allowed ``python``/``python3`` call is rewritten to this process's
         interpreter so scripts can import Vibe-Trading's own packages.
     """
+    if "\x00" in command:
+        return None, "null characters are not allowed"
     if "\n" in command or "`" in command or "$(" in command:
         return None, "newlines, backticks and $( ) are not allowed"
-    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
-    lexer.whitespace_split = True
-    try:
-        tokens = list(lexer)
-    except ValueError as exc:
-        return None, f"unparseable command: {exc}"
+    tokens = None
+    if os.name == "nt" and sys.platform == "win32" and command.startswith(_windows_quoted_command([sys.executable]) + " "):
+        try:
+            native = _windows_argv(command)
+        except OSError:
+            return None, "unparseable Windows command"
+        # Only our fully quoted canonical form bypasses the raw-command lexer.
+        # Appending operators or changing quote boundaries cannot use this path.
+        if _windows_quoted_command(native) == command:
+            tokens = native
+    if tokens is None:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        try:
+            tokens = list(lexer)
+        except ValueError as exc:
+            return None, f"unparseable command: {exc}"
     if not tokens:
         return None, "empty command"
     if any(tok and set(tok) <= _SHELL_OPERATOR_CHARS for tok in tokens):
@@ -107,10 +153,16 @@ def check_bash_command(command: str) -> tuple[Optional[str], Optional[str]]:
     program, args = tokens[0], tokens[1:]
     join = subprocess.list2cmdline if os.name == "nt" else shlex.join
     if program in _PYTHON_COMMANDS or program == sys.executable:
+        # CRT quoting alone cannot protect a literal quote next to cmd.exe's
+        # metacharacters. Refuse this representation instead of splitting the
+        # intended Python argument into another shell command.
+        if os.name == "nt" and any('"' in arg and any(char in arg for char in "&|<>") for arg in args):
+            return None, "quoted Windows shell metacharacters require a relative .py script"
+        python_join = _windows_quoted_command if os.name == "nt" else shlex.join
         if args[:1] == ["-c"] and len(args) >= 2:
-            return join([sys.executable, *args]), None
+            return python_join([sys.executable, *args]), None
         if args and args[0].endswith(".py") and _relative_path(args[0]):
-            return join([sys.executable, *args]), None
+            return python_join([sys.executable, *args]), None
         return (
             None,
             "python may only run `python <relative script>.py` or `python -c <code>`",

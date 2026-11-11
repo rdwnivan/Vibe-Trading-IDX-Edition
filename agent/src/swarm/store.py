@@ -22,6 +22,12 @@ from pydantic import ValidationError
 from pathlib import Path
 
 from src.config.accessor import get_env_config
+from src.atomic_file import (
+    REPLACE_ATTEMPTS as _REPLACE_ATTEMPTS,
+    REPLACE_BACKOFF as _REPLACE_BACKOFF,
+    is_transient_windows_error,
+    replace_with_retry,
+)
 
 from src.swarm.models import SwarmEvent, SwarmRun
 from src.tools.redaction import redact_internal_paths
@@ -79,19 +85,8 @@ def swarm_runs_root() -> Path:
     return get_swarm_runs_dir()
 
 
-_TRANSIENT_WINERRORS = (5, 32)  # ERROR_ACCESS_DENIED, ERROR_SHARING_VIOLATION
-_REPLACE_ATTEMPTS = 6
-_REPLACE_BACKOFF = (0.025, 0.05, 0.1, 0.2, 0.4)  # seconds; len == attempts - 1
-
-
 def _is_transient_windows_error(exc: OSError) -> bool:
-    """True for the Windows access/sharing race on os.replace.
-
-    ``winerror`` is only set on Windows; ``getattr`` keeps this a hard
-    False on POSIX, so the retry path is Windows-only and POSIX behavior
-    is unchanged.
-    """
-    return getattr(exc, "winerror", None) in _TRANSIENT_WINERRORS
+    return is_transient_windows_error(exc)
 
 
 def _replace_with_retry(tmp: Path, target: Path) -> None:
@@ -103,16 +98,7 @@ def _replace_with_retry(tmp: Path, target: Path) -> None:
     exactly once — no behavior change. Non-transient errors re-raise
     immediately; the last transient error re-raises after the budget.
     """
-    for attempt in range(_REPLACE_ATTEMPTS):
-        try:
-            os.replace(tmp, target)
-            return
-        except OSError as exc:
-            if not _is_transient_windows_error(exc):
-                raise
-            if attempt == _REPLACE_ATTEMPTS - 1:
-                raise
-            time.sleep(_REPLACE_BACKOFF[attempt])
+    replace_with_retry(tmp, target, replace=os.replace, sleep=time.sleep)
 
 
 class SwarmStore:
@@ -589,5 +575,8 @@ class SwarmStore:
         # instances are racing.
         tmp_path = path.with_suffix(f".{uuid.uuid4().hex}.tmp")
         with self._write_lock:
-            tmp_path.write_text(content, encoding="utf-8")
-            _replace_with_retry(tmp_path, path)
+            try:
+                tmp_path.write_text(content, encoding="utf-8")
+                _replace_with_retry(tmp_path, path)
+            finally:
+                tmp_path.unlink(missing_ok=True)

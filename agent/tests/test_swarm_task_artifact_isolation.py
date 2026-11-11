@@ -76,14 +76,14 @@ def test_runtime_preserves_each_same_agent_tasks_real_files(
         directory = store.run_dir(run.id) / "artifacts" / agent.id / task.id
         assert (directory / "report.md").read_text() == task.summary
         assert (directory / "summary.md").read_text() == task.summary
-        messages = json.loads((directory / "messages.json").read_text())
+        messages = json.loads((directory / "messages.json").read_text(encoding="utf-8"))
         assert messages[1]["content"] == task.id
         assert all(path.startswith(f"artifacts/{agent.id}/{task.id}/") for path in task.artifacts)
 
 
-def test_internal_task_symlink_cannot_share_a_siblings_directory(tmp_path: Path) -> None:
+def test_internal_task_symlink_cannot_share_a_siblings_directory(tmp_path: Path, make_symlink) -> None:
     parent = tmp_path / "artifacts" / "analyst"
     (parent / "second").mkdir(parents=True)
-    (parent / "first").symlink_to(parent / "second", target_is_directory=True)
+    make_symlink(parent / "first", parent / "second", target_is_directory=True)
     with pytest.raises(ValueError):
         worker.agent_artifact_dir(tmp_path, "analyst", "first")

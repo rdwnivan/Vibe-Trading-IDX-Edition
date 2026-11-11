@@ -12,6 +12,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 
 from src.swarm.models import SwarmTask, TaskStatus
+from src.atomic_file import replace_with_retry
 
 
 class TaskStore:
@@ -57,8 +58,11 @@ class TaskStore:
         # another's unwritten temp file (#1536).
         tmp_path = path.with_suffix(f".{uuid.uuid4().hex}.tmp")
         with self._lock:
-            tmp_path.write_text(task.model_dump_json(indent=2), encoding="utf-8")
-            tmp_path.replace(path)
+            try:
+                tmp_path.write_text(task.model_dump_json(indent=2), encoding="utf-8")
+                replace_with_retry(tmp_path, path, replace=Path.replace)
+            finally:
+                tmp_path.unlink(missing_ok=True)
 
     def load_task(self, task_id: str) -> SwarmTask:
         """Load a task by ID.
@@ -145,8 +149,11 @@ def resolve_dependencies(tasks_dir: Path, completed_task_id: str) -> list[str]:
 
         updated_task = SwarmTask.model_validate(updated_data)
         tmp_path = path.with_suffix(f".{uuid.uuid4().hex}.tmp")
-        tmp_path.write_text(updated_task.model_dump_json(indent=2), encoding="utf-8")
-        tmp_path.replace(path)
+        try:
+            tmp_path.write_text(updated_task.model_dump_json(indent=2), encoding="utf-8")
+            replace_with_retry(tmp_path, path, replace=Path.replace)
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
     return newly_unblocked
 

@@ -47,7 +47,7 @@ def test_complete_json_and_every_readable_part(tmp_path):
     receipt = json.loads(delivered)
     assert receipt['_provenance']['source'] == 'fixture'
     artifact = receipt['_result_file']
-    original = Path(artifact['path']).read_text()
+    original = Path(artifact['path']).read_text(encoding='utf-8')
     assert 'fixture-private-key' not in original + delivered
     parsed = json.loads(original)
     assert parsed['AAPL'] == json.loads(raw)['AAPL']
@@ -64,7 +64,7 @@ def test_complete_json_and_every_readable_part(tmp_path):
 
 
 @pytest.mark.parametrize('failure', ['no_reader', 'write_failure', 'symlink', 'modified'])
-def test_unavailable_artifact_is_not_claimed(tmp_path, monkeypatch, failure):
+def test_unavailable_artifact_is_not_claimed(tmp_path, monkeypatch, failure, make_symlink):
     registry = registry_with_reader()
     if failure == 'no_reader':
         registry = ToolRegistry()
@@ -75,7 +75,7 @@ def test_unavailable_artifact_is_not_claimed(tmp_path, monkeypatch, failure):
     elif failure == 'symlink':
         outside = tmp_path.parent / f'{tmp_path.name}-outside'
         outside.mkdir()
-        (tmp_path / 'tool-results').symlink_to(outside, target_is_directory=True)
+        make_symlink(tmp_path / 'tool-results', outside, target_is_directory=True)
     else:
         receipt = json.loads(deliver_tool_result(large_result(), tmp_path, registry))
         Path(receipt['_result_file']['path']).write_text('changed by another writer')

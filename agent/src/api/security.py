@@ -384,6 +384,9 @@ def _is_loopback_origin(origin: str) -> bool:
     """Return whether a browser Origin header names a loopback web UI."""
     try:
         parsed = urllib.parse.urlsplit(origin)
+        # urlsplit defers port validation until this property is read.
+        # Validate before a loopback hostname can bypass the origin check.
+        _ = parsed.port
     except ValueError:
         return False
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
@@ -401,13 +404,13 @@ def _origin_matches_request_host(origin: str, request: Request) -> bool:
     """Return whether *origin* is the same site serving this request."""
     try:
         parsed = urllib.parse.urlsplit(origin)
+        origin_port = parsed.port
     except ValueError:
         return False
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         return False
 
     origin_host = parsed.hostname.rstrip(".").lower()
-    origin_port = parsed.port
     request_host = _host_without_port(request.headers.get("host", ""))
     if origin_host != request_host:
         return False

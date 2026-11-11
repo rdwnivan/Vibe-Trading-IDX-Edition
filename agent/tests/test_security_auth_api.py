@@ -47,6 +47,22 @@ def test_remote_write_requires_api_key_when_key_unset() -> None:
     assert "API_AUTH_KEY" in response.json()["detail"]
 
 
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "http://testserver:invalid",
+        "http://testserver:65536",
+        "http://localhost:invalid",
+        "http://127.0.0.1:-1",
+    ],
+)
+def test_malformed_origin_port_is_denied_before_auth(origin: str) -> None:
+    response = _remote_client().post("/api/research/idx", headers={"Origin": origin}, json={})
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Cross-site request denied"
+
+
 def test_remote_goal_endpoints_require_api_key_when_key_unset() -> None:
     client = _remote_client()
 

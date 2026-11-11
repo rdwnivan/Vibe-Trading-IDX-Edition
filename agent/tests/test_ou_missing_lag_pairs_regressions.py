@@ -3,6 +3,8 @@ import pandas as pd
 import pytest
 from src.quantlib.timeseries import fit_ornstein_uhlenbeck
 
+pytest.importorskip("statsmodels.api", reason="OU fit regressions require the optional stats extra")
+
 
 def test_ou_only_fits_adjacent_observed_pairs():
     values = pd.Series([1.0, 2.0, 1.5, np.nan, 9.0, 6.0, 4.0, 3.0])

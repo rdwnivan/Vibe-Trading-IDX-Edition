@@ -169,14 +169,15 @@ def test_table_changed_or_unlisted_in_the_manifest_is_not_registered(reuse) -> N
 
 
 def test_run_without_card_symlinked_card_or_outside_the_roots_is_not_adopted(
-    reuse, tmp_path_factory: pytest.TempPathFactory
+    reuse, tmp_path_factory: pytest.TempPathFactory,
+    make_symlink,
 ) -> None:
     ledger, prior = reuse
     (prior / "ew" / "run_card.json").unlink()
     foreign = tmp_path_factory.mktemp("foreign")
     _write_backtest(foreign / "rp", RP)
     (prior / "rp" / "run_card.json").unlink()
-    (prior / "rp" / "run_card.json").symlink_to(foreign / "rp" / "run_card.json")
+    make_symlink(prior / "rp" / "run_card.json", foreign / "rp" / "run_card.json")
     _read(ledger, prior / "ew", "metrics", "no-card")
     _read(ledger, prior / "rp", "metrics", "linked-card")
     ledger._adopt_prior_backtest(str(foreign / "rp"), "outside-roots")
