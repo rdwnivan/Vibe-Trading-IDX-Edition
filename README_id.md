@@ -8,6 +8,136 @@
 
 <h1 align="center">Vibe-Trading: Agent Trading Pribadi Anda</h1>
 
+**Pengembangan IDX Edition:** data riset harian `.JK` kini memakai loader
+Yahoo/yfinance yang ada sebagai `id_equity` dalam IDR. Ticker tanpa venue
+mempertahankan arti pasar sebelumnya. Backtest dan matching paper IDX belum
+tersedia. Baca [asesmen arsitektur, batas kemampuan, dan verifikasi](agent/IDX_FOUNDATION.md).
+Untuk riset lokal melalui agent, muat skill bawaan `idx-research`.
+`get_stock_profile(ticker="BBCA.JK", sections=["key_stats", "financials"])`
+kini memvalidasi identitas listing IDX dan kuotasi IDR, memisahkan currency
+laporan, serta menandai waktu retrieval dan tanggal publikasi yang belum tersedia.
+Field angka IDX menolak boolean, string dan container tanpa coercion; null dan
+angka valid dipertahankan. Retrieval snapshot nyata BBCA.JK/BBRI.JK lulus;
+unit per field, fundamental historis dan kelengkapan corporate events belum
+diterima. Lihat [validasi tipe angka dan bukti](agent/IDX_PERSONAL_RESEARCH.md#validasi-tipe-angka-profil--2026-11-11).
+Untuk satu operator tepercaya, tersedia [template review deployment dan QA lokal](deployment/single-operator/README.md):
+backend loopback, proxy HTTPS dan state persisten. Ini persiapan, bukan hosting
+publik atau isolasi multiuser yang sudah terverifikasi. `serve --dev` menjaga
+Vite pada loopback meskipun API diberi bind remote secara eksplisit.
+Jalur yfinance IDX menolak pelanggaran invariant OHLC sebelum bar cacat dibuang
+oleh normalisasi. Cache IDX lama dilewati untuk kontrak ini; perilaku normalisasi
+dan cache pasar lain tetap dipertahankan.
+Kedua transport Yahoo IDX juga menolak OHLC parsial/non-numerik atau field harga
+hilang sebelum observasi dibuang. Slot OHLCV sepenuhnya kosong tetap dilewati
+tanpa menyimpulkan libur/suspensi. Akuisisi IDX dipisahkan per simbol agar seri
+yang ditolak tidak menghilangkan simbol sehat pada watchlist.
+Yahoo/yfinance IDX kini memvalidasi volume mentah sebelum coercion: teks invalid,
+boolean, kompleks, negatif, nonfinite dan overflow menolak seri. String angka
+tetap didukung; volume hilang tetap hilang dan nol tetap observasi. Kontrak cache
+IDX lama dilewati tanpa menghapus file. Local Data Bridge generik belum memiliki
+metadata wajib untuk penerimaan riset IDX; deklarasi loader saja belum cukup.
+Pada file local IDX, volume absent tetap hilang; volume hasil resampling juga
+hilang jika salah satu bar penyusun yang teramati tidak memiliki volume. Nilai
+invalid ditolak melalui guard IDX bersama; kebijakan local pasar lain tetap sama.
+Bar local IDX dengan tanggal hilang/gagal parse atau OHLC tidak lengkap,
+nonnumerik, nonfinite dan melanggar invariant menolak seri sebelum filter dan
+resampling. Harga boolean/kompleks serta bar bertanggal dengan OHLC all-null juga
+ditolak; kontrak cache local IDX lama dilewati. Konversi UTC dan pemilihan bucket
+tetap sama dan masih memerlukan validasi terhadap kontrak ekspor nyata.
+Kolom tanggal local IDX yang absent kini menggagalkan akuisisi, termasuk file
+kosong dengan schema cacat; DatetimeIndex tetap diterima sebagai sumber tanggal.
+File kosong dengan schema tanggal/OHLC valid tetap no_data. Lihat
+[audit schema tanggal dan verifikasi](agent/IDX_PERSONAL_RESEARCH.md#data-03--schema-tanggal-local-data-bridge).
+Deklarasi reader local IDX kini menolak type tak didukung serta path/query wajib
+yang absent, kosong atau bukan string sebelum I/O reader. Kegagalan menjadi
+`fetch_failed`; sumber valid yang kosong tetap `no_data`. Type yang tidak ditulis
+tetap default CSV. Lihat [validasi konfigurasi](agent/IDX_PERSONAL_RESEARCH.md#data-03--konfigurasi-sumber-local-data-bridge).
+Item bukan mapping dan mapping dengan simbol non-string dalam list YAML
+`sources` local diberi warning nomor entri lalu dilewati, sehingga simbol valid
+di semua pasar tetap dapat dimuat. Simbol tidak dikonversi menjadi string.
+Nilai mentah tidak dicatat; pencocokan simbol dan pemilihan duplikat terakhir
+tetap sama. Ini belum memvalidasi seluruh struktur YAML. Lihat
+[audit isolasi entri](agent/IDX_PERSONAL_RESEARCH.md#data-03--isolasi-entri-yaml-local-data-bridge).
+[Follow-up tipe simbol](agent/IDX_PERSONAL_RESEARCH.md#data-03--simbol-non-string-local-data-bridge)
+juga menguji pemakaian cache positif serta pencocokan string numerik existing.
+Dokumen local kini menolak scalar/list top-level dengan error konfigurasi
+tersanitasi; dokumen kosong/null mempertahankan perilaku existing. Nilai
+`sources` yang hadir kini wajib list; key absent atau list kosong tetap memakai
+perilaku existing. Lihat [follow-up container sources](agent/IDX_PERSONAL_RESEARCH.md#data-03--container-sources-local-data-bridge) dan
+[audit top-level dan batas kompatibilitas](agent/IDX_PERSONAL_RESEARCH.md#data-03--dokumen-top-level-local-data-bridge).
+List `sources` local nonempty tanpa satu pun simbol string nonblank kini menolak
+fetch dengan error konfigurasi tersanitasi (`fetch_failed` melalui helper),
+termasuk list yang seluruh simbolnya absent/blank. Availability tetap memeriksa
+deklarasi. Simbol permintaan yang tidak ada dalam indeks valid dan dataset valid
+kosong tetap `no_data`; list campuran tetap mempertahankan peer sehat. Lihat
+[audit list tanpa mapping](agent/IDX_PERSONAL_RESEARCH.md#data-03--list-tanpa-mapping-local-data-bridge).
+Fase 2B menambahkan [validasi snapshot referensi lokal dan penelusuran sumber resmi](agent/IDX_REFERENCE.md);
+snapshot resmi lengkap dan rulebook historis masih belum tersedia.
+Riset pribadi juga memiliki watchlist manual di `/research/idx`, chart harian,
+indikator existing dan metadata sumber, melalui UI, agent/MCP dan CLI tanpa LLM.
+Tabel OHLCV harian yang dapat dibuka menampilkan bar respons yang sama dalam IDR
+dan volume saham, dengan volume nol dibedakan dari nilai yang hilang.
+Watchlist dapat mencari nama/ticker melalui Yahoo dan menambah hasil IDX · IDR
+bersimbol kanonik `.JK`; kandidat pencarian bukan master instrumen resmi.
+Riset menolak bar yang diterima bila invalid sebelum memotong lookback dan
+mewajibkan metadata harian/unit saham; volume hilang dan gap tanggal tetap terlihat.
+Pada batas frame observasi, OHLCV boolean dan kompleks ditolak dan overflow konversi numerik
+dilaporkan per simbol, sehingga hasil watchlist yang sehat tetap tersedia.
+Kolom OHLCV wajib datar dan unik; kolom bertingkat ditolak pada tahap harga,
+tanpa menebak level simbol atau memilih salah satu field duplikat.
+Hasil indikator nonfinite juga ditolak per simbol pada tahap
+`indicator_calculation`; indikator null yang sah tetap didukung.
+Adjustment harga wajib dideklarasikan (`unknown` eksplisit tetap diterima);
+riset mempertahankan harga observasi tanpa menebak atau menerapkan ulang split/dividen.
+Observasi yang ditolak menyertakan `quality_issue.code` stabil pada JSON
+API/agent/MCP/CLI untuk tahap validasi yang gagal tanpa menyalin pesan exception mentah.
+Object provenance hilang atau rusak menolak observasi terkait pada tahap deklarasi
+mata uang; respons akuisisi non-object menghasilkan error akuisisi terstruktur
+tanpa membuat watchlist crash.
+Object provenance yang gagal serialisasi JSON strict menjadi `null` dengan warning
+tersanitasi; bar terkait ditolak melalui gate metadata yang sama, simbol lain tetap tersedia.
+Untuk simbol unavailable, diagnostik akuisisi non-object menjadi `null` dengan
+warning tersanitasi; simbol sehat dan object diagnostik valid tetap dipertahankan.
+Object diagnostik yang mengandung angka nonfinite, nilai non-JSON, siklus atau
+nesting berlebihan juga menjadi `null`, sehingga hasil watchlist lain tetap tersedia.
+Watchlist kini menerjemahkan tahap pertama yang gagal menjadi label yang terbaca;
+termasuk deklarasi identitas instrumen pada seluruh bahasa UI yang didukung.
+kode hilang atau tidak dikenal menampilkan pesan belum tersedia. Ini tidak
+menyatakan seluruh masalah atau memastikan akar penyebab di provider.
+Hasil API/agent/MCP/CLI juga memuat usia kalender terhadap tanggal akhir permintaan,
+dengan peringatan setelah 14 hari; ini tidak memverifikasi sesi bursa yang hilang.
+Watchlist juga menampilkan peringatan, usia observasi dan tanggal acuannya;
+diagnostik usia yang hilang atau tidak didukung ditandai belum tersedia pada bagian tersebut.
+Kartu dan detail memeriksa format diagnostik tanpa menghitung ulang usia atau verdict backend.
+Waktu pengambilan kini berlabel WIB; tanggal as-of sumber dan sesi terakhir
+analisis ditampilkan terpisah. Metadata waktu yang hilang atau invalid tetap
+ditandai tidak tersedia.
+Panel detail membedakan jumlah bar dianalisis dari batas bar yang diminta.
+Jumlah hilang atau invalid tetap tidak tersedia; jumlah bar tidak membuktikan
+kelengkapan sesi bursa atau menjelaskan penyebab observasi yang hilang.
+JSON API/agent/MCP/CLI juga memuat `volume_coverage` pada bar yang dianalisis:
+jumlah volume tersedia dan hilang, dengan volume nol dihitung terpisah.
+Panel detail kini menampilkan keempat hitungan dari metadata ini. Nol termasuk
+volume tersedia; hitungan hilang atau invalid tetap tidak tersedia. Total volume
+atau hitungan nol yang bertentangan membuat seluruh ringkasan volume tidak tersedia,
+sedangkan chart dan indikator tetap tampil. Hitungan ini
+bukan bukti likuiditas, suspensi atau kelengkapan sesi bursa.
+Hasil akuisisi yang tidak tersedia kini menampilkan urutan upaya sumber, dengan
+label data kosong, permintaan gagal atau sumber tidak tersedia. Detail hilang
+atau asing ditandai tidak tersedia; upaya bukan bukti suspensi atau delisting.
+Hasil fallback yang berhasil juga menampilkan upaya gagal dari provenance
+sesuai urutan laporan. Detail asing tetap tidak tersedia; Yahoo dan yfinance
+tetap dua transport satu vendor, tanpa konfirmasi independen.
+Panel indikator juga menampilkan sinyal/histogram MACD, Bollinger 20 bar (IDR)
+dan rata-rata volume saham dari respons, dengan null dan presisi tetap dipertahankan.
+Deklarasi symbol, market atau exchange pada provenance yang bertentangan dengan
+instrumen permintaan ditolak (`instrument_identity`). Field identitas yang absen
+tetap kompatibel; pemeriksaan ini tidak membuktikan keaslian sumber.
+Panel detail juga menampilkan fingerprint SHA-256 dari backend atas interval,
+tanggal, close dan volume analisis. Fingerprint hilang atau malformed tetap tidak
+tersedia; ini bukan autentikasi provider atau hash seluruh field OHLCV.
+Baca [cara pakai dan batas kemampuan](agent/IDX_PERSONAL_RESEARCH.md).
+
 <p align="center">
   <b>Satu Perintah untuk Membekali Agent Anda dengan Kapabilitas Trading yang Lengkap</b>
 </p>
@@ -755,9 +885,9 @@ Di luar OHLCV, **29 tool data read-only** menjangkau fundamental & flow — fund
 Inventaris detail dilipat di bawah agar README utama tetap mudah dipindai. Buka bagian yang Anda perlukan saat ingin memeriksa building block yang tersedia.
 
 <details>
-<summary><b>Library Skill Finansial</b> <sub>90 skill dalam 9 kategori</sub></summary>
+<summary><b>Library Skill Finansial</b> <sub>91 skill dalam 9 kategori</sub></summary>
 
-- 📊 90 skill finansial khusus yang diorganisasi dalam 9 kategori
+- 📊 91 skill finansial khusus yang diorganisasi dalam 9 kategori
 - 🌐 Cakupan lengkap dari market tradisional hingga crypto & DeFi
 - 🔬 Kapabilitas menyeluruh dari sourcing data hingga riset quant
 
@@ -765,7 +895,7 @@ Inventaris detail dilipat di bawah agar README utama tetap mudah dipindai. Buka 
 |----------|--------|----------|
 | Data Source | 10 | `data-routing`, `tushare`, `yfinance`, `okx-market`, `akshare`, `mootdx`, `ccxt`, `eastmoney`, `sec-edgar`, `qveris` |
 | Strategy | 19 | `strategy-generate`, `cross-market-strategy`, `technical-basic`, `candlestick`, `ichimoku`, `elliott-wave`, `smc`, `multi-factor`, `ml-strategy` |
-| Analysis | 23 | `factor-research`, `correlation-regime`, `macro-analysis`, `global-macro`, `valuation-model`, `investor-lenses`, `credit-analysis`, `dividend-analysis` |
+| Analysis | 24 | `factor-research`, `correlation-regime`, `macro-analysis`, `global-macro`, `valuation-model`, `investor-lenses`, `credit-analysis`, `dividend-analysis` |
 | Asset Class | 9 | `options-strategy`, `options-advanced`, `convertible-bond`, `etf-analysis`, `asset-allocation`, `sector-rotation` |
 | Crypto | 7 | `perp-funding-basis`, `liquidation-heatmap`, `stablecoin-flow`, `defi-yield`, `onchain-analysis` |
 | Flow | 8 | `hk-connect-flow`, `us-etf-flow`, `edgar-sec-filings`, `financial-statement`, `adr-hshare` |
@@ -1171,6 +1301,10 @@ cd frontend && npm install && npm run dev  # requires Node >= 22.22
 
 Buka `http://localhost:5899`. Frontend mem-proxy call API ke `localhost:8899`.
 
+Dari checkout source, `python agent/api_server.py --host 127.0.0.1 --port 8899`
+menjalankan app API, auth dan lifecycle yang sama dengan `vibe-trading serve`.
+Dengan `agent/` pada `PYTHONPATH`, `python -m api_server` memakai entry point itu juga.
+
 **Mode production (satu server):**
 
 ```bash
@@ -1178,8 +1312,28 @@ cd frontend && npm run build && cd ..
 vibe-trading serve --port 8899     # FastAPI serves dist/ as static files
 ```
 
+**Membangun distribusi Python dengan Web UI:** dari checkout ini, jalankan
+`cd frontend && npm ci && npm run build`, kembali ke root repository, lalu
+`python -m pip wheel --no-deps --wheel-dir dist .`. Wheel menyertakan hasil
+Vite tersebut di `src/api/_frontend`; sdist menyertakan `frontend/dist`
+sehingga dapat dibangun ulang tanpa Node. Build wheel/sdist menolak bila
+`index.html` tidak tersedia dan menampilkan perintah pemulihan. Ulangi build
+Vite setelah source frontend berubah. Instalasi editable tetap menyajikan
+`frontend/dist` checkout dan boleh dipasang sebelum build UI.
+
+Pasang wheel hasil build pada environment Python baru. Untuk Windows/Python
+3.12, pasang `desktop/electron/requirements-windows-lock.txt` dahulu dengan
+`python -m pip install --require-hashes -r ...`, lalu
+`python -m pip install --no-deps <path-wheel>`. Jalankan
+`vibe-trading serve --host 127.0.0.1 --port 8899` dari direktori mana pun dan
+buka `http://127.0.0.1:8899/research/idx`. UI terpasang tidak memerlukan Node
+atau checkout saat runtime. State tetap memakai `VIBE_TRADING_HOME` atau
+`~/.vibe-trading`; masukkan API key yang dikonfigurasi melalui Settings bila
+diperlukan. Ini kontrak artefak lokal; belum ada paket baru yang dipublish.
+Lihat [bukti distribusi dan batasnya](agent/IDX_PERSONAL_RESEARCH.md#dev-pack-01--distribusi-web-ui-python).
+
 > [!NOTE]
-> `vibe-trading serve` bind ke `0.0.0.0` dan secara default hanya mengizinkan loopback: membuka UI di **mesin yang sama** (`http://localhost:8899`) bekerja tanpa config tambahan. Jika Anda membuka dari **mesin lain, host VM, atau ponsel di LAN**, endpoint sensitif mengembalikan `403` dan chat menampilkan "Remote API access requires an API key" — atur `API_AUTH_KEY` yang kuat di `agent/.env`, restart, lalu masukkan key yang sama sekali saja di **Settings**. (Host gateway Docker Desktop: atur `VIBE_TRADING_TRUST_DOCKER_LOOPBACK=1` dengan bind port default `127.0.0.1`.)
+> `vibe-trading serve` secara default bind ke `127.0.0.1`: membuka UI di **mesin yang sama** (`http://localhost:8899`) bekerja tanpa config tambahan. Jika Anda membuka dari **mesin lain, host VM, atau ponsel di LAN**, endpoint sensitif mengembalikan `403` dan chat menampilkan "Remote API access requires an API key" — atur `API_AUTH_KEY` yang kuat di `agent/.env`, restart, lalu masukkan key yang sama sekali saja di **Settings**. (Host gateway Docker Desktop: atur `VIBE_TRADING_TRUST_DOCKER_LOOPBACK=1` dengan bind port default `127.0.0.1`.)
 
 </details>
 
@@ -1640,7 +1794,7 @@ Mengirim `{}` akan menjadwalkan template memakai cadence yang disarankan beserta
 <a id="-mcp-plugin"></a>
 ## 🔌 Plugin MCP
 
-Vibe-Trading mengekspos 84 tool MCP untuk client yang kompatibel MCP. Berjalan sebagai subprocess stdio — tidak perlu setup server. Tool riset inti bekerja tanpa API key untuk HK/AS/crypto; tool connector trading menggunakan profil connector terpilih, dan `run_swarm` memerlukan LLM key.
+Vibe-Trading mengekspos 85 tool MCP untuk client yang kompatibel MCP. Berjalan sebagai subprocess stdio — tidak perlu setup server. Tool riset inti bekerja tanpa API key untuk HK/AS/crypto; tool connector trading menggunakan profil connector terpilih, dan `run_swarm` memerlukan LLM key.
 
 **Environment variable:** client menjalankan server sendiri, sehingga `export` dari shell tidak pernah sampai ke proses tersebut — atur di block `env` client. Kode backtest yang dihasilkan dibatasi ke root run yang diizinkan, jadi menulis hasil ke workspace Anda sendiri memerlukan `VIBE_TRADING_ALLOWED_RUN_ROOTS`:
 
@@ -1709,7 +1863,7 @@ dengan `--host` / `--port`.
 
 </details>
 
-**Tool MCP yang diekspos (84):** `list_skills`, `load_skill`, `start_research_goal`, `get_research_goal`, `update_research_goal`, `add_goal_evidence`, `update_research_goal_status`, `backtest`, `factor_analysis`, `alpha_zoo`, `alpha_bench`, `analyze_options`, `analyze_options_payoff`, `pattern_recognition`, `read_url`, `read_document`, `web_search`, `write_file`, `read_file`, `read_run_artifact`, `list_backtest_runs`, `list_strategies`, `query_strategies`, `get_strategy_evidence`, `refresh_strategy_evidence`, `adapt_strategy`, `trading_connections`, `trading_select_connection`, `trading_check`, `trading_account`, `trading_positions`, `trading_orders`, `trading_quote`, `trading_history`, `list_swarm_presets`, `run_swarm`, `get_market_data`, `get_fund_flow`, `get_dragon_tiger`, `get_northbound_flow`, `get_southbound_flow`, `get_margin_trading`, `get_block_trades`, `get_shareholder_count`, `get_lockup_expiry`, `get_sector_info`, `get_research_reports`, `get_stock_news`, `get_sec_filings`, `get_financial_statements`, `get_options_chain`, `get_stock_profile`, `screen_market`, `search_symbol`, `get_macro_series`, `iwencai_search`, `qveris_search`, `qveris_inspect`, `qveris_execute`, `get_institutional_holdings`, `etf_holdings`, `prediction_market`, `research_papers`, `get_swarm_status`, `get_run_result`, `list_runs`, `reap_stale_runs`, `retry_run`, `analyze_trade_journal`, `extract_shadow_strategy`, `run_shadow_backtest`, `render_shadow_report`, `scan_shadow_signals`, `quantlib_call`, `cashflow_performance`, `orderbook_depth`, `sentiment`, `technical_indicators`, `get_fundamentals`, `get_fund_nav`, `get_cn_macro_series`, `get_cn_announcements`, `search_broker_reports`, `paper_trade_step`.
+**Tool MCP yang diekspos (85):** `list_skills`, `load_skill`, `start_research_goal`, `get_research_goal`, `update_research_goal`, `add_goal_evidence`, `update_research_goal_status`, `backtest`, `factor_analysis`, `alpha_zoo`, `alpha_bench`, `analyze_options`, `analyze_options_payoff`, `pattern_recognition`, `read_url`, `read_document`, `web_search`, `write_file`, `read_file`, `read_run_artifact`, `list_backtest_runs`, `list_strategies`, `query_strategies`, `get_strategy_evidence`, `refresh_strategy_evidence`, `adapt_strategy`, `trading_connections`, `trading_select_connection`, `trading_check`, `trading_account`, `trading_positions`, `trading_orders`, `trading_quote`, `trading_history`, `list_swarm_presets`, `run_swarm`, `get_market_data`, `get_fund_flow`, `get_dragon_tiger`, `get_northbound_flow`, `get_southbound_flow`, `get_margin_trading`, `get_block_trades`, `get_shareholder_count`, `get_lockup_expiry`, `get_sector_info`, `get_research_reports`, `get_stock_news`, `get_sec_filings`, `get_financial_statements`, `get_options_chain`, `get_stock_profile`, `screen_market`, `search_symbol`, `get_macro_series`, `iwencai_search`, `qveris_search`, `qveris_inspect`, `qveris_execute`, `get_institutional_holdings`, `etf_holdings`, `prediction_market`, `research_papers`, `get_swarm_status`, `get_run_result`, `list_runs`, `reap_stale_runs`, `retry_run`, `analyze_trade_journal`, `extract_shadow_strategy`, `run_shadow_backtest`, `render_shadow_report`, `scan_shadow_signals`, `quantlib_call`, `cashflow_performance`, `orderbook_depth`, `sentiment`, `technical_indicators`, `get_fundamentals`, `get_fund_nav`, `get_cn_macro_series`, `get_cn_announcements`, `search_broker_reports`, `paper_trade_step`, `idx_research`.
 
 ### Tool MCP eksternal untuk SWARM
 
@@ -1733,7 +1887,7 @@ Jelajahi di ClawHub: [clawhub.ai/skills/vibe-trading](https://clawhub.ai/skills/
 <details>
 <summary><b>OpenSpace — skill yang berkembang sendiri</b></summary>
 
-Semua 90 skill finansial dipublikasikan di [open-space.cloud](https://open-space.cloud) dan berkembang secara otonom melalui engine self-evolution OpenSpace.
+Semua 91 skill finansial dipublikasikan di [open-space.cloud](https://open-space.cloud) dan berkembang secara otonom melalui engine self-evolution OpenSpace.
 
 Untuk menggunakan OpenSpace, tambahkan kedua server MCP ke config agent Anda:
 
@@ -1755,7 +1909,7 @@ Untuk menggunakan OpenSpace, tambahkan kedua server MCP ke config agent Anda:
 }
 ```
 
-OpenSpace akan menemukan seluruh 90 skill secara otomatis, mengaktifkan auto-fix, auto-improve, dan sharing komunitas. Cari skill Vibe-Trading melalui `search_skills("finance backtest")` pada agent mana pun yang terhubung OpenSpace.
+OpenSpace akan menemukan seluruh 91 skill secara otomatis, mengaktifkan auto-fix, auto-improve, dan sharing komunitas. Cari skill Vibe-Trading melalui `search_skills("finance backtest")` pada agent mana pun yang terhubung OpenSpace.
 
 </details>
 
@@ -2083,13 +2237,13 @@ Vibe-Trading/
 ├── agent/                          # Backend (Python)
 │   ├── cli/                        # CLI package — interactive TUI + subcommands
 │   ├── api_server.py               # FastAPI server — runs, sessions, upload, swarm, SSE
-│   ├── mcp_server.py               # MCP server — 84 tools for OpenClaw / Claude Desktop
+│   ├── mcp_server.py               # MCP server — 85 tools for OpenClaw / Claude Desktop
 │   │
 │   ├── src/
 │   │   ├── agent/                  # ReAct agent core
 │   │   │   ├── loop.py             #   5-layer compression + read/write tool batching
 │   │   │   ├── context.py          #   system prompt + auto-recall from persistent memory
-│   │   │   ├── skills.py           #   skill loader (90 bundled + user-created via CRUD)
+│   │   │   ├── skills.py           #   skill loader (91 bundled + user-created via CRUD)
 │   │   │   ├── tools.py            #   tool base class + registry
 │   │   │   ├── memory.py           #   lightweight workspace state per run
 │   │   │   ├── frontmatter.py      #   shared YAML frontmatter parser
@@ -2098,7 +2252,7 @@ Vibe-Trading/
 │   │   ├── memory/                 # Cross-session persistent memory
 │   │   │   └── persistent.py       #   file-based memory (~/.vibe-trading/memory/)
 │   │   │
-│   │   ├── tools/                  # 118 auto-discovered agent tools
+│   │   ├── tools/                  # 119 auto-discovered agent tools
 │   │   │   ├── backtest_tool.py    #   run backtests
 │   │   │   ├── remember_tool.py    #   cross-session memory (save/recall/forget)
 │   │   │   ├── skill_writer_tool.py #  skill CRUD (save/patch/delete/file)
@@ -2116,7 +2270,7 @@ Vibe-Trading/
 │   │   ├── api/                    # FastAPI route modules
 │   │   │   └── alpha_routes.py     #   /alpha/list, /alpha/{id}, /alpha/bench, SSE stream
 │   │   │
-│   │   ├── skills/                 # 90 finance skills in 9 categories (SKILL.md each)
+│   │   ├── skills/                 # 91 finance skills in 9 categories (SKILL.md each)
 │   │   ├── swarm/                  # Swarm DAG execution engine
 │   │   │   └── presets/            #   30 swarm preset YAML definitions
 │   │   ├── session/                # Multi-turn chat + FTS5 session search

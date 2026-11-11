@@ -1,0 +1,11 @@
+# Template only. Keep the real file outside the checkout, mode 0600.
+# Empty by design: the systemd pre-start check refuses to start without a key.
+API_AUTH_KEY=
+API_ALLOWED_HOSTS=research.example.invalid
+CORS_ORIGINS=https://research.example.invalid
+FORWARDED_ALLOW_IPS=127.0.0.1
+VIBE_TRADING_TRUST_DOCKER_LOOPBACK=0
+VIBE_TRADING_ENABLE_SHELL_TOOLS=0
+VIBE_TRADING_ENABLE_ADVISORY=0
+VIBE_TRADING_ENABLE_SCHEDULER=0
+VIBE_TRADING_CHANNELS_AUTO_START=0

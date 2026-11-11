@@ -1,0 +1,46 @@
+# Include inside nginx's http context, on a dedicated host/virtual host.
+# Replace the reserved domain and certificate paths before validation.
+# Never log $request/$request_uri: SSE ticket values can be query parameters.
+log_format vibe_safe '$remote_addr $request_method $uri $status';
+
+server {
+    listen 80;
+    server_name research.example.invalid;
+    access_log /var/log/nginx/vibe-access.log vibe_safe;
+    error_log /dev/null crit;
+    return 308 https://research.example.invalid$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name research.example.invalid;
+    ssl_certificate /etc/vibe-trading/tls/fullchain.pem;
+    ssl_certificate_key /etc/vibe-trading/tls/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    client_max_body_size 10m;
+    access_log /var/log/nginx/vibe-access.log vibe_safe;
+    # Error logs can contain request arguments. Keep this vhost's error log off;
+    # use sanitized application logs and status-only access logs for diagnosis.
+    error_log /dev/null crit;
+
+    # A remote UI must not control the service lifecycle.
+    location = /system/shutdown { return 403; }
+
+    location / {
+        proxy_pass http://127.0.0.1:8899;
+        proxy_http_version 1.1;
+        proxy_set_header Host research.example.invalid;
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Forwarded "";
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        # Never replay an accepted write to another upstream.
+        proxy_next_upstream off;
+    }
+}

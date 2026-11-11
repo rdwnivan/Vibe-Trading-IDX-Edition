@@ -95,6 +95,18 @@ For AI-assisted or automation-assisted contributions, also see
 local checks, higher-risk broker/MCP/credential surfaces, and the expected PR
 risk notes for agent-authored changes.
 
+### Offline packaging checks
+
+Run `pytest agent/tests/test_frontend_distribution.py -q` to check the fixture
+wheel, missing-UI remediation and editable development install. The three
+integration cases require an already available `setuptools` backend; if it is
+absent, they explicitly skip before creating the builder environment. They do
+not download build requirements. A temporary venv uses Python's bundled pip and
+reuses the available backend, with `--no-index --no-build-isolation --no-deps`,
+disabled user pip configuration and an isolated local fixture install. This
+checks fixture packaging, not a fresh online dependency installation or a new
+production frontend build. Keep real build/dependency provisioning separate.
+
 ## Keep internal documents local
 
 The repository-root `docs/` directory holds local working notes and must not
