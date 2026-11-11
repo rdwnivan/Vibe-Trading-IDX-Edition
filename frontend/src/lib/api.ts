@@ -1,4 +1,5 @@
 import i18n from "@/i18n";
+import type { IDXResearchResponse, IDXSymbolSearchResponse } from "@/lib/idx-research";
 import { authHeaders, withAuthTicket } from "@/lib/apiAuth";
 import type {
   OptionsChainResponse,
@@ -515,6 +516,10 @@ export interface SaveResearchArtifactRequest {
 }
 
 export const api = {
+  searchIDXSymbols: (query: string, signal?: AbortSignal) =>
+    request<IDXSymbolSearchResponse>(`/api/research/idx/symbols?${new URLSearchParams({ query })}`, { signal }),
+  getIDXResearch: (body: { codes: string[]; lookback: number; end_date?: string }, signal?: AbortSignal) =>
+    request<IDXResearchResponse>("/api/research/idx", { method: "POST", body: JSON.stringify(body), signal }),
   getPixelOffice: () => request<OfficeSnapshot>("/api/pixel-office"),
   updatePixelOffice: (action: "create" | "assign" | "complete" | "rank", arguments_: Record<string, unknown>) =>
     request<OfficeSnapshot>("/api/pixel-office/actions", { method: "POST", body: JSON.stringify({ action, arguments: arguments_ }) }),
