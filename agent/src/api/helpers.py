@@ -12,6 +12,7 @@ from fastapi import HTTPException, Request, status
 from fastapi.responses import FileResponse
 
 from src.api._compat import host_attr as _host_attr
+from src.api.frontend import resolve_frontend_dist
 from src.config.paths import get_runs_dir, get_sessions_dir, get_uploads_dir
 
 
@@ -37,7 +38,7 @@ ENV_EXAMPLE_PATH = AGENT_DIR / ".env.example"
 # SPA deep-link fallback
 # ============================================================================
 
-_FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "dist"
+_FRONTEND_DIST = resolve_frontend_dist()
 _SPA_HTML_EXACT_PATHS: frozenset[str] = frozenset({"/correlation"})
 _SPA_HTML_PATH_REGEX: tuple[re.Pattern[str], ...] = (
     re.compile(r"^/runs/[^/]+/?$"),
