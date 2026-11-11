@@ -56,6 +56,11 @@ const CATEGORIES: Category[] = [
         descKey: "welcome.examples.optionsGreeksDesc",
         promptKey: "welcome.examples.optionsGreeksPrompt",
       },
+      {
+        titleKey: "welcome.examples.idxWatchlist",
+        descKey: "welcome.examples.idxWatchlistDesc",
+        promptKey: "welcome.examples.idxWatchlistPrompt",
+      },
     ],
   },
   {

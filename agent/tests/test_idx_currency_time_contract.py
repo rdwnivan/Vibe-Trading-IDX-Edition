@@ -24,7 +24,9 @@ def _records(seed: int, periods: int = 80) -> list[dict]:
     rng = np.random.default_rng(seed)
     closes = 1000 * np.cumprod(1 + rng.normal(0, 0.01, periods))
     dates = pd.date_range("2026-01-01", periods=periods, freq="B")
-    return [{"date": d.date().isoformat(), "close": float(c)} for d, c in zip(dates, closes)]
+    return [
+        {"date": d.date().isoformat(), "close": float(c)} for d, c in zip(dates, closes)
+    ]
 
 
 def _run_risk(symbols: list[str]) -> tuple[dict, list[dict]]:
@@ -53,7 +55,9 @@ def test_risk_xray_refuses_to_blend_idr_with_another_currency(symbols, other):
 
     assert result["status"] == "error"
     assert "IDR" in result["error"] and other in result["error"]
-    assert calls == [], "prices must not be fetched for a basket that cannot be priced in one currency"
+    assert (
+        calls == []
+    ), "prices must not be fetched for a basket that cannot be priced in one currency"
 
 
 def test_risk_xray_refuses_idr_with_an_unclassifiable_member():
@@ -95,7 +99,9 @@ def test_yahoo_idx_session_date_flips_exactly_at_jakarta_midnight(monkeypatch):
     import backtest.loaders.yahoo_loader as yahoo
 
     payload = _yahoo_payload(_LAST_SECOND_OF_NOV_2, _FIRST_SECOND_OF_NOV_3)
-    monkeypatch.setattr(yahoo.yahoo_client, "get_chart", lambda *a, **k: (payload, "IDR"))
+    monkeypatch.setattr(
+        yahoo.yahoo_client, "get_chart", lambda *a, **k: (payload, "IDR")
+    )
 
     frame = YahooLoader().fetch(["BBCA.JK"], "2026-11-02", "2026-11-03")["BBCA.JK"]
 
@@ -110,7 +116,9 @@ def test_yahoo_non_idx_daily_dates_stay_on_utc(monkeypatch):
     import backtest.loaders.yahoo_loader as yahoo
 
     payload = _yahoo_payload(_FIRST_SECOND_OF_NOV_3)
-    monkeypatch.setattr(yahoo.yahoo_client, "get_chart", lambda *a, **k: (payload, "USD"))
+    monkeypatch.setattr(
+        yahoo.yahoo_client, "get_chart", lambda *a, **k: (payload, "USD")
+    )
 
     frame = YahooLoader().fetch(["AAPL.US"], "2026-11-02", "2026-11-03")["AAPL.US"]
 
