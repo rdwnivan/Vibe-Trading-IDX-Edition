@@ -196,6 +196,81 @@ lot/tick JSON was created. Full texts and intervening amendments, effective date
 board exceptions, limits, fees/taxes, settlement, suspensions and actions are still
 required before simulation acceptance.
 
+### II-A Kep-00158/BEI/10-2026 read, 2026-11-12
+
+Access change: the same II-A attachment URL now returns HTTP 200 to an ordinary
+browser session (no CAPTCHA or challenge). A non-browser `curl` request still
+receives HTTP 403 with an HTML body; no header spoofing was used to get around
+it. Receipt from the in-browser fetch: `application/pdf`, **1,495,566 bytes**,
+`Last-Modified: Mon, 19 Oct 2026 23:50:08 GMT`, SHA-256
+`a33125be8c418e7ec0443cdf3c2e012fa66b1b993f72168cafccb6487dc05736`, 29 pages.
+Text was extracted in the browser with pdf.js 4.4.168 and read for the clauses
+below. The PDF bytes and extracted text were **not** saved to disk or committed.
+A later check must re-download the file and compare it against this hash.
+
+Decree (pages 1–3):
+
+- Issued **20 October 2026**, in force **20 October 2026**, effective from that
+  date. It restates the full II-A annex as one unit and **revokes
+  Kep-00157/BEI/10-2026 (19 October 2026)**. Existing implementing provisions stay
+  in force where they do not conflict with it.
+- OJK approvals cited: S-259/PM.01/2026 (17 September 2026; II-A and II-O
+  changes), S-135/D.04/2026 (18 October 2026) and S-136/D.04/2026 (19 October
+  2026; temporary lower auto-rejection adjustment).
+- **Transition:** the percentage auto-rejection limits in annex VI.7.1.1 are
+  **not applied until 31 December 2026**. Until then a transitional, asymmetric
+  schedule applies (decree item 3). Price ranges are reference-price bands:
+
+| Reference-price band | Upper limit | Lower limit |
+|---|---|---|
+| Rp1–Rp10 | +Rp1 | −Rp1 |
+| Rp11–Rp14 | +35% | −Rp1 |
+| Rp15–Rp200 | +35% | −7% |
+| >Rp200–Rp5,000 | +25% | −7% |
+| >Rp5,000 | +20% | −7% |
+
+  Orders below the Rp1 minimum price (VI.6) are also auto-rejected.
+
+Annex clauses used for the rulebook contract (scope: equity securities on the
+Regular and Cash markets unless stated otherwise):
+
+- **Currency and day:** a price is an amount in rupiah (I.11). An exchange day
+  is Monday to Friday, except national holidays and days declared exchange
+  holidays (I.16). The holiday list itself is not in this document.
+- **Settlement:** Regular market **T+2** (I.29); Cash market **T+0** (I.30).
+- **Round lot:** trading must be in round lots or multiples; **1 round lot = 100
+  shares** (VI.4.1–VI.4.2).
+- **Tick size** by previous close (VI.5.2): <Rp200 → Rp1 (max step Rp10);
+  Rp200–<Rp500 → Rp2 (Rp20); Rp500–<Rp2,000 → Rp5 (Rp50); Rp2,000–<Rp5,000 →
+  Rp10 (Rp100); ≥Rp5,000 → Rp25 (Rp250). The maximum step does not apply to
+  warrants (VI.5.3). Tick and step change in real time with the order price's
+  band (VI.5.4), and a step may not exceed the auto-rejection limit (VI.5.5).
+- **Minimum price:** Rp1 (VI.6).
+- **Permanent auto-rejection** (VI.7.1.1, deferred to after 31 December 2026 by
+  the decree): ±Rp1 for Rp1–Rp10; ±35% for Rp11–Rp200; ±25% for >Rp200–Rp5,000;
+  ±20% for >Rp5,000. Warrants have their own schedule (VI.7.1.2–VI.7.1.3).
+- **Volume rejection:** an order larger than **50,000 lots or 5% of listed
+  shares, whichever is smaller** (VI.7.2).
+- **Reference price** (VI.7.3): previous close; theoretical post-corporate-action
+  price; IPO price on first trading day; or appraised fair value.
+  Auto-rejection does not apply to rights (HMETD) except the minimum price (VI.7.4).
+- **Regular-market sessions** in JATS time (IV.1–IV.2):
+  - Monday–Thursday: pre-opening 08:45:00–08:59:59 (matching 08:58:00–08:59:59);
+    session I 09:00:00–12:00:00; session II 13:30:00–15:49:59; pre-closing
+    15:50:00–16:01:59 (random closing 15:58:00–15:59:59, matching
+    16:00:00–16:01:59); post-closing 16:02:00–16:15:00 at the closing price.
+  - Friday: same, except session I ends 11:30:00 and session II starts 14:00:00.
+  - Cash market: session I only (Mon–Thu to 12:00:00, Fri to 11:30:00).
+  - Negotiated market: session II ends 16:30:00.
+
+Limits of this evidence: it fixes the regime **from 20 October 2026** only. The
+text of the revoked Kep-00157 and every earlier II-A version, so the rules for
+any earlier simulation date, are still unread. JATS time is not stated as WIB in
+the clauses read. Holidays, special-monitoring board rules (II-X), trading
+guidelines, fees/taxes, suspensions and corporate-action handling stay open. No
+rulebook JSON or default `IDXRegularRules` instance was added; backtests remain
+refused.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
