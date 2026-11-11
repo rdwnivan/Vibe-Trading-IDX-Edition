@@ -84,6 +84,20 @@ def test_session_iteration_cap_uses_safe_default_for_malformed_env(monkeypatch, 
     assert get_env_config().agent_tuning.vibe_trading_agent_max_iterations == 50
 
 
+@pytest.mark.parametrize("market", ["id_equity", "us_equity"])
+def test_source_order_alias_is_retained_in_typed_config(monkeypatch, market: str) -> None:
+    from backtest.loaders.registry import source_order_env_var
+
+    key = source_order_env_var(market)
+    order = "local,yahoo,yfinance"
+    monkeypatch.setenv(key, order)
+
+    config = get_env_config()
+
+    assert getattr(config.data, f"market_data_order_{market}") == order
+    assert config.model_dump(by_alias=True)["data"][key] == order
+
+
 class TestEnvConfigDefaults:
     """Verify every field defaults correctly when no env vars are set."""
 

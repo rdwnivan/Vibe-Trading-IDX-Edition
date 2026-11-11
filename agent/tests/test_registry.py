@@ -202,6 +202,7 @@ class TestFallbackChains:
             "us_equity",
             "hk_equity",
             "india_equity",
+            "id_equity",
             "kr_equity",
             "ca_equity",
             "ar_equity",
@@ -238,6 +239,7 @@ class TestFallbackChains:
         answering the mootdx/tdxpy protocol, upstream dormant), but the loader
         stays registered so explicit source="mootdx" keeps working."""
         assert "mootdx" not in FALLBACK_CHAINS["a_share"]
+        _ensure_registered()
         assert "mootdx" in LOADER_REGISTRY
         # An override naming it is no longer a permutation of the default.
         order = get_default_source_order("a_share") + ["mootdx"]

@@ -6,7 +6,7 @@ Zero API key required for HK/US/crypto research markets (yfinance, OKX,
 AKShare are free). Trading connector tools are profile-scoped and require the
 selected connector's own local app or OAuth setup.
 
-Surfaces 84 tools: skills, research goals, strategy discovery,
+Surfaces 85 tools: skills, research goals, strategy discovery,
 backtest/factor/options/pattern
 analysis, deterministic paper-trading matching (paper_trade_step), market data, fundamentals & capital-flow & news & discovery
 (get_fund_flow / get_dragon_tiger / get_northbound_flow / get_southbound_flow /
@@ -2487,7 +2487,7 @@ def get_options_chain(ticker: str, expiration: int | None = None) -> str:
 
 @mcp.tool
 def get_stock_profile(ticker: str, sections: _lenient_str_list_opt = None) -> str:
-    """Fetch a read-only company profile for a US, HK, or UK (LSE .L) listing (Yahoo Finance).
+    """Fetch a read-only Yahoo listing profile, including guarded IDX .JK snapshots.
 
     Returns valuation key statistics, analyst price targets and
     earnings/revenue estimates, institutional and insider ownership, and the
@@ -2496,7 +2496,11 @@ def get_stock_profile(ticker: str, sections: _lenient_str_list_opt = None) -> st
 
     Args:
         ticker: US (bare or .US suffix), HK (zero-padded .HK code), or
-            UK (LSE .L, e.g. VOD.L) symbol.
+            UK (LSE .L, e.g. VOD.L), Argentina (.BA), Brazil (.SA), or
+            IDX regular share (.JK, e.g. BBCA.JK). IDX requires matching
+            provider listing identity and IDR quotes; financial currency is
+            separate. Retrieval time is not publication time; historical
+            point-in-time fundamentals are unsupported.
         sections: Profile sections to return, any of: key_stats, financials,
             earnings_trend, institution_ownership, insider_holders,
             recommendation_trend. Defaults to all sections.
@@ -2528,7 +2532,7 @@ def screen_market(market: str, sort_by: str = "change_pct", top_n: int = 30) -> 
 
 
 @mcp.tool
-def search_symbol(query: str, limit: int = 10) -> str:
+def search_symbol(query: str, limit: int = 10, market: str = "all") -> str:
     """Resolve a company name or ticker fragment to candidate trading symbols.
 
     Returns candidates with their market in the project's symbol convention
@@ -2540,9 +2544,14 @@ def search_symbol(query: str, limit: int = 10) -> str:
     Args:
         query: Free-text company name or ticker fragment (Chinese or English).
         limit: Maximum number of merged candidates to return.
+        market: all preserves multi-market search; idx searches Yahoo only
+            for supported regular IDX shares, without account connectors.
     """
     registry = _get_registry()
-    return registry.execute("search_symbol", {"query": query, "limit": limit})
+    arguments = {"query": query, "limit": limit}
+    if market != "all":
+        arguments["market"] = market
+    return registry.execute("search_symbol", arguments)
 
 
 @mcp.tool
@@ -2821,6 +2830,7 @@ _MIRRORED_TOOL_SOURCES = (
     ("src.tools.orderbook_depth_tool", "OrderBookDepthTool"),
     ("src.tools.sentiment_tool", "SentimentTool"),
     ("src.tools.technical_indicator_tool", "TechnicalIndicatorTool"),
+    ("src.tools.idx_research_tool", "IDXResearchTool"),
     ("src.tools.get_fundamentals_tool", "GetFundamentalsTool"),
 )
 

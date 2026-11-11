@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "kind": "instruments",
+  "market": "id_equity",
+  "currency": "IDR",
+  "timezone": "Asia/Jakarta",
+  "source": "fixture://synthetic-reference",
+  "usage_terms": "Synthetic test only",
+  "retrieved_at": "2026-11-03T10:00:00+07:00",
+  "payload": {
+    "as_of": "2026-11-03",
+    "instruments": [
+      {"symbol": " bbca.jk ", "name": "Synthetic issuer", "sector": "Synthetic"}
+    ]
+  }
+}

@@ -29,6 +29,11 @@ from backtest.engines._market_hooks import (
 def _build_rule_engines(config: dict, codes: List[str]) -> Dict[str, BaseEngine]:
     """Instantiate one sub-engine per market type detected in codes."""
     markets = {_detect_market(c) for c in codes}
+    if "id_equity" in markets:
+        raise ValueError(
+            "IDX (id_equity) backtesting is unavailable until a verified "
+            "historical rulebook, calendar and corporate-action model exist."
+        )
     engines: Dict[str, BaseEngine] = {}
 
     for market in markets:

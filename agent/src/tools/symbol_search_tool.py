@@ -30,6 +30,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from backtest.loaders import eastmoney_client, sec_edgar_client, yahoo_client
+from backtest.engines._market_hooks import _detect_market, code_currency
 from src.agent.tools import BaseTool
 from src.market_data import FIAT_CODES, canonical_fx_pair
 
@@ -163,6 +164,7 @@ _MARKET_BY_SUFFIX: Dict[str, str] = {
     "SA": "br",
     "L": "uk",
     "VN": "vn",
+    "JK": "id",
 }
 
 # Quote types Yahoo lists under a plain US ticker (``QQQ``, ``SPY``, ``VFIAX``).
@@ -225,11 +227,17 @@ class SymbolSearchTool(BaseTool):
         "profile; other queries search Eastmoney (China/HK/US names and tickers) and Yahoo "
         "(global) and, for U.S. equities, attaches the SEC CIK. Use this to turn "
         "an ambiguous name into a concrete symbol before calling get_market_data "
-        'or get_sec_filings. Example: search_symbol(query="apple", limit=5).'
+        'or get_sec_filings. Example: search_symbol(query="apple", limit=5). '
+        'For personal IDX research use market="idx": Yahoo-only regular-share '
+        'candidates with explicit IDX venue and identity currency IDR, not an official master.'
     )
     parameters = {
         "type": "object",
         "properties": {
+            "market": {
+                "type": "string", "enum": ["all", "idx"], "default": "all",
+                "description": "idx searches Yahoo only for supported regular IDX shares; all preserves multi-market search.",
+            },
             "query": {
                 "type": "string",
                 "description": (
@@ -256,7 +264,8 @@ class SymbolSearchTool(BaseTool):
 
         Args:
             **kwargs: ``query`` (str, required free-text name/ticker) and
-                ``limit`` (int, optional; clamped to ``1.._MAX_LIMIT``).
+                ``limit`` (int, optional; clamped to ``1.._MAX_LIMIT``), and
+                ``market`` (all by default; idx restricts research to Yahoo).
 
         Returns:
             A JSON envelope string. On success:
@@ -271,6 +280,27 @@ class SymbolSearchTool(BaseTool):
             return _error("'query' is required and must be a non-empty string")
 
         limit = _clamp_limit(kwargs.get("limit", _DEFAULT_LIMIT))
+        market = kwargs.get("market", "all")
+        if market not in ("all", "idx"):
+            return _error("'market' must be all or idx")
+        if market == "idx":
+            # Explicit research scope: never inspect account connectors or
+            # reinterpret a bare ticker outside this candidate selection.
+            hits, status = _search_yahoo(query)
+            supported = []
+            for candidate in hits:
+                try:
+                    is_idx = _detect_market(candidate["symbol"]) == "id_equity"
+                except ValueError:
+                    continue  # Unsupported .JK instrument, not a regular share.
+                if is_idx and candidate["type"] == "equity" and candidate["exchange"] in yahoo_client.IDX_EQUITY_EXCHANGES:
+                    supported.append({**candidate, "venue": "IDX", "currency": code_currency(candidate["symbol"])})
+            merged = _merge_candidates(supported)[:limit]
+            return json.dumps({
+                "ok": True, "market": "idx", "source": "symbol_search",
+                "data": {"query": query, "count": len(merged), "candidates": merged,
+                         "sources": {"yahoo": status}},
+            }, ensure_ascii=False)
 
         candidates: List[Dict[str, Any]] = []
         sources: Dict[str, str] = {}

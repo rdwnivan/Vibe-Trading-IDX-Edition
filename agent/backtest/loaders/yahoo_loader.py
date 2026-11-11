@@ -30,6 +30,13 @@ from backtest.loaders.base import (
     validate_date_range,
 )
 from backtest.loaders.registry import register
+from backtest.loaders.idx_contract import (
+    IDX_OBSERVATION_CACHE_FIELDS,
+    is_idx_share,
+    normalize_idx_observations,
+    stamp_idx_frame,
+    validate_idx_interval,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +71,7 @@ def _is_supported(code: str) -> bool:
     return upper.endswith(
         (
             ".US", ".HK", ".NS", ".BO", ".KS", ".KQ", ".TO", ".V", ".VN", ".BA",
-            ".SA", ".L", "=F", "=X",
+            ".SA", ".L", ".JK", "=F", "=X",
         )
     )
 
@@ -137,7 +144,8 @@ def _epoch_seconds(date_str: str) -> int:
 
 
 def _rows_to_frame(
-    rows: List[dict], start_date: str, end_date: str, interval: str = "1D"
+    rows: List[dict], start_date: str, end_date: str, interval: str = "1D",
+    *, exchange_timezone: str | None = None,
 ) -> pd.DataFrame:
     """Build the OHLCV frame from chart rows, clipped to the inclusive window.
 
@@ -162,8 +170,12 @@ def _rows_to_frame(
     if not rows:
         return pd.DataFrame()
 
-    frame = pd.DataFrame(rows)
-    index = pd.to_datetime(frame["trade_date"], unit="s", utc=True).dt.tz_convert(None)
+    # Keep IDX scalars intact until the shared contract validates them. Pandas
+    # inference can overflow huge integers before validation sees raw volume.
+    frame = pd.DataFrame(rows, dtype=object if exchange_timezone else None)
+    index = pd.to_datetime(frame["trade_date"], unit="s", utc=True)
+    index = (index.dt.tz_convert(exchange_timezone).dt.tz_localize(None)
+             if exchange_timezone else index.dt.tz_convert(None))
     if not _is_intraday_interval(interval):
         index = index.dt.normalize()
     frame = frame.drop(columns=["trade_date"])
@@ -172,10 +184,15 @@ def _rows_to_frame(
 
     for column in _OHLCV_COLUMNS:
         if column not in frame.columns:
-            frame[column] = 0.0 if column == "volume" else pd.NA
+            frame[column] = 0.0 if column == "volume" and not exchange_timezone else pd.NA
 
-    frame = frame.loc[:, list(_OHLCV_COLUMNS)].apply(pd.to_numeric, errors="coerce")
-    frame["volume"] = frame["volume"].fillna(0.0)
+    frame = frame.loc[:, list(_OHLCV_COLUMNS)]
+    frame = (
+        normalize_idx_observations(frame) if exchange_timezone
+        else frame.apply(pd.to_numeric, errors="coerce")
+    )
+    if not exchange_timezone:
+        frame["volume"] = frame["volume"].fillna(0.0)
     frame = frame.dropna(subset=["open", "high", "low", "close"])
 
     lower = pd.Timestamp(start_date).normalize()
@@ -191,12 +208,13 @@ class DataLoader:
     name = "yahoo"
     markets = {
         "us_equity", "hk_equity", "india_equity", "kr_equity", "ca_equity",
-        "vietnam_equity", "uk_equity", "ar_equity", "br_equity",
+        "vietnam_equity", "uk_equity", "ar_equity", "br_equity", "id_equity",
     }
     # Yahoo chart volume is single shares for US/HK equities
     # (HKUDS/Vibe-Trading#1062; HK verified 2026-08-11, 00700.HK ratio 1.00
-    # vs tencent/eastmoney). Other equity markets stay undeclared.
-    volume_units = {"us_equity": "shares", "hk_equity": "shares", "uk_equity": "shares"}
+    # vs tencent/eastmoney). IDX carries the provider share-volume contract,
+    # with no lot conversion; independent IDX volume calibration is pending.
+    volume_units = {"us_equity": "shares", "hk_equity": "shares", "uk_equity": "shares", "id_equity": "shares"}
     requires_auth = False
 
     def is_available(self) -> bool:
@@ -235,6 +253,7 @@ class DataLoader:
         if not codes:
             return {}
         validate_date_range(start_date, end_date)
+        validate_idx_interval(codes, interval)
 
         result: Dict[str, pd.DataFrame] = {}
         for code in codes:
@@ -245,7 +264,7 @@ class DataLoader:
                     timeframe=interval,
                     start_date=start_date,
                     end_date=end_date,
-                    fields=None,
+                    fields=IDX_OBSERVATION_CACHE_FIELDS if is_idx_share(code) else None,
                     fetch=lambda code=code: self._fetch_one(
                         code, start_date, end_date, interval
                     ),
@@ -254,6 +273,8 @@ class DataLoader:
                     result[code] = df
             except Exception as exc:
                 logger.warning("yahoo failed for %s: %s", code, exc)
+                if is_idx_share(code):
+                    raise
         return result
 
     def _fetch_one(
@@ -284,7 +305,12 @@ class DataLoader:
             interval=_to_yahoo_interval(interval),
             period1=period1,
             period2=period2,
+            strict_ohlc=is_idx_share(code),
         )
-        frame = _rows_to_frame(rows, start_date, end_date, interval)
+        frame = _rows_to_frame(
+            rows, start_date, end_date, interval,
+            exchange_timezone="Asia/Jakarta" if is_idx_share(code) else None,
+        )
         frame = normalize_declared_quote_currency(frame, code, currency)
+        frame = stamp_idx_frame(frame, code, self.name)
         return frame if not frame.empty else None

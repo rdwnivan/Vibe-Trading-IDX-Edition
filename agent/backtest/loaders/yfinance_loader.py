@@ -19,6 +19,13 @@ from backtest.loaders.base import (
     validate_ohlc,
 )
 from backtest.loaders.registry import register
+from backtest.loaders.idx_contract import (
+    IDX_OBSERVATION_CACHE_FIELDS,
+    is_idx_share,
+    normalize_idx_observations,
+    stamp_idx_frame,
+    validate_idx_interval,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -193,7 +200,9 @@ def _extract_symbol_frame(frame: pd.DataFrame, symbol: str, total_symbols: int) 
     return pd.DataFrame()
 
 
-def _normalize_frame(frame: pd.DataFrame, requested_interval: str) -> pd.DataFrame:
+def _normalize_frame(
+    frame: pd.DataFrame, requested_interval: str, *, idx: bool = False,
+) -> pd.DataFrame:
     """Normalize raw yfinance data into the backtest OHLCV schema.
 
     Args:
@@ -212,22 +221,35 @@ def _normalize_frame(frame: pd.DataFrame, requested_interval: str) -> pd.DataFra
     for column in _OHLCV_COLUMNS:
         if column not in normalized.columns:
             if column == "volume":
-                normalized[column] = 0.0
+                normalized[column] = float("nan") if idx else 0.0
             else:
+                if idx:
+                    raise ValueError("IDX prices require all OHLC fields")
                 return pd.DataFrame(columns=_OHLCV_COLUMNS)
 
     normalized = normalized.loc[:, _OHLCV_COLUMNS].copy()
-    normalized = normalized.apply(pd.to_numeric, errors="coerce")
+    normalized = (
+        normalize_idx_observations(normalized) if idx
+        else normalized.apply(pd.to_numeric, errors="coerce")
+    )
 
     index = pd.DatetimeIndex(pd.to_datetime(normalized.index))
     if getattr(index, "tz", None) is not None:
+        if idx:
+            index = index.tz_convert("Asia/Jakarta")
         index = index.tz_localize(None)
+    if idx:
+        index = index.normalize()
     normalized.index = index
     normalized.index.name = "trade_date"
     normalized = normalized.sort_index()
-    normalized["volume"] = normalized["volume"].fillna(0.0)
+    if not idx:
+        normalized["volume"] = normalized["volume"].fillna(0.0)
     normalized = normalized.dropna(subset=["open", "high", "low", "close"])
-    normalized = validate_ohlc(normalized)
+    # IDX must reach the shared failure/fallback boundary with its defect
+    # intact; dropping the bad row here would make stamp_idx_frame accept a
+    # shortened series as healthy. Other markets retain their existing policy.
+    normalized = validate_ohlc(normalized, strategy="raise" if idx else "drop")
 
     # ``requested_interval`` reaches here with whatever case the caller used
     # (``_INTERVAL_MAP`` accepts both ``4H`` and ``4h``). A case-sensitive
@@ -257,12 +279,12 @@ class DataLoader:
     name = "yfinance"
     markets = {
         "us_equity", "hk_equity", "india_equity", "kr_equity", "ca_equity",
-        "vietnam_equity", "uk_equity", "ar_equity", "br_equity", "crypto",
+        "vietnam_equity", "uk_equity", "ar_equity", "br_equity", "id_equity", "crypto",
     }
     # yfinance volume is single shares for US/HK equities
     # (HKUDS/Vibe-Trading#1062; HK verified 2026-08-11, 00700.HK ratio 1.00
     # vs tencent/eastmoney). Crypto base-asset units stay undeclared.
-    volume_units = {"us_equity": "shares", "hk_equity": "shares", "uk_equity": "shares"}
+    volume_units = {"us_equity": "shares", "hk_equity": "shares", "uk_equity": "shares", "id_equity": "shares"}
     requires_auth = False
 
     def is_available(self) -> bool:
@@ -302,6 +324,7 @@ class DataLoader:
         if not codes:
             return {}
         validate_date_range(start_date, end_date)
+        validate_idx_interval(codes, interval)
 
         requested_interval = str(interval or "1D").strip()
         yf_interval = _to_yfinance_interval(requested_interval)
@@ -312,6 +335,14 @@ class DataLoader:
             symbol_groups[_to_yfinance_symbol(code)].append(code)
 
         unique_symbols = list(symbol_groups.keys())
+        # Old IDX entries may already have lost structurally invalid rows.
+        # They cannot be revalidated from the remaining bars. Use a distinct
+        # cache identity for this normalization contract, leaving other markets
+        # and their cache keys unchanged.
+        cache_fields = {
+            symbol: IDX_OBSERVATION_CACHE_FIELDS if is_idx_share(symbol) else None
+            for symbol in unique_symbols
+        }
         results: Dict[str, pd.DataFrame] = {}
 
         # Serve cached symbols first so a fully-cached request skips the bulk
@@ -324,7 +355,7 @@ class DataLoader:
                 timeframe=requested_interval,
                 start_date=start_date,
                 end_date=end_date,
-                fields=None,
+                fields=cache_fields[symbol],
             )
             if cached is not None:
                 for original_code in symbol_groups[symbol]:
@@ -347,7 +378,7 @@ class DataLoader:
                 if symbol_frame.empty:
                     symbol_frame = _download_history(symbol, start_date, yf_end_date, yf_interval)
 
-                normalized = _normalize_frame(symbol_frame, requested_interval)
+                normalized = _normalize_frame(symbol_frame, requested_interval, idx=is_idx_share(symbol))
                 if normalized.empty:
                     logger.warning("yfinance returned no usable data for %s", symbol)
                     continue
@@ -363,19 +394,22 @@ class DataLoader:
                         normalized, symbol, declared
                     )
 
+                normalized = stamp_idx_frame(normalized, symbol, self.name)
                 loader_cache_put(
                     source=self.name,
                     symbol=symbol,
                     timeframe=requested_interval,
                     start_date=start_date,
                     end_date=end_date,
-                    fields=None,
+                    fields=cache_fields[symbol],
                     frame=normalized,
                 )
                 for original_code in symbol_groups[symbol]:
                     results[original_code] = normalized.copy()
             except Exception as exc:
                 logger.warning("Failed to fetch data for %s: %s", symbol, exc)
+                if is_idx_share(symbol):
+                    raise
                 continue
 
         return results

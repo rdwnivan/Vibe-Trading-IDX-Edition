@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from backtest.loaders.yahoo_client import get_quote_summary
+from backtest.engines._market_hooks import _detect_market, code_currency
+from backtest.loaders.yahoo_client import IDX_EQUITY_EXCHANGES, get_quote_summary
 from src.agent.tools import BaseTool
 
 logger = logging.getLogger(__name__)
@@ -269,6 +271,10 @@ def _resolve_sections(sections: Optional[List[str]]) -> List[str]:
 def _market_for(ticker: str) -> str:
     """Classify a ticker into a coarse market label for the envelope."""
     upper = ticker.strip().upper()
+    if upper.endswith(".JK"):
+        if upper.startswith("LOCAL:") or _detect_market(upper) != "id_equity":
+            raise ValueError("use an explicit regular-share .JK symbol")
+        return "idx"
     if upper.endswith(".HK"):
         return "hk"
     if upper.endswith(".L"):
@@ -280,13 +286,49 @@ def _market_for(ticker: str) -> str:
     return "us"
 
 
+def _validate_idx_summary(summary: Any, ticker: str, sections: List[str]) -> None:
+    """Require provider-declared identity before exposing IDX profile values."""
+    price = summary.get(_LISTING_MODULE) if isinstance(summary, dict) else None
+    if not isinstance(price, dict) or (
+        price.get("symbol") != ticker
+        or not isinstance(price.get("exchange"), str)
+        or price["exchange"] not in IDX_EQUITY_EXCHANGES
+        or price.get("quoteType") != "EQUITY"
+        or price.get("currency") != code_currency(ticker)
+    ):
+        raise ValueError("IDX listing requires matching symbol, IDX equity venue and IDR quote currency")
+    for name in sections:
+        module = summary.get(_SECTION_MODULES[name])
+        if module is not None and not isinstance(module, dict):
+            raise ValueError("IDX profile section must be an object or unavailable")
+
+
+def _validate_idx_numeric_values(sections: Dict[str, Any]) -> None:
+    """Reject JSON-compatible non-numbers in the shaped numeric fields.
+
+    The shapers own field selection. All their output fields are numeric except
+    the labels/dates below; null still means unavailable. Finiteness remains
+    enforced by strict JSON serialization. No coercion or unit inference occurs.
+    """
+    text_fields = {
+        "recommendationKey", "period", "end_date", "organization",
+        "name", "relation", "latest_transaction",
+    }
+    for section in sections.values():
+        rows = [section] if isinstance(section, dict) else section
+        for row in rows:
+            for field, value in row.items():
+                if field not in text_fields and value is not None and type(value) not in (int, float):
+                    raise ValueError("invalid IDX profile values")
+
+
 class StockProfileTool(BaseTool):
     """Company profile: key stats, analyst estimates, and ownership."""
 
     name = "get_stock_profile"
     description = (
         "Fetch a read-only company profile for a US, Hong Kong, UK (LSE .L), "
-        "Argentina (BYMA .BA), or Brazil (B3 .SA) "
+        "Argentina (BYMA .BA), Brazil (B3 .SA), or IDX (.JK) "
         "listing from Yahoo Finance: valuation key statistics, analyst price "
         "targets and earnings/revenue estimates, institutional and insider "
         "ownership, and the analyst recommendation trend. Always includes "
@@ -295,7 +337,9 @@ class StockProfileTool(BaseTool):
         "read as the primary one. Use this for fundamentals and consensus "
         "context, not for OHLCV price bars (use get_market_data). Example: "
         'get_stock_profile(ticker="AAPL.US", '
-        'sections=["key_stats", "financials"]).'
+        'sections=["key_stats", "financials"]). '
+        "IDX requires matching provider-declared equity venue and IDR quote currency. "
+        "Financial reporting currency stays separate; snapshots are not publication-dated history."
     )
     parameters = {
         "type": "object",
@@ -303,7 +347,7 @@ class StockProfileTool(BaseTool):
             "ticker": {
                 "type": "string",
                 "description": (
-                    "US, HK, UK (LSE .L), Argentina (BYMA .BA), or Brazil (B3 .SA, e.g. PETR4.SA) symbol. US uses a bare or .US suffix "
+                    "US, HK, UK (LSE .L), Argentina (BYMA .BA), Brazil (B3 .SA), or IDX (BBCA.JK) symbol. US uses a bare or .US suffix "
                     "(AAPL or AAPL.US); HK uses a zero-padded .HK code "
                     "(00700.HK); UK uses the .L suffix (VOD.L)."
                 ),
@@ -347,6 +391,13 @@ class StockProfileTool(BaseTool):
             return self._error("ticker is required")
 
         try:
+            market = _market_for(ticker)
+        except ValueError:
+            return self._error("use an explicit regular-share .JK symbol")
+        if market == "idx":
+            ticker = ticker.upper()
+
+        try:
             sections = _resolve_sections(kwargs.get("sections"))
         except ValueError as exc:
             return self._error(str(exc))
@@ -357,13 +408,29 @@ class StockProfileTool(BaseTool):
         try:
             summary = get_quote_summary(ticker, modules)
         except Exception as exc:  # noqa: BLE001 - surface upstream as envelope
+            if market == "idx":
+                logger.warning("IDX profile acquisition failed (%s)", type(exc).__name__)
+                return self._error("yahoo quoteSummary request failed; retry later or check provider availability")
             logger.warning("get_stock_profile failed for %s: %s", ticker, exc)
             return self._error(f"yahoo quoteSummary request failed: {exc}")
 
+        if market == "idx":
+            try:
+                _validate_idx_summary(summary, ticker, sections)
+            except ValueError as exc:
+                logger.warning("IDX profile declarations rejected (%s)", type(exc).__name__)
+                return self._error(str(exc))
+
         shaped: Dict[str, Any] = {}
-        for name in sections:
-            module = summary.get(_SECTION_MODULES[name]) or {}
-            shaped[name] = _SHAPERS[name](module if isinstance(module, dict) else {})
+        try:
+            for name in sections:
+                module = summary.get(_SECTION_MODULES[name]) or {}
+                shaped[name] = _SHAPERS[name](module if isinstance(module, dict) else {})
+        except (AttributeError, TypeError, ValueError, KeyError) as exc:
+            if market != "idx":
+                raise
+            logger.warning("IDX profile section rejected (%s)", type(exc).__name__)
+            return self._error("invalid IDX profile section data")
 
         price_module = summary.get(_LISTING_MODULE) or {}
         financial_module = summary.get(_SECTION_MODULES["financials"]) or {}
@@ -372,15 +439,29 @@ class StockProfileTool(BaseTool):
             financial_module if isinstance(financial_module, dict) else {},
         )
 
-        return json.dumps(
-            {
-                "ok": True,
-                "market": _market_for(ticker),
-                "source": "yahoo",
-                "data": {"ticker": ticker, "listing": listing, "sections": shaped},
-            },
-            ensure_ascii=False,
-        )
+        result = {
+            "ok": True,
+            "market": market,
+            "source": "yahoo",
+            "data": {"ticker": ticker, "listing": listing, "sections": shaped},
+        }
+        if market == "idx":
+            listing.setdefault("financial_currency", None)
+            result["provenance"] = {
+                "retrieved_at": datetime.now(timezone.utc).isoformat(),
+                "financial_period": None,
+                "publication_time": None,
+                "historical_use": "not_supported",
+            }
+        try:
+            if market == "idx":
+                _validate_idx_numeric_values(shaped)
+            return json.dumps(result, ensure_ascii=False, allow_nan=market != "idx")
+        except (TypeError, ValueError, RecursionError) as exc:
+            if market != "idx":
+                raise
+            logger.warning("IDX profile values rejected (%s)", type(exc).__name__)
+            return self._error("invalid IDX profile values")
 
     @staticmethod
     def _error(message: str) -> str:

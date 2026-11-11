@@ -24,6 +24,13 @@ from src.ui_services import build_run_analysis, load_run_context  # noqa: F401
 
 # UTF-8 on Windows
 import sys as _sys
+
+# Route compatibility lookups and desktop/CLI imports must see this same host,
+# including when Python executes the file/module as __main__. Register before
+# assembling routes so a later import cannot create a second app or lifespan.
+_sys.modules.setdefault("api_server", _sys.modules[__name__])
+_sys.modules.setdefault("agent.api_server", _sys.modules[__name__])
+
 for _s in ("stdout", "stderr"):
     _r = getattr(getattr(_sys, _s, None), "reconfigure", None)
     if callable(_r):
@@ -318,6 +325,9 @@ register_alpha_routes(app)
 # --- Options analysis ---
 from src.api.options_routes import register_options_routes  # noqa: E402
 register_options_routes(app)
+
+from src.api.idx_research_routes import register_idx_research_routes  # noqa: E402
+register_idx_research_routes(app, require_auth)
 
 # --- Auth helpers (SSE tickets) ---
 from src.api.auth_routes import register_auth_routes  # noqa: E402

@@ -46,6 +46,10 @@ logger = logging.getLogger(__name__)
 # across chart/quote/options/search regardless of which host alias is used.
 HOST_KEY = "yahoo"
 
+# Listing aliases shared by IDX search and profile validation. These describe
+# Yahoo responses, not an official instrument universe or trading permission.
+IDX_EQUITY_EXCHANGES = frozenset({"JKT", "IDX"})
+
 # Yahoo serves the same data from query1/query2; query2 is conventionally used
 # for the crumb-gated endpoints. We keep the chart on query1 like the website.
 _CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart"
@@ -163,14 +167,16 @@ def get_chart(
     period1: Optional[int] = None,
     period2: Optional[int] = None,
     range_: Optional[str] = None,
-) -> List[Dict[str, Any]]:
+    strict_ohlc: bool = False,
+) -> Tuple[List[Dict[str, Any]], str]:
     """Fetch OHLCV bars from the v8 chart endpoint as ascending rows.
 
     Either supply a ``range_`` (e.g. ``"1y"``, ``"max"``) or a
     ``period1``/``period2`` epoch-second window; ``range_`` wins when both are
     given. Yahoo returns parallel timestamp/indicator arrays which this function
-    zips into row dicts, dropping any bar whose OHLC is incomplete (Yahoo emits
-    ``null`` for non-trading slots).
+    zips into row dicts. By default, incomplete OHLC rows are dropped. Strict
+    callers reject partially observed prices; wholly absent OHLCV slots remain
+    omitted without establishing why the observations are absent.
 
     Args:
         symbol: Project-side symbol (mapped via :func:`map_symbol`).
@@ -178,6 +184,9 @@ def get_chart(
         period1: Inclusive start as epoch seconds, or ``None``.
         period2: Exclusive end as epoch seconds, or ``None``.
         range_: Relative range string; takes precedence over period1/period2.
+        strict_ohlc: Preserve raw volume for downstream validation and reject
+            incomplete/nonnumeric OHLC instead of dropping partially observed
+            bars. Wholly absent OHLCV slots remain omitted.
 
     Returns:
         ``(rows, currency)`` where ``rows`` is an ascending list of
@@ -210,13 +219,15 @@ def get_chart(
         min_interval=_min_interval(),
         params=params,
     )
-    return _parse_chart(payload, yahoo_symbol)
+    return _parse_chart(payload, yahoo_symbol, strict_ohlc=strict_ohlc)
 
 
 _GBP_PENCE_CURRENCY = "GBp"
 
 
-def _parse_chart(payload: Any, yahoo_symbol: str) -> Tuple[List[Dict[str, Any]], str]:
+def _parse_chart(
+    payload: Any, yahoo_symbol: str, *, strict_ohlc: bool = False,
+) -> Tuple[List[Dict[str, Any]], str]:
     """Convert a v8 chart payload into ascending OHLCV row dicts.
 
     Returns:
@@ -252,12 +263,22 @@ def _parse_chart(payload: Any, yahoo_symbol: str) -> Tuple[List[Dict[str, Any]],
     rows: List[Dict[str, Any]] = []
     for index, ts in enumerate(timestamps):
         values = {field: _at(quotes.get(field), index) for field in _QUOTE_FIELDS}
+        if strict_ohlc:
+            if all(value is None for value in values.values()):
+                continue
+            if any(_to_float(values[field]) is None for field in ("open", "high", "low", "close")):
+                raise ValueError("Incomplete or nonnumeric OHLC observation")
         # A non-trading slot leaves OHLC null; skip rather than emit a NaN bar.
         if any(values[field] is None for field in ("open", "high", "low", "close")):
             continue
         ratio = _adjust_ratio(_at(adjclose_series, index), values["close"])
         row: Dict[str, Any] = {"trade_date": ts}
         for field in _QUOTE_FIELDS:
+            if strict_ohlc and field == "volume":
+                # IDX's shared contract must distinguish invalid values from
+                # genuinely absent volume before _to_float loses the evidence.
+                row[field] = values[field]
+                continue
             value = _to_float(values[field])
             if value is not None and field != "volume" and ratio is not None:
                 value *= ratio

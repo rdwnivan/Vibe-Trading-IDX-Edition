@@ -5,7 +5,7 @@
 Tool: `get_stock_profile`
 Backed by: `backtest.loaders.yahoo_client.get_quote_summary`
 Description: Read-only agent/CLI tool that returns a compact company profile for
-a US, Hong Kong, or UK (LSE .L) listing — valuation key statistics, analyst price
+a US, Hong Kong, UK (LSE .L), Argentina (.BA), Brazil (.SA), or IDX (.JK) listing — valuation key statistics, analyst price
 targets and earnings/revenue estimates, institutional and insider ownership,
 and the analyst recommendation trend. Use it for fundamentals and consensus
 context, not for OHLCV price bars (use `get_market_data` for prices).
@@ -21,7 +21,7 @@ The tool selects the right Yahoo quoteSummary modules, unwraps Yahoo
 
 Name | Type | Required | Description
 ---- | ---- | -------- | -----------
-ticker | str | Y | US (`AAPL` or `AAPL.US`), HK (`00700.HK`, zero-padded), or UK LSE (`VOD.L`) symbol.
+ticker | str | Y | US (`AAPL` or `AAPL.US`), HK (`00700.HK`), UK (`VOD.L`), Argentina (`GOOGL.BA`), Brazil (`PETR4.SA`), or IDX (`BBCA.JK`) symbol.
 sections | list[str] | N | Which sections to return (one or more of the section names below). Defaults to all sections. Unknown names return an error envelope.
 
 Section name → underlying Yahoo module:
@@ -45,12 +45,13 @@ A JSON-string envelope.
 On success:
 
 ```json
-{"ok": true, "market": "us|hk|uk", "source": "yahoo",
- "data": {"ticker": "<input>", "sections": {"<name>": <shaped>}}}
+{"ok": true, "market": "us|hk|uk|ar|br|idx", "source": "yahoo",
+ "data": {"ticker": "<input>", "listing": {"symbol": "<provider symbol>", "exchange": "<provider venue>", "currency": "<quote currency>"}, "sections": {"<name>": "<shaped>"}}}
 ```
 
-`market` is `hk` when the ticker ends `.HK`, `uk` when it ends `.L`,
-else `us`. Scalar sections
+`market` is `hk` for `.HK`, `uk` for `.L`, `ar` for `.BA`, `br` for `.SA`,
+and `idx` for supported regular-share `.JK` symbols; other existing inputs
+retain `us`. Bare `BBCA` is not automatically treated as IDX. Scalar sections
 (`key_stats`, `financials`) shape to a flat dict; list sections
 (`earnings_trend`, `institution_ownership`, `insider_holders`,
 `recommendation_trend`) shape to a list of rows (≤ 25).
@@ -63,6 +64,28 @@ On failure:
 
 Failures are returned as an envelope (never raised) — e.g. a missing/blank
 `ticker`, an unknown section name, or an upstream Yahoo request error.
+
+**IDX snapshot contract**
+
+An IDX response must declare the exact requested symbol, an equity listing on
+Yahoo's shared IDX venue aliases, and IDR quote currency. Unsupported `.JK`
+instrument shapes and `local:` inputs fail before fetching. Missing/conflicting
+listing identity, malformed sections, non-JSON/nonfinite values and provider
+errors return sanitized failure envelopes rather than fabricated fundamentals.
+The aliases describe provider responses, not an official instrument master.
+
+`listing.financial_currency` preserves the provider's financial reporting
+currency independently of IDR quotes; it is null when unavailable. Monetary
+fields with unresolved units remain unsuitable for cross-currency ratios or
+valuation. Missing fields stay null/list sections stay empty.
+
+IDX envelopes additionally return `provenance.retrieved_at` (UTC retrieval
+time), `financial_period: null`, `publication_time: null`, and
+`historical_use: "not_supported"`. Retrieval is not publication or a verified
+fundamental period. This profile cannot supply point-in-time historical
+fundamentals, complete corporate actions, trading permission or data rights.
+Synthetic contract tests do not establish live IDX provider coverage. Use
+`load_skill(name="idx-research")` for the bounded local research workflow.
 
 <br>
 <br>

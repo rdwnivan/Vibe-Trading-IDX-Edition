@@ -99,6 +99,9 @@ _MARKET_PATTERNS = [
     # and a hyphen (e.g. BF-B.US) — same characters as ca/india/uk below.
     (re.compile(r"^[A-Z0-9&.\-]+\.US$", re.I), "us_equity"),
     (re.compile(r"^\d{3,5}\.HK$", re.I), "hk_equity"),
+    # Regular Indonesian shares only. Bare codes retain their US meaning;
+    # resolving a bare IDX ticker requires a verified instrument registry.
+    (re.compile(r"^[A-Z]{4}\.JK$", re.I), "id_equity"),
     # India equities: NSE (RELIANCE.NS) / BSE (500325.BO); tickers may carry
     # '&' and '-' (e.g. M&M.NS, BAJAJ-AUTO.NS).
     (re.compile(r"^[A-Z0-9&.\-]+\.(NS|BO)$", re.I), "india_equity"),
@@ -239,6 +242,7 @@ _MARKET_CURRENCY = {
     "a_share": "CNY",
     "us_equity": "USD",
     "hk_equity": "HKD",
+    "id_equity": "IDR",
     "india_equity": "INR",
     "kr_equity": "KRW",
     "ca_equity": "CAD",
@@ -364,7 +368,7 @@ def _detect_market(code: str) -> str:
 
     Returns:
         Market type (a_share/us_equity/hk_equity/india_equity/kr_equity/
-        ca_equity/ar_equity/br_equity/crypto/futures/forex).
+        ca_equity/ar_equity/br_equity/id_equity/crypto/futures/forex).
         Bare 1-5 letter alphabetic tickers resolve to ``us_equity``;
         bare 6-letter codes that start with a precious-metal or G10
         currency code (whitelist) resolve to ``forex``; concatenated
@@ -372,10 +376,12 @@ def _detect_market(code: str) -> str:
         ``=F`` (futures) and ``=X`` (forex) notations are recognized;
         any other unknown format defaults to ``a_share``.
     """
-    symbol = strip_local_prefix(code)
+    symbol = strip_local_prefix(code.strip()).strip()
     for pattern, market in _MARKET_PATTERNS:
         if pattern.match(symbol):
             return market
+    if symbol.upper().endswith(".JK"):
+        raise ValueError("Unsupported IDX instrument: regular shares require four letters plus .JK")
     return "a_share"
 
 
