@@ -769,7 +769,8 @@ the Kep-00120 citation "does not match" is withdrawn.
 
 | Version | In force | Evidence | Text read |
 |---|---|---|---|
-| Kep-00108/BEI/12-2020 | 4 December 2020 issue date (per Kep-00061 recital) | cited | no |
+| Kep-00025/BEI/03-2020 | 12 March 2020 (date given; in-force date not shown) | Kep-00108 recital and revocation | no |
+| Kep-00108/BEI/12-2020 | 7 December 2020 (issued 4 December 2020) | signed decree | yes, decree and annex ([read later](#vat-basis-ii-a-kep-00108-and-i-x-kep-00315-read-2026-11-12)) |
 | Kep-00061/BEI/07-2021 | 26 July 2021 | signed decree | yes, decree |
 | Kep-00055/BEI/03-2023 | 3 April 2023 | signed decree | yes |
 | Kep-00196/BEI/12-2024 | 9 December 2024 (issued 6 December 2024) | IDXbell newsletter | no |
@@ -877,6 +878,190 @@ Kep-00003 (8 April 2025), Kep-00136 and Kep-00157. I-X Kep-00315 and Kep-00035,
 the official holiday list and the JATS–WIB mapping are also unread. No rulebook
 JSON, `IDXRegularRules` default, fee model or code change was made; backtests
 stay refused.
+
+### VAT basis, II-A Kep-00108 and I-X Kep-00315 read, 2026-11-12
+
+Leads came from web searches limited to official domains; each document below
+was opened and read. Search summaries are not used as evidence. Text was
+extracted in the browser with pdf.js 4.4.168 from cdnjs, except UU 42/2009: the
+built-in browser refused `peraturan.bpk.go.id` this time, so that file was
+fetched with plain `curl` into `%TEMP%` and read with the project's `pypdf`.
+Nothing was saved to the repository. The two `idx.co.id` files return HTTP 403
+`text/html` to plain `curl` and 200 in the browser.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| II-A Kep-00108/BEI/12-2020 | 676,694 | Fri, 04 Dec 2020 07:49:28 GMT | 32 | `659b7a2ff2aaa3336439cc41abe3ef5832e312b93dec77788b617183a15474cd` |
+| I-X Kep-00315/BEI/11-2023 | 835,485 | Fri, 01 Dec 2023 07:51:55 GMT | 10 | `b12a82be7017eb3a9b53ce12b7c7288ddecd16e7d4ba838c9b121850759b2676` |
+| BEI announcement Peng-SPT-00003/BEI.PP1/06-2025 et al. | 773,295 | Mon, 23 Jun 2025 11:20:55 GMT | 4 | `565bfd2be8cb55bcf6aafade07ef457c9b415ad845a697beb0a71aec43eff2e2` |
+| OJK/SRO joint press release SP 21/DHMS/OJK/III/2020 | 145,784 | Mon, 23 Mar 2020 01:52:22 GMT | 2 | `5b40a1d062dc7573eab0c0be269121ff159fbb6f1ee1968e732728401e3aac40` |
+| UU 7/2021 (HPP), JDIH Kemenkeu | 10,263,030 | Fri, 10 Nov 2023 09:56:38 GMT | 224 | `4e4be3e276bf327e6e9e8a4a031838f572feb4014c2476f6cea0d9a54dd38d5b` |
+| PMK 131/2024, JDIH Kemenkeu | 398,305 | Wed, 01 Jan 2025 04:46:01 GMT | 6 | `bd2b45907407c6640a6313500adb87c5a95854d79df3b53c1f5064ace71305cd` |
+| UU 42/2009, JDIH BPK | 263,002 | Tue, 05 Sep 2017 04:53:44 GMT | 73 | `17bb1512014f0eda9364f84baa33d0439633ac1cdd48801c134d105e6b58d444` |
+
+All seven returned HTTP 200 `application/pdf` to the fetch that was hashed.
+URLs: [II-A Kep-00108](https://www.idx.co.id/media/9410/perubahan_peraturan_ii_a_perdagangan_efek_bersifat_ekuitas.pdf),
+[I-X Kep-00315](https://www.idx.co.id/Media/hqydaod4/peraturan_i_x_penempatan_pencatatan_ebe_pada_papan_pemantauan_khusus011223.pdf),
+[June 2025 announcement](https://idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/From_EREP/202506/293cdf91c4_bae7069f6b.pdf),
+[OJK/SRO press release](https://ojk.go.id/id/berita-dan-kegiatan/siaran-pers/Documents/Pages/Siaran-Pers-Bersama-OJK-dan-SRO-Jaga-Keberlangsungan-Aktivitas-Perdagangan-Bursa-Efek-yang-Teratur/SPB%20-%20OJK%20dan%20SRO%20Jaga%20Keberlangsungan%20Aktivitas%20Perdagangan%20Bursa%20Efek%20yang%20Teratur.pdf),
+[UU 7/2021](https://jdih.kemenkeu.go.id/api/download/a9faab97-aca7-4f87-9fdc-faa8123d1454/7TAHUN2021UU.pdf),
+[PMK 131/2024](https://jdih.kemenkeu.go.id/api/download/ad276b82-94bd-4197-b409-af33e2842cd6/2024pmkeuangan131.pdf)
+([JDIH BPK entry](https://peraturan.bpk.go.id/Details/311485/pmk-no-131-tahun-2024)),
+[UU 42/2009](https://peraturan.bpk.go.id/Details/38787/uu-no-42-tahun-2009).
+
+**VAT on exchange, clearing and depository fees.** II-A XI.2 (both Kep-00108 and
+Kep-00158) adds VAT to the exchange fee and has the exchange collect it, without
+a rate. The rate comes from the VAT law (UU 8/1983 as amended):
+
+| Period | Statutory rate | Tax base for an ordinary taxable service | Effective share of the fee | Source |
+|---|---|---|---|---|
+| 1 April 2010 – 31 March 2022 | 10% | the fee | 10% | UU 42/2009 art. I item 8 (Pasal 7(1)); in force 1 April 2010 (Pasal II) |
+| 1 April 2022 – 31 December 2024 | 11% | the fee | 11% | UU 7/2021 Pasal 4 item 2 (Pasal 7(1)a); VAT chapter in force 1 April 2022 (Pasal 17(2)) |
+| From 1 January 2025 | 12% | "other value" of **11/12** of the fee | 11% | UU 7/2021 Pasal 7(1)b ("no later than 1 January 2025"); PMK 131/2024 Art. 3(2)–(3), in force 1 January 2025 (Art. 6) |
+
+- PMK 131/2024 keeps the full 12% on the sale price only for luxury goods that
+  bear sales tax on luxury goods (Art. 2). Every other taxable good and **every
+  taxable service** uses the 11/12 base (Art. 3(1)). Businesses already on a
+  separate "other value" or fixed-amount scheme are excluded (Art. 4). JDIH BPK
+  lists PMK 131/2024 as "Berlaku" with no amending or revoking regulation shown;
+  that is not proof that none exists.
+- Exchange, clearing and depository services are not in the VAT-exempt lists
+  read. UU 42/2009 Pasal 4A(3)d left "financial services" outside VAT, and its
+  explanation limits these to deposit taking, lending and placement, finance
+  leasing, factoring, credit cards, consumer finance, pawn lending and
+  guarantees. UU 7/2021 removed that item from Pasal 4A(3) and moved "financial
+  services" to the Pasal 16B(1a)j facility, with the same list in its
+  explanation. Neither list names exchange, clearing or custody services, and
+  II-A XI.2 treats the exchange fee as subject to VAT. The implementing
+  government regulation for Pasal 16B was not read.
+- Simulation consequence: the VAT on the exchange fee is **0.018% × 10%, 11% or
+  11%** of transaction value in the three periods above. The 2025 figure equals
+  12% × 11/12. Whether VAT is charged on the KSEI and KPEI fees, and how a broker
+  passes any of it to a client, was not read and is not assumed.
+- Not checked: whether UU 6/2023 (Cipta Kerja) changed Pasal 7 after UU 7/2021,
+  how the exchange's own invoices apply the 11/12 base, and any VAT rule before
+  1 April 2010.
+
+**II-A Kep-00108/BEI/12-2020** (decree file with the directors' names; the file
+name has no "signed" marker):
+
+- Issued **4 December 2020**, in force **7 December 2020**. It revokes II-A
+  **Kep-00025/BEI/03-2020** (12 March 2020), items 1–2 of Kep-00031/BEI/03-2020
+  (26 March 2020, trading-hour change) and Kep-00063/BEI/09-2020 (2 September
+  2020, reference prices) (decree item 8). OJK approval S-1153/PM.21/2020
+  (16 November 2020). Kep-00025 becomes the earliest version now evidenced; its
+  text is unread.
+- Annex hours IV.2–IV.4 and market orders were set to start **26 July 2021**
+  (items 2a, 4). Until then a temporary Monday–Friday schedule applied: pre-opening
+  08:45:00–08:55:00, session I 09:00:00–11:30:00, session II 13:30:00–14:49:59,
+  pre-closing 14:50:00–15:00:00, post-closing 15:05:00–15:15:00 (item 2b).
+  Kep-00061 replaced Kep-00108 on 26 July 2021 and deferred the annex hours
+  again, so the Kep-00108 annex hours never applied.
+- Annex auto-rejection VI.7.1.2 (symmetric ±35/25/20%) was deferred. The
+  temporary limits were **+35/+25/+20% upper and −7% lower** for the Rp50–200,
+  >Rp200–5,000 and >Rp5,000 bands (item 5). The reference-price clauses VI.7.3
+  and VI.9 were also deferred; the reference was the previous price, theoretical
+  post-action price, IPO price or appraised value (item 6).
+- Annex values: round lot 100 (VI.4.2); tick Rp1/2/5/10/25 with maximum steps
+  Rp10/20/50/100/250 at the 200/500/2,000/5,000 previous-price breaks
+  (VI.5.2.1–VI.5.2.5); minimum price **Rp50** for shares, Rp1 for rights and
+  warrants (VI.6); volume rejection above 50,000 lots or 5% of listed shares
+  (VI.7.2); Regular T+2, Cash T+0 (VI.12.3–VI.12.4); cum Regular ends RD−2, Cash
+  on RD (VIII.1); exchange fee **0.018%** per transaction on Regular and Cash,
+  excluding clearing and settlement, with a Rp20,000,000 monthly member minimum
+  (XI.1.1, XI.1.3); VAT added (XI.2). Pre-opening was for LQ45 stocks and others
+  the exchange chose (VI.8.2).
+- Simulation consequence: from 7 December 2020 to 25 July 2021 the values above
+  apply, with the temporary hours and the −7% lower limit. The earlier
+  Kep-00061 note (−7%, Rp50) is consistent with this. What applied before
+  7 December 2020 is in Kep-00025 and is unread.
+
+**II-A Kep-00196/BEI/12-2024 and Kep-00003/BEI/04-2025 (II-A): no signed file
+found.** Searches limited to `idx.co.id` and `idx.id` returned only secondary
+references and drafts:
+
+- Pre-opening list announcement Peng-00251/BEI.POP/12-2024 and the IDXbell
+  newsletter cite Kep-00196 dated 6 December 2024; neither was read this time.
+  A search summary also said the trading-hours page cites Kep-00196. The current
+  English trading-hours page, opened today, cites only Kep-00158, so that summary
+  reflects an older copy.
+- An unsigned "konsep bersih" draft of II-A
+  ([`0hebzfh0`](https://www.idx.co.id/Media/0hebzfh0/konsep_bersih_perubahan_peraturan_nomor_ii_a_terdampak_pspp.pdf))
+  and a June 2023 change matrix
+  ([`5wabxbxi`](https://idx.co.id/Media/5wabxbxi/20230622_matriks_perubahan_peraturan_ii-a_perdagangan_ebe.pdf))
+  exist. They are drafts, were not opened, and are not evidence.
+- The values of both versions therefore stay unread. The II-A rows for
+  Kep-00196 and Kep-00003 in the version table are unchanged.
+
+**I-X Kep-00315/BEI/11-2023**, special-monitoring placement:
+
+- Issued **1 December 2023**, in force **4 December 2023**. It revokes I-X
+  **Kep-00081/BEI/05-2023** (5 June 2023) (decree item 7). OJK approvals
+  S-21/PM.21/2023 (4 January 2023) and S-267/PM.01/2023 (28 November 2023, phase II
+  full call auction transition). Trading on the board follows the transition in
+  II-X Kep-00316/BEI/11-2023 (items 2–3).
+- Placement criteria (III.1), any one is enough:
+
+| Item | Criterion |
+|---|---|
+| III.1.1 | 6-month average price below **Rp51** on the Regular and/or periodic-call-auction market (not for Acceleration-board shares, III.2) |
+| III.1.2 | disclaimer opinion on the latest audited statements |
+| III.1.3 | no revenue, or no change in revenue, against the previous statements |
+| III.1.4 | mining company (or its holding) with no core revenue by the end of the 4th financial year after listing |
+| III.1.5 | negative equity in the latest statements |
+| III.1.6 | no longer meets continued-listing rules I-A (Main, Development) or I-V (Acceleration) |
+| III.1.7 | 6-month average daily value below Rp5,000,000 **and** volume below 10,000 shares |
+| III.1.8–III.1.9 | PKPU, bankruptcy or cancellation of a composition filed against the company or a material subsidiary |
+| III.1.10 | trading halted for more than 1 exchange day because of trading activity |
+| III.1.11 | other conditions set by the exchange with OJK approval or order |
+
+- The 6-month windows of III.1.1 and III.1.7 are evaluated each **May and
+  November** (III.3). III.1.6 started on 31 January 2024 for I-A and starts on
+  31 October 2025 for I-V (item 4).
+- Exit (IV.1) needs the condition to end, revenue recorded for III.1.4, liquidity
+  or a liquidity provider for III.1.7, 30 calendar days on the board for
+  III.1.10, and a share price of **at least Rp50** (IV.1.6). Placement and exit
+  are announced at least 1 exchange day ahead (II.3); the exchange may keep a
+  company on the board on substance (IV.4).
+- Suspension (V): mandatory after more than 1 consecutive year for III.1.2–1.6,
+  1.8 and 1.9 (V.1); discretionary for III.1.1, 1.7 and 1.11 (V.2). It covers all
+  markets for 1.2–1.5, 1.8 and 1.9, Regular and Cash only for 1.1, 1.6 and 1.7
+  (V.3). The V.1 suspension did not apply to companies whose only criterion is
+  negative equity until **8 June 2026** (item 5); the year counts from the date a
+  company was first placed (item 6).
+- Interval: in force 4 December 2023 until Kep-00076 replaced it on 21 June 2024.
+  Kep-00076 III.1.1 uses a 3-month window together with value and volume tests,
+  so the criteria changed between versions and Kep-00315 values must not be
+  used after 20 June 2024.
+
+**I-X Kep-00035/BEI/06-2025: no rule file found.** Searches returned no
+attachment. A BEI suspension announcement of 23 June 2025 (hashed above) cites
+Kep-00035 and restates three points: the V.1 year counts from 21 June 2024 for
+companies already on the board under Kep-00076; V.1 covers III.1.2–1.6, 1.8 and
+1.9; and the negative-equity exemption runs to **30 June 2026**. This is the
+exchange's own summary, not the rule text, and gives no placement thresholds. A
+search summary dated Kep-00035 to 3 June 2025 from the governance report; that
+page was not re-read, so the date stays unverified. The announcement's list of
+48 companies is not reproduced here.
+
+**Trading halt before 8 April 2025: Kep-00024/BEI/03-2020 not found.** No copy
+turned up on `idx.co.id`, `idx.id` or `ojk.go.id`. The OJK/SRO joint press
+release of 23 March 2020 lists, among COVID-19 measures, "a 30-minute trading
+halt when IHSG falls 5%" (item 8). It does not cite Kep-00024 or give any second
+tier. A search summary claimed further 10% and 15% tiers from an OJK letter
+S-274/PM.21/2020 and an older Kep-00366/BEI/05-2012; neither was opened, so
+those tiers are not recorded. The thresholds in force from 10 March 2020 to
+7 April 2025 therefore stay unproven beyond the single 5% statement.
+
+**KPEI II-5:** no local PDF path was given, so the KPEI step was skipped and the
+KPEI site was not tried again.
+
+**Still open after this read:** the KPEI Regular-market clearing fee, broker
+commission, the texts of II-A Kep-00025, Kep-00196, Kep-00003 (8 April 2025),
+Kep-00136 and Kep-00157, I-X Kep-00081 and Kep-00035, the 2020 halt guideline,
+the VAT points listed above, the official holiday list and the JATS–WIB mapping.
+No rulebook JSON, `IDXRegularRules` default, fee model or code change was made;
+backtests stay refused.
 
 ### Additional public-access checks, 2026-11-03
 
