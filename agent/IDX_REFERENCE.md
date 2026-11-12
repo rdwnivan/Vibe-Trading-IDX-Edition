@@ -1063,6 +1063,99 @@ the VAT points listed above, the official holiday list and the JATS–WIB mappin
 No rulebook JSON, `IDXRegularRules` default, fee model or code change was made;
 backtests stay refused.
 
+### BEI holiday calendars 2024 to 2027, 2026-11-12
+
+Leads came from web searches limited to official domains; each file below was
+opened and read. The BEI files were read in the browser with pdf.js 4.4.168. The
+built-in browser refused `web.ksei.co.id` this time, so the two KSEI files were
+fetched with plain `curl` (HTTP 200) into `%TEMP%` and read with `pypdf`. Nothing
+was saved to the repository.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| BEI Peng-00233/BEI.POP/11-2024, 2024 calendar change | 420,277 | Tue, 12 Nov 2024 04:19:00 GMT | 3 | `22c6255c03fe6bd72b0ef940f34761810dadf5c35df60cf328e43e7ebf5d034d` |
+| BEI Peng-00213/BEI.POP/10-2024, 2025 calendar | 394,023 | Wed, 16 Oct 2024 15:35:39 GMT | 3 | `84cfc174e5eab9257e9f93ce36bb41c76e67a3d8cb99cc9b4a80c76c26638b43` |
+| KSEI PENG-0004/DIR/KSEI/0825, 2025 change | 1,009,963 | Mon, 11 Aug 2025 08:04:26 GMT | 3 | `c29c466e48ed8eb968876e51b99076a23c91d79e6f9cc8f7c646986ff9b50f21` |
+| KSEI PENG-0007/DIR/KSEI/1225, 2025 second change | 1,086,708 | Tue, 16 Dec 2025 01:52:24 GMT | 4 | `80996292bd2230b5dfd2354d57a121749740d0e2a7a224cffb36558beaa0b413` |
+| BEI Peng-00171/BEI.POP/09-2025, 2026 calendar | 364,914 | Tue, 23 Sep 2025 02:19:21 GMT | 3 | `5273a6f5724a5ac7f17027bdfcc8205ff8491e8299a6c0230347c59332e25324` |
+| BEI Peng-00169/BEI.POP/09-2026, 2027 calendar | 624,261 | Wed, 16 Sep 2026 11:27:55 GMT | 3 | `2175f76d80d4645db8844dffbb93a8d88627b1dcf8429d91ab1d5959f78ceab7` |
+| BEI Peng-00171/BEI.POP/09-2026, 2027 label correction | 787,875 | Thu, 17 Sep 2026 15:42:17 GMT | 3 | `cd4e16986e53cb2d8ef2a243e7f74ad1bfced1721310f5a7934c4f3ab088938e` |
+
+URLs: [Peng-00233](https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/Libur%20Bursa%20Peng-00233-No.%20Peng-00233BEI.POP11-2024.pdf),
+[Peng-00213](https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/Peng-00213-No.%20Peng-00213BEI.POP10-2024.pdf),
+[KSEI PENG-0004](https://web.ksei.co.id/files/Pengumuman_Perubahan_Hari_Libur_dan_Cuti_Bersama_PT_KSEI_Tahun_2025.pdf),
+[KSEI PENG-0007](https://web.ksei.co.id/files/Pengumuman_Perubahan_Kedua_Hari_Libur_dan_Cuti_Bersama_PT_KSEI_Tahun_2025.pdf),
+[Peng-00171/2025](https://idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/Peng-00171%20Libur%20Bursa%202026-No.%20Peng-00171BEI.POP09-2025.pdf),
+[Peng-00169](https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/Libur%20Bursa%20Peng-00169%20ID-No.%20Peng-00169BEI.POP09-2026.pdf),
+[Peng-00171/2026](https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/Penyesuaian%20Kalender%20Bursa%20Peng-00171%20ID-No.%20Peng-00171BEI.POP09-2026.pdf).
+
+**What a BEI calendar is.** Each yearly notice says the calendar fixes the days on
+which **both trading and settlement** of securities at the exchange do not take
+place (item 1). It is based on the joint ministerial decree on national holidays
+and collective leave for that year. BEI may change it if Bank Indonesia changes
+its clearing calendar or the government changes holidays (item 2). It lists only
+weekday closures; holidays on Saturday or Sunday are named in a note and left out.
+
+**Weekday closures, by year** (dates are day-month):
+
+| Year | Source in force | Closures | Trading days | Dates |
+|---|---|---|---|---|
+| 2024 | Peng-00233 (11 November 2024), revising Peng-00030/BEI.POP/02-2024 | 25 | 237 | 01-01; 08-02, 09-02, 14-02 (general election); 11-03, 12-03, 29-03; 08-04 to 12-04, 15-04; 01-05, 09-05, 10-05, 23-05, 24-05; 17-06, 18-06; 16-09; 27-11 (regional elections); 25-12, 26-12, 31-12 |
+| 2025 | Peng-00213 (16 October 2024), plus 18 August per KSEI (below) | 24 + 1 | 237 as published | 01-01, 27-01, 28-01, 29-01; 28-03, 31-03; 01-04 to 04-04, 07-04, 18-04; 01-05, 12-05, 13-05, 29-05, 30-05; 06-06, 09-06, 27-06; (18-08); 05-09; 25-12, 26-12, 31-12 |
+| 2026 | Peng-00171/BEI.POP/09-2025 (23 September 2025) | 22 | 239 | 01-01, 16-01; 16-02, 17-02; 18-03, 19-03, 20-03, 23-03, 24-03; 03-04; 01-05, 14-05, 15-05, 27-05, 28-05; 01-06, 16-06; 17-08, 25-08; 24-12, 25-12, 31-12 |
+| 2027 | Peng-00169/BEI.POP/09-2026 (16 September 2026), label corrected by Peng-00171/BEI.POP/09-2026 | 20 | 241 | 01-01, 05-01; 05-02; 08-03 to 12-03, 15-03, 25-03, 26-03; 06-05, 17-05 to 20-05; 01-06; 17-08; 24-12, 31-12 |
+
+- **Arithmetic check.** For each year, all listed dates fall on weekdays, and
+  weekdays minus closures reproduce both the stated annual total and every
+  monthly "Hari Bursa" figure in the attachment. With 18 August added, 2025 has
+  236 trading days; no BEI document stating 236 was read.
+- **2024:** Peng-00233 adds 27 November 2024 for the regional elections, citing
+  OJK letter S-240/PM.122/2024 (7 November 2024), and sets 31 December 2024 as a
+  holiday, "revising" Peng-00030 (5 February 2024). Peng-00030 and the original
+  2024 notice were not read, so the calendar in force before 11 November 2024
+  (in particular for 31 December) is not shown. A backtest that replays decisions
+  as of a past date needs those earlier versions; a calendar of what actually
+  happened can use Peng-00233.
+- **2025:** KSEI PENG-0004/DIR/KSEI/0825 (8 August 2025) cites BEI
+  **Peng-00149/BEI.POP/08-2025** (8 August 2025, "Perubahan Kalender Libur Bursa
+  Tahun 2025") and adds **18 August 2025** (collective leave for Independence
+  Day) to KSEI's closures. KSEI PENG-0007/DIR/KSEI/1225 (15 December 2025) keeps
+  the same 25 dates and limits 31 December 2025 settlement to government bonds,
+  bonds traded through SPPA/PLTE and Bank Indonesia securities. Peng-00149 itself
+  was **not found** on `idx.co.id`. The 18 August closure is therefore evidenced
+  by KSEI's citation of a BEI notice, not by the BEI text. The KSEI list for 2025
+  otherwise matches Peng-00213 date for date.
+- **2026:** no BEI change notice for 2026 was found. KSEI's operational index
+  still links its 2026 holiday item to PENG-0002/DIR/KSEI/0126, whose 22 dates
+  match Peng-00171/BEI.POP/09-2025 (see
+  [Calendar revision chain](#calendar-revision-chain)). Not finding a change is
+  not proof that none exists; the year is not over.
+- **2027:** the correction changes only one description ("Kenaikan Yesus Kristus
+  (Paskah)" becomes "Kenaikan Yesus Kristus") and keeps every date. It names a new
+  BEI page, `https://www.idx.co.id/id/berita/jadwal-libur-bursa`. That page and the
+  older `tentang-bei` page both rendered empty in the browser today, without
+  dates or attachments. KSEI's index now links a separate KSEI 2027 holiday
+  notice, which was not read.
+- Notice numbers repeat across years: Peng-00171 is the 2026 calendar
+  (09-2025) and also the 2027 correction (09-2026). Cite number and month-year
+  together.
+
+**Simulation consequence.** For 2024, 2026 and 2027, the session-date calendar
+can be the weekdays minus the closures above, as last published. For 2025 it
+needs the extra 18 August closure, whose BEI text is still unread. Each year can
+still change by later notice, so coverage should end at the last notice read and
+be marked revisable. Years before 2024 are not covered: no BEI calendar for 2023
+or earlier was found in this pass. Trading sessions, half days and instrument
+suspensions are separate from this list. Per the notices, settlement does not
+run on these days either, so T+2 counts the same exchange days; KSEI's limited
+31 December bond settlement does not apply to equities.
+
+Limits of this evidence: the BEI texts of Peng-00030/BEI.POP/02-2024, the
+original 2024 notice and Peng-00149/BEI.POP/08-2025, all calendars before 2024,
+and any change to 2026 or 2027 after the notices read. No calendar artifact,
+`complete: true` flag, rulebook JSON or code change was made; backtests stay
+refused.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
