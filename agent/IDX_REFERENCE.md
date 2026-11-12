@@ -462,6 +462,115 @@ I-A before 2024, POJK 15/POJK.04/2022, the I-N delisting rule, II-A Kep-00136
 and Kep-00157, holidays, JATS–WIB mapping, fees and taxes stay open. No rulebook
 JSON, `IDXRegularRules` default or code change was made; backtests stay refused.
 
+### Fees, JATS time and I-N read, 2026-11-12
+
+Same browser method and access state as the section above: HTTP 200 in the
+browser, `curl` without header changes HTTP 403 `text/html`. Nothing was saved
+to disk or committed.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| Kep-00120/BEI/08-2026 (joint BEI/KPEI/KSEI) | 1,061,693 | Fri, 14 Aug 2026 15:03:55 GMT | 7 | `a4a98ab4df4b3920d338607531317593200b0dbdc627f7ddb854a824770b7c27` |
+| I-N Kep-00054/BEI/05-2024 | 1,682,750 | Mon, 06 May 2024 13:10:53 GMT | 17 | `a2af2c4079ba8f71e1c67672de570dab89fb8ed0803a46ae264d8892838fd1e1` |
+
+II-A Kep-00158 and guideline Kep-00138 were downloaded again. Both SHA-256
+values match the ones recorded above, so the files are unchanged.
+
+**Fee register search.** Keputusan Direksi filters for `Biaya`, `Transaksi Bursa`,
+`Levy` and `Pungutan`, plus `Biaya` and `Pungutan` across all three Peraturan BEI
+tabs, find no decree that sets a Regular-market base fee. They find only fee
+reliefs and exemptions: Negotiated-market relief (Kep-00120), liquidity providers
+(Kep-00125, Kep-00053) and ETFs (Kep-00089, Kep-00094, Kep-00098). The base
+exchange fee is set in II-A itself.
+
+**II-A Kep-00158 chapter XI (transaction fees):**
+
+- The exchange member pays the exchange **0.018% of each transaction's value** on
+  the Regular and Cash markets, excluding clearing and settlement (XI.1.1). The
+  Negotiated-market fee follows an exchange decree (XI.1.2). The member pays a
+  monthly minimum of Rp20,000,000 (XI.1.3), which is a member-level charge, not a
+  per-trade cost.
+- VAT and other taxes are added and collected through the exchange (XI.2). No
+  VAT rate is stated.
+- XI.3–XI.7 cover the member's monthly payment, late fines and suspension of the
+  member. These do not apply to a simulated investor.
+- This is the exchange's charge to the member. What a broker charges a client is
+  a separate commercial term and is not set here.
+
+**Kep-00120/BEI/08-2026** (joint decree with KEP-081/DIR/KPEI/0826 and
+KEP-0045/DIR/KSEI/0826), Negotiated-market fee relief:
+
+- Issued and in force **14 August 2026**. It revokes the joint decree
+  Kep-00052/BEI/08-2020 (18 August 2020).
+- Negotiated-market cost is **0.03%** of transaction value: exchange 0.018%,
+  KPEI clearing 0.009%, KSEI settlement 0.003% (item 1). Relief of 10–25% applies
+  per transaction of at least Rp250 billion, when the price is at or above the
+  Regular-market lower auto-rejection limit (item 2).
+- Its recitals cite the sources for the clearing and settlement parts. KPEI II-5
+  (KEP-031/DIR/KPEI/0626, 15 June 2026) X.1.2 sets **0.009% for the Negotiated
+  market**. KSEI VI-A (KEP-0017/DIR/KSEI/0422, 26 April 2022) 4.6.1 sets
+  **0.003% of the cumulative monthly transaction value** for equity settlement.
+  Neither KPEI nor KSEI rule was read. The Regular-market KPEI clearing fee is
+  not stated in anything read and must not be assumed from the Negotiated figure.
+- **Conflicting reference to an earlier II-A:** the recitals cite II-A as the
+  annex of **Kep-00003/BEI/04-2025 (8 April 2025)**. The Peraturan BEI register,
+  however, lists Kep-00003/BEI/04-2025 as **II-Q**, on liquidity-provider
+  activity, in the Peraturan Perdagangan tab. No II-A entry under that number
+  appears in any tab. Either one decree covered both rules, or one of the two
+  sources is wrong. Neither the II-Q attachment nor any 2025 II-A text was read,
+  so this is not resolved. Kep-00003 is **not** added to the II-A version chain.
+- Its deadlines are written as "pukul 17:00 WIB" (items 6 and 9). These are
+  administrative deadlines in a different document. They do not define JATS time.
+
+**JATS time.** II-A I.40 defines JATS time only as "the time shown on JATS".
+A text search of all 89 pages of guideline Kep-00138 (143,599 extracted
+characters, no blank pages) finds no `WIB`, `UTC`, `GMT` or "zona waktu". The
+BEI website clock shows WIB. No rule read ties session times to WIB/UTC+7, so an
+`Asia/Jakarta` session clock stays a modelling assumption.
+
+Wording difference: guideline Kep-00138 says the random close falls between
+**15:58:00 and 16:00:00**, while II-A Kep-00158 IV.1 gives 15:58:00–15:59:59. The
+guideline came into force before the current II-A, and which wording governs was
+not resolved. A daily-bar simulation is not affected.
+
+**I-N Kep-00054/BEI/05-2024**, delisting and relisting:
+
+- Issued and in force **6 May 2024**. It revokes BEJ I-I Kep-308/BEJ/07-2004
+  (19 July 2004) and BES I.A.7 SK-023/LGL/BES/XI/2004 (25 November 2004). OJK
+  approval S-89/PM.01/2024 (7 April 2024). For voluntary delistings already
+  suspended before 6 May 2024, the delisting fee is 2× the last annual listing
+  fee instead of 5× (decree item 2).
+- Grounds (III.1): the company's request, an OJK order, or an exchange decision.
+  The exchange can decide when there is a significant adverse condition without
+  adequate recovery (III.1.3.1), when listing requirements are no longer met
+  (III.1.3.2), or after **at least 24 months of suspension** on the Regular and
+  Cash markets or all markets (III.1.3.3).
+- Voluntary delisting (III.3): listed at least 5 years, fee 5× the last annual
+  listing fee. The exchange suspends the shares on all markets once the plan is
+  disclosed (III.3.2.3). Delisting follows within 14 working days of the OJK
+  letter, and the exchange announces it at least one exchange day before the
+  effective date.
+- Exchange-decided delisting (III.5): after **6 consecutive months** of
+  suspension, the exchange announces potential delisting and repeats the notice
+  every June and December (III.5.3). A delisting decision is final, and the public
+  is told by the start of session I on the next exchange day (III.5.4.1–III.5.4.2).
+  The company must disclose its buyback plan within 30 days, and delisting takes
+  effect **6 months after that period** (III.5.4.3–III.5.4.4), on the next exchange
+  day if that is a holiday (III.5.4.6). OJK can set another date (III.5.4.5).
+- The exchange may temporarily lift a suspension on the Negotiated market only
+  (II.8). Relisting is possible no earlier than 6 months after delisting, under the
+  same company code (V.2, V.4).
+- Simulation consequence: a delisted stock's last tradable day and any buyback
+  exit come from dated announcements. A survivorship-safe universe needs those
+  events. Long runs of missing bars cannot stand in for them.
+
+Limits of this evidence: the Regular-market KPEI clearing fee, the KSEI and KPEI
+rules, the VAT rate, the final income tax on share sales (a government tax rule,
+not an exchange rule) and broker commission stay unread. Earlier II-A versions,
+including whether Kep-00003/BEI/04-2025 contains one, the official holiday list
+and the JATS–WIB mapping also stay open. No rulebook JSON, `IDXRegularRules` default or code change was made;
+backtests stay refused.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
