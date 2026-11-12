@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shlex
 import sys
 
@@ -97,7 +98,7 @@ def test_python_only_policy_allows(command) -> None:
     rewritten, reason = claude_cli_policy.check_bash_command(command)
     assert reason is None
     if command.startswith("python"):
-        assert shlex.split(rewritten)[0] == sys.executable
+        assert shlex.split(rewritten, posix=os.name != "nt")[0].strip('"') == sys.executable
 
 
 @pytest.mark.parametrize(
@@ -162,7 +163,8 @@ def test_blocked_bash_is_fed_back_and_allowed_bash_is_rewritten(fake_cli) -> Non
     )
 
     assert "program 'curl' is not allowed" in calls()[1]["stdin"]
-    assert shlex.split(message.tool_calls[0]["args"]["command"]) == [
+    words = shlex.split(message.tool_calls[0]["args"]["command"], posix=os.name != "nt")
+    assert [word.strip('"') for word in words] == [
         sys.executable,
         "var.py",
     ]

@@ -52,7 +52,7 @@ def test_cjk_query_does_not_match_unrelated_shared_character(tmp_path):
     index.close()
 
 
-def test_case_alias_and_symlink_paths_use_real_directory_identity(tmp_path):
+def test_case_alias_and_symlink_paths_use_real_directory_identity(tmp_path, make_symlink):
     root = tmp_path / "Dropbox"
     root.mkdir()
     lower = tmp_path / "dropbox"
@@ -64,11 +64,11 @@ def test_case_alias_and_symlink_paths_use_real_directory_identity(tmp_path):
         with pytest.raises(ValueError):
             resolve_safe_path(str(lower / "report.txt"), None, [root], purpose="write")
     alias = tmp_path / "cloud-alias"
-    alias.symlink_to(root, target_is_directory=True)
+    make_symlink(alias, root, target_is_directory=True)
     assert resolve_safe_path(str(alias / "report.txt"), None, [root]) == root.resolve() / "report.txt"
     outside = tmp_path / "private"
     outside.mkdir()
-    (root / "escape").symlink_to(outside, target_is_directory=True)
+    make_symlink(root / "escape", outside, target_is_directory=True)
     with pytest.raises(ValueError):
         resolve_safe_path(str(root / "escape" / "secret.txt"), None, [root])
 
@@ -123,7 +123,7 @@ def test_sdk_aliases_still_refuse_nonfinite_or_malformed_positions(field, invali
     assert _post_trade_gross_exposure([row], symbol="AAPL", signed_order_notional=50) is None
 
 
-def test_pdf_write_authenticated_download_and_im_delivery_share_real_file(tmp_path, monkeypatch):
+def test_pdf_write_authenticated_download_and_im_delivery_share_real_file(tmp_path, monkeypatch, make_symlink):
     from src.api.uploads_routes import register_uploads_routes
     from src.channels.runtime import ChannelRuntime
     from src.session.models import Message
@@ -152,7 +152,7 @@ def test_pdf_write_authenticated_download_and_im_delivery_share_real_file(tmp_pa
     message = Message(metadata={"generated_reports": [payload, payload, {"report_id": "../secret"}]})
     assert ChannelRuntime._report_media(message) == [str(path)]
     path.unlink()
-    path.symlink_to(tmp_path / "研究报告.pdf")
+    make_symlink(path, tmp_path / "研究报告.pdf")
     assert client.get(payload["download_url"], headers={"Authorization": "Bearer test-token"}).status_code == 404
 
 

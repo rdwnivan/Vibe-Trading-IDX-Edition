@@ -46,7 +46,11 @@ _SINGLE_CURRENCY_VENUES: tuple[tuple[re.Pattern[str], str], ...] = (
 
 def _venue_currency(code: str) -> str | None:
     """Return the one currency a symbol's venue pool accepts, or None if unconstrained."""
+    from backtest.engines._market_hooks import _detect_market, code_currency
+
     code = str(code).strip()
+    if _detect_market(code) == "id_equity":
+        return code_currency(code)
     return next(
         (cur for pattern, cur in _SINGLE_CURRENCY_VENUES if pattern.match(code)), None
     )
@@ -480,8 +484,13 @@ _LOADER_CACHE_TRUE_VALUES = {"1", "true", "yes", "on"}
 # actual adjustment stamp. Older entries may contain artificial return jumps.
 # v9: SEC successor/predecessor facts extend historical coverage. Old cached
 # panels may omit the predecessor's filings and must be rebuilt.
-_LOADER_CACHE_VERSION = 9
-_LOADER_FRAME_METADATA_ATTRS = ("quote_currency", "currency_conversion", "adjustment")
+# v10: IDX frames require declared IDR, session dates and retrieval provenance.
+_LOADER_CACHE_VERSION = 10
+_LOADER_FRAME_METADATA_ATTRS = (
+    "quote_currency", "currency_conversion", "adjustment", "market", "exchange",
+    "exchange_timezone", "interval", "volume_unit", "source", "retrieved_at",
+    "data_as_of", "freshness", "data_delay", "data_quality",
+)
 
 
 def loader_cache_enabled() -> bool:

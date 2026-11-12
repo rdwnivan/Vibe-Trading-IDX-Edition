@@ -665,7 +665,7 @@ class TestMemoryEntryNewFields:
         assert entries[0].compression_level == "daily"
 
 
-def test_offsetless_frontmatter_timestamp_is_read_as_utc(monkeypatch) -> None:
+def test_offsetless_frontmatter_timestamp_is_read_as_utc(local_timezone) -> None:
     """Writers stamp ``time.gmtime()`` with no offset; reading it back must not
     shift it by the host's UTC offset."""
     import time
@@ -673,14 +673,8 @@ def test_offsetless_frontmatter_timestamp_is_read_as_utc(monkeypatch) -> None:
 
     from src.memory.persistent import _parse_timestamp
 
-    monkeypatch.setenv("TZ", "Asia/Shanghai")
-    time.tzset()
-    try:
-        stamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(1_800_000_000))
-        assert _parse_timestamp(stamp, 0.0) == 1_800_000_000
-        assert _parse_timestamp("2026-01-01T00:00:00", 0.0) == datetime(
-            2026, 1, 1, tzinfo=timezone.utc
-        ).timestamp()
-    finally:
-        monkeypatch.undo()
-        time.tzset()
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(1_800_000_000))
+    assert _parse_timestamp(stamp, 0.0) == 1_800_000_000
+    assert _parse_timestamp("2026-01-01T00:00:00", 0.0) == datetime(
+        2026, 1, 1, tzinfo=timezone.utc
+    ).timestamp()

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
+
+import pytest
 
 from src.channels.websocket import WebSocketChannel
 from src.channelsui.websocket_logging import websockets_server_logger
@@ -16,21 +19,23 @@ def test_websockets_server_logger_is_a_logger_not_a_factory():
     assert isinstance(websockets_server_logger, logging.Logger)
 
 
-def test_websocket_channel_starts_on_a_unix_socket():
+@pytest.mark.parametrize("transport", [
+    "tcp",
+    pytest.param("unix", marks=pytest.mark.skipif(sys.platform == "win32", reason="Windows asyncio lacks Unix servers")),
+])
+def test_websocket_channel_starts_on_a_loopback_transport(transport):
     from src.channels.bus.queue import MessageBus
 
     # macOS caps unix socket paths at 104 chars, so keep it short
-    import tempfile, uuid as _uuid
+    import tempfile
+    import uuid as _uuid
 
     sock = f"{tempfile.gettempdir()}/vt-{_uuid.uuid4().hex[:8]}.sock"
+    config = {"enabled": True, "path": "/ws", "host": "127.0.0.1", "port": 0}
+    if transport == "unix":
+        config["unix_socket_path"] = sock
     channel = WebSocketChannel(
-        {
-            "enabled": True,
-            "unix_socket_path": sock,
-            "path": "/ws",
-            "host": "127.0.0.1",
-            "port": 0,
-        },
+        config,
         MessageBus(),
         gateway=build_gateway_services(),
     )

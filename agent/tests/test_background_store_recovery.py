@@ -83,6 +83,71 @@ class TestRecoveryIsConservative:
 
 
 class TestStore:
+    @pytest.mark.parametrize("code", [5, 32])
+    def test_terminal_record_survives_transient_windows_replace_contention(self, tmp_path, monkeypatch, code):
+        from src import atomic_file
+        from tests.module_os_helpers import patch_module_os
+
+        store = BackgroundTaskStore(tmp_path)
+        store.save(make(status="running"))
+        error = PermissionError("simulated Windows contention")
+        error.winerror = code
+        attempts, delays = [], []
+
+        def replace(source, target):
+            attempts.append(source)
+            if len(attempts) <= 2:
+                raise error
+            os.replace(source, target)
+
+        patch_module_os(monkeypatch, store_mod, replace=replace)
+        monkeypatch.setattr(atomic_file, "time", SimpleNamespace(sleep=delays.append))
+
+        store.save(make(status="completed"))
+
+        records, unreadable = store.load_all()
+        assert unreadable == []
+        assert [record.status for record in records] == ["completed"]
+        assert len(attempts) == 3
+        assert delays == [0.025, 0.05]
+        assert list((tmp_path / "background-tasks").glob("*.tmp")) == []
+
+    @pytest.mark.parametrize(("code", "expected_attempts", "expected_delays"), [
+        (5, 6, [0.025, 0.05, 0.1, 0.2, 0.4]),
+        (32, 6, [0.025, 0.05, 0.1, 0.2, 0.4]),
+        (2, 1, []),
+        (None, 1, []),
+    ])
+    def test_failed_replacement_preserves_record_cleans_temp_and_propagates_error(
+        self, tmp_path, monkeypatch, code, expected_attempts, expected_delays
+    ):
+        from src import atomic_file
+        from tests.module_os_helpers import patch_module_os
+
+        store = BackgroundTaskStore(tmp_path)
+        path = store.save(make(status="running"))
+        original = path.read_bytes()
+        error = PermissionError("simulated replacement failure")
+        if code is not None:
+            error.winerror = code
+        attempts, delays = [], []
+
+        def replace(source, target):
+            attempts.append(source)
+            raise error
+
+        patch_module_os(monkeypatch, store_mod, replace=replace)
+        monkeypatch.setattr(atomic_file, "time", SimpleNamespace(sleep=delays.append))
+
+        with pytest.raises(PermissionError) as raised:
+            store.save(make(status="completed"))
+
+        assert raised.value is error
+        assert path.read_bytes() == original
+        assert list((tmp_path / "background-tasks").glob("*.tmp")) == []
+        assert len(attempts) == expected_attempts
+        assert delays == expected_delays
+
     def test_round_trip_and_layout_is_stable_per_owner(self, tmp_path):
         store = BackgroundTaskStore(tmp_path)
         record = make()
@@ -105,11 +170,22 @@ class TestStore:
         with pytest.raises(BackgroundStoreError):
             store.save(make(task_id="../../etc/passwd"))
 
+    @pytest.mark.skipif(os.name == "nt", reason="POSIX mode bits do not validate Windows ACL privacy")
     def test_private_permissions(self, tmp_path):
         store = BackgroundTaskStore(tmp_path)
         path = store.save(make())
         assert stat.S_IMODE(path.stat().st_mode) == 0o600
         assert stat.S_IMODE(path.parent.stat().st_mode) == 0o700
+
+    def test_save_requests_private_file_mode(self, tmp_path, monkeypatch):
+        from tests.module_os_helpers import patch_module_os
+
+        calls = []
+        patch_module_os(monkeypatch, store_mod, chmod=lambda path, mode: calls.append((path, mode)))
+
+        path = BackgroundTaskStore(tmp_path).save(make())
+
+        assert calls == [(path, 0o600)]
 
     def test_unknown_version_is_reported_not_overwritten(self, tmp_path):
         store = BackgroundTaskStore(tmp_path)
@@ -132,14 +208,14 @@ class TestStore:
         assert records == []
         assert len(unreadable) == 1
 
-    def test_symlink_is_refused(self, tmp_path):
+    def test_symlink_is_refused(self, tmp_path, make_symlink):
         store = BackgroundTaskStore(tmp_path)
         directory = tmp_path / "background-tasks"
         directory.mkdir()
         outside = tmp_path / "outside.json"
         outside.write_text(json.dumps(__import__("dataclasses").asdict(make(task_id="deadbeef"))))
         link = store._path_for(make(task_id="deadbeef"))
-        link.symlink_to(outside)
+        make_symlink(link, outside)
         _records, unreadable = store.load_all()
         assert len(unreadable) == 1
 
@@ -193,13 +269,15 @@ class TestManagerWiring:
     def test_a_completed_run_leaves_a_queryable_record(self, tmp_path, monkeypatch):
         import json as _json
         import shlex
+        import subprocess
         import sys as _sys
 
         from src.tools import background_tools as bg
 
         monkeypatch.setattr(bg, "WORKDIR", tmp_path)
         manager = bg.BackgroundManager(bg.BackgroundScope("session:s1"), store=BackgroundTaskStore(tmp_path))
-        command = shlex.join([_sys.executable, "-c", "print('stored')"])
+        args = [_sys.executable, "-c", "print('stored', flush=True)"]
+        command = subprocess.list2cmdline(args) if os.name == "nt" else shlex.join(args)
         task_id = _json.loads(manager.run(command))["task_id"]
         deadline = time.monotonic() + 15
         while time.monotonic() < deadline and _json.loads(manager.check(task_id))["status"] == "running":

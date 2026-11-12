@@ -25,6 +25,16 @@ describe("generated report download", () => {
 });
 
 describe("api request helper", () => {
+  it("encodes an IDX query and forwards auth and cancellation to the existing request helper", async () => {
+    vi.stubGlobal("localStorage", { getItem: vi.fn(() => "synthetic-api-key"), setItem: vi.fn(), removeItem: vi.fn() });
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true, data: { candidates: [], sources: { yahoo: "ok" } } }), { headers: { "content-type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { api } = await loadApiModule();
+    const controller = new AbortController();
+    await api.searchIDXSymbols("Bank & .JK", controller.signal);
+    expect(fetchMock).toHaveBeenCalledWith("/api/research/idx/symbols?query=Bank+%26+.JK", expect.objectContaining({ headers: { Authorization: "Bearer synthetic-api-key", "Content-Type": "application/json" }, signal: expect.any(AbortSignal) }));
+  });
+
   it("translates the server's message-size error into a recovery instruction", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
       detail: { code: "message_too_long", max_length: 100_000, message: "Shorten input" },

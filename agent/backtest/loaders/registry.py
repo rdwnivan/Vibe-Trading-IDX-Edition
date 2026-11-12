@@ -226,6 +226,9 @@ FALLBACK_CHAINS: dict[str, list[str]] = {
         "local",
     ],
     "india_equity": ["yahoo", "yfinance", "india_broker", "local"],
+    # Research-only daily IDX shares. Both network adapters use Yahoo data;
+    # this is transport fallback, not independent-source confirmation.
+    "id_equity": ["yahoo", "yfinance", "local"],
     "kr_equity": ["pykrx", "yahoo", "yfinance", "local"],
     # TSX (.TO) / TSX Venture (.V): direct Yahoo first, SDK fallback second.
     "ca_equity": ["yahoo", "yfinance", "local"],

@@ -166,6 +166,27 @@ describe("WelcomeScreen", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers a read-only IDX research example that fills its prompt", async () => {
+    const user = userEvent.setup();
+    render(<WelcomeScreen onExample={onExample} />);
+
+    await user.click(screen.getByRole("button", { name: "Browse all examples" }));
+    const library = document.getElementById("welcome-example-library")!;
+    await user.click(within(library).getByRole("tab", { name: /Research & Analysis/ }));
+
+    const title = i18n.t("welcome.examples.idxWatchlist").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const card = within(library).getByRole("button", { name: new RegExp(title) });
+    await user.click(card);
+
+    const prompt = i18n.t("welcome.examples.idxWatchlistPrompt");
+    expect(onExample).toHaveBeenLastCalledWith(prompt);
+    // Only capabilities that exist: explicit .JK venue, IDR, provenance, and
+    // no simulated execution (IDX backtests are refused until RULE-01).
+    expect(prompt).toMatch(/BBCA\.JK/);
+    expect(prompt).toMatch(/IDR/);
+    expect(prompt).not.toMatch(/backtest/i);
+  });
+
   it("closes the example library with Escape and restores focus to its trigger", async () => {
     const user = userEvent.setup();
     render(<WelcomeScreen onExample={onExample} />);

@@ -8,6 +8,138 @@
 
 <h1 align="center">Vibe-Trading: Your Personal Trading Agent</h1>
 
+**IDX Edition development:** daily `.JK` research now routes through the existing
+Yahoo/yfinance loaders as `id_equity` in IDR. Bare tickers retain their existing
+market meaning; IDX backtesting and paper matching are not available. See the
+[architecture assessment, limitations and verification guide](agent/IDX_FOUNDATION.md).
+For agent-assisted local research, load the bundled `idx-research` skill.
+`get_stock_profile(ticker="BBCA.JK", sections=["key_stats", "financials"])`
+now validates IDX listing identity and IDR quotes, keeps financial reporting
+currency separate, and labels retrieval separately from unavailable publication
+dates. IDX numeric fields reject booleans, strings and containers without
+coercion; null and valid numeric values are preserved. Live BBCA.JK/BBRI.JK
+snapshot retrieval passed; per-field units, historical fundamentals and
+corporate-event completeness remain unverified. See the
+[numeric validation and evidence](agent/IDX_PERSONAL_RESEARCH.md#validasi-tipe-angka-profil--2026-11-11).
+For a single trusted operator, [deployment review templates and local QA](deployment/single-operator/README.md)
+cover a loopback backend, HTTPS proxy and persistent state. They are preparation,
+not verified public hosting or multiuser isolation. `serve --dev` keeps Vite on
+loopback even when the API has an explicit remote bind.
+Phase 2B adds [read-only local reference snapshot validation and official source discovery](agent/IDX_REFERENCE.md);
+complete official snapshots and historical rulebooks remain pending.
+Personal research also has a manual watchlist at `/research/idx`, daily charts,
+existing indicators and source metadata, with agent/MCP and no-LLM CLI access.
+An expandable daily OHLCV table shows the same received bars in IDR and share
+volume, keeping zero volume distinct from missing values.
+The watchlist can search Yahoo names/tickers and add supported IDX · IDR results
+with canonical `.JK` symbols; search candidates are not an official instrument master.
+Research rejects invalid acquired bars before trimming the lookback and requires
+daily/share-volume metadata; missing volume and date gaps remain visible.
+The yfinance IDX path rejects OHLC invariant violations before normalization can
+drop the defective bar. Older IDX cache entries are bypassed for this contract;
+other markets keep their existing normalization and cache behavior.
+Both IDX Yahoo transports also reject partial/nonnumeric OHLC or missing price
+fields before dropping observations. Wholly absent OHLCV slots remain omitted
+without inferring closures or suspensions. IDX acquisition isolates symbols so
+a rejected series does not discard healthy watchlist peers.
+IDX Yahoo/yfinance now validate raw volume before coercion: invalid text,
+booleans, complex, negative, nonfinite and overflowing values reject the series.
+Numeric strings remain supported; genuine missing volume stays missing and zero
+stays observed. Older IDX cache contracts are bypassed without deleting files.
+The generic Local Data Bridge still lacks the metadata required for IDX research
+acceptance; its loader declaration alone does not establish that support.
+For IDX local files, absent volume stays missing and resampled volume is missing
+if any observed constituent lacks volume. Invalid volume is rejected through the
+same IDX guard; other markets retain their existing local normalization policy.
+Local IDX rows with missing/unparseable dates or incomplete, nonnumeric,
+nonfinite or structurally invalid OHLC reject the series before filtering and
+resampling. Boolean/complex prices and dated all-null OHLC rows are rejected;
+older local IDX cache contracts are bypassed. UTC conversion and bucket selection
+remain unchanged and still require validation against an actual export contract.
+Missing local IDX date columns now fail acquisition, including empty files with
+an invalid schema; a DatetimeIndex remains an accepted date source. Empty files
+with a valid date/OHLC schema still report no data. See the
+[date-schema audit and verification](agent/IDX_PERSONAL_RESEARCH.md#data-03--schema-tanggal-local-data-bridge).
+IDX local reader declarations now reject unsupported types and absent, blank or
+non-string required path/query settings before reader I/O. These failures are
+reported as `fetch_failed`; valid empty sources remain `no_data`. An omitted
+type still defaults to CSV. See the [configuration checks](agent/IDX_PERSONAL_RESEARCH.md#data-03--konfigurasi-sumber-local-data-bridge).
+Non-mapping items and mappings with non-string symbols in the local YAML
+`sources` list emit a warning with their entry number and are skipped, preserving
+valid symbols in every market. Symbols are never coerced to strings. Raw
+values are not logged; existing symbol matching and last-duplicate selection
+remain unchanged. This does not validate the entire YAML structure. See the
+[entry-isolation audit](agent/IDX_PERSONAL_RESEARCH.md#data-03--isolasi-entri-yaml-local-data-bridge).
+The [symbol-type follow-up](agent/IDX_PERSONAL_RESEARCH.md#data-03--simbol-non-string-local-data-bridge)
+also verifies positive-cache reuse and unchanged numeric-string matching.
+Local bridge documents now reject top-level scalars and lists with a sanitized
+configuration error; empty/null documents retain their existing behavior. A
+declared `sources` value must now be a list; an absent key or empty list keeps
+its existing behavior. See the [sources-container follow-up](agent/IDX_PERSONAL_RESEARCH.md#data-03--container-sources-local-data-bridge) and the
+[top-level audit and compatibility limits](agent/IDX_PERSONAL_RESEARCH.md#data-03--dokumen-top-level-local-data-bridge).
+A nonempty local `sources` list with no nonblank string symbol now fails during
+fetch with a sanitized configuration error (`fetch_failed` through the helper).
+This includes lists containing only absent/blank symbols. Availability remains
+a declaration check. Missing requested symbols in a valid index and valid empty
+datasets still return `no_data`; mixed lists still preserve healthy peers.
+See the [unmapped-list audit](agent/IDX_PERSONAL_RESEARCH.md#data-03--list-tanpa-mapping-local-data-bridge).
+At the acquired-frame boundary, boolean and complex OHLCV are rejected and numeric conversion
+overflow is reported per symbol, preserving healthy watchlist results.
+Required OHLCV columns must be flat and unique; hierarchical columns are rejected
+at the price stage, without guessing a symbol level or selecting a duplicate field.
+Nonfinite computed indicators are also rejected per symbol at the
+`indicator_calculation` stage; legitimate null indicators remain available.
+Price adjustment must be declared (explicit `unknown` is accepted); research
+keeps served prices without inferring or reapplying splits/dividends.
+Rejected observations include a stable `quality_issue.code` in API/agent/MCP/CLI
+JSON identifying the failed validation stage without copying raw exception messages.
+Missing or malformed provenance objects reject the affected observation at the
+currency-declaration gate; a non-object acquisition response returns a structured
+acquisition error instead of crashing the watchlist.
+Provenance objects that fail strict JSON serialization become `null` with a
+sanitized warning; affected bars fail the same metadata gate while peers remain available.
+For unavailable symbols, non-object acquisition diagnostics become `null` with
+a sanitized warning; healthy symbols and valid diagnostic objects are preserved.
+Diagnostic objects containing nonfinite numbers, non-JSON values, cycles or
+excessive nesting also become `null`, preserving the rest of the watchlist.
+The watchlist now translates the first failed stage into a readable label;
+this includes instrument identity declarations in all supported UI languages.
+missing or unknown codes show an explicit unavailable message. This does not
+identify every issue or establish the provider root cause.
+API/agent/MCP/CLI results also report calendar age relative to the requested end
+date, warning after 14 days; this does not verify missing exchange sessions.
+The watchlist also displays these warnings, observation age and reference dates;
+missing or unsupported age diagnostics remain explicitly unavailable in that section.
+Cards and details validate the diagnostic format without recalculating backend age or verdict.
+Retrieval times now carry an explicit WIB label; source as-of session dates and
+the last analyzed session are shown separately. Missing or invalid time metadata
+remains unavailable.
+The detail panel distinguishes the analyzed bar count from the requested bar
+limit. Missing or invalid counts remain unavailable; counts do not establish
+exchange-session completeness or explain missing observations.
+API/agent/MCP/CLI JSON also reports `volume_coverage` over analyzed bars:
+available and missing volume counts, with observed zero volume counted separately.
+The detail panel now displays all four counts from this metadata. Zero is included
+in available volume; absent or invalid counts remain unavailable. Contradictory
+volume totals or zero counts make the entire volume summary unavailable, while
+charts and indicators remain visible. These counts
+do not establish liquidity, suspension or exchange-session completeness.
+Unavailable acquisition results now show ordered source attempts, distinguishing
+empty data, failed requests and unavailable sources. Missing or unknown details
+remain explicitly unavailable; attempts do not prove suspension or delisting.
+Successful fallback results also show the failed attempts from provenance in
+reported order. Unknown details stay unavailable; Yahoo and yfinance remain
+two transports for one vendor, without independent confirmation.
+The indicator panel also shows the received MACD signal/histogram, 20-bar
+Bollinger bands (IDR) and mean share volume, preserving nulls and reported precision.
+The detail panel also shows the backend SHA-256 fingerprint of analysis interval,
+dates, closes and volumes. Missing or malformed fingerprints remain unavailable;
+this does not authenticate the provider or hash all OHLCV fields.
+See [usage and limitations](agent/IDX_PERSONAL_RESEARCH.md).
+Research rejects present provenance symbol, market or exchange declarations that
+conflict with the requested instrument (`instrument_identity`). Absent identity
+fields remain compatible; this check does not authenticate the source.
+
 <p align="center">
   <b>One Command to Empower Your Agent with Comprehensive Trading Capabilities</b>
 </p>
@@ -766,9 +898,9 @@ Beyond OHLCV, **29 read-only data tools** reach into fundamentals & flow — fun
 Detailed inventories are folded below to keep the main README scannable. Open them when you want to inspect the available building blocks.
 
 <details>
-<summary><b>Finance Skill Library</b> <sub>90 skills across 9 categories</sub></summary>
+<summary><b>Finance Skill Library</b> <sub>91 skills across 9 categories</sub></summary>
 
-- 📊 90 specialized finance skills organized into 9 categories
+- 📊 91 specialized finance skills organized into 9 categories
 - 🌐 Complete coverage from traditional markets to crypto & DeFi
 - 🔬 Comprehensive capabilities spanning data sourcing to quantitative research
 
@@ -776,7 +908,7 @@ Detailed inventories are folded below to keep the main README scannable. Open th
 |----------|--------|----------|
 | Data Source | 10 | `data-routing`, `tushare`, `yfinance`, `okx-market`, `akshare`, `mootdx`, `ccxt`, `eastmoney`, `sec-edgar`, `qveris` |
 | Strategy | 19 | `strategy-generate`, `cross-market-strategy`, `technical-basic`, `candlestick`, `ichimoku`, `elliott-wave`, `smc`, `multi-factor`, `ml-strategy` |
-| Analysis | 23 | `factor-research`, `correlation-regime`, `macro-analysis`, `global-macro`, `valuation-model`, `investor-lenses`, `credit-analysis`, `dividend-analysis` |
+| Analysis | 24 | `factor-research`, `correlation-regime`, `macro-analysis`, `global-macro`, `valuation-model`, `investor-lenses`, `credit-analysis`, `dividend-analysis` |
 | Asset Class | 9 | `options-strategy`, `options-advanced`, `convertible-bond`, `etf-analysis`, `asset-allocation`, `sector-rotation` |
 | Crypto | 7 | `perp-funding-basis`, `liquidation-heatmap`, `stablecoin-flow`, `defi-yield`, `onchain-analysis` |
 | Flow | 8 | `hk-connect-flow`, `us-etf-flow`, `edgar-sec-filings`, `financial-statement`, `adr-hshare` |
@@ -1184,6 +1316,7 @@ LANGCHAIN_MODEL_NAME=claude-opus-5-5
 
 - `VIBE_TRADING_DENY_TOOL_PREFIXES` hides tools whose names start with these prefixes from every provider. An explicitly configured `CLAUDE_CLI_DENY_TOOL_PREFIXES` remains the fallback alias across providers. With neither configured, other providers retain their existing tool surface; Claude CLI retains its previous `trading_,etoro_` default (including broker reads).
 - `VIBE_TRADING_BASH_POLICY=python-only` applies the same rule to every provider: `bash` may run only `python <relative script>.py`, `python -c ...`, and read-only `ls`/`cat`/`head`/`tail`/`wc`/`pwd` on non-hidden relative paths (so not `.env`); refused calls are returned to the model so it can choose again. `CLAUDE_CLI_BASH_POLICY` remains the fallback alias. `vibe-trading provider doctor` reports the active policy and which variable supplied it.
+- On Windows, Python commands retain their arguments across repeated policy checks. Arguments combining literal double quotes with `&`, `|`, `<` or `>` are refused because `cmd.exe` can reinterpret them; put that code in a relative `.py` script. This policy remains a convenience filter, and shell-tool opt-in and live order gates still apply.
 
 > **Warning:** Both settings are convenience filters, not a security boundary. `python -c` can still run arbitrary code, and external MCP tools (`mcp_<server>_<tool>`) are not covered by the default prefixes. Live orders stay bound by the mandate gate and kill switch whatever these settings allow.
 
@@ -1252,6 +1385,10 @@ cd frontend && npm install && npm run dev  # requires Node >= 22.22
 
 Open `http://localhost:5899`. The frontend proxies API calls to `localhost:8899`.
 
+From a source checkout, `python agent/api_server.py --host 127.0.0.1 --port 8899`
+starts the same API app, authentication and lifecycle as `vibe-trading serve`.
+With `agent/` on `PYTHONPATH`, `python -m api_server` uses that entry point too.
+
 **Production mode (single server):**
 
 ```bash
@@ -1259,8 +1396,28 @@ cd frontend && npm run build && cd ..
 vibe-trading serve --port 8899     # FastAPI serves dist/ as static files
 ```
 
+**Build a Python distribution with the Web UI:** from this checkout, run
+`cd frontend && npm ci && npm run build`, return to the repository root, then
+`python -m pip wheel --no-deps --wheel-dir dist .`. The wheel bundles that
+Vite output under `src/api/_frontend`; the sdist includes `frontend/dist` so
+rebuilding it needs no Node. Wheel/sdist builds fail with build instructions
+if `index.html` is missing. Rebuild Vite after changing frontend source.
+Editable installs continue to serve the checkout's `frontend/dist` and may
+be installed before building the UI.
+
+Install the resulting wheel into a new Python environment (on Windows/Python
+3.12, install `desktop/electron/requirements-windows-lock.txt` first with
+`python -m pip install --require-hashes -r ...`, then install the wheel with
+`python -m pip install --no-deps <wheel-path>`). Run
+`vibe-trading serve --host 127.0.0.1 --port 8899` from any directory and open
+`http://127.0.0.1:8899/research/idx`. The installed UI needs neither Node nor
+a checkout at runtime. Runtime state still uses `VIBE_TRADING_HOME` or
+`~/.vibe-trading`. Enter the configured API key in Settings when required.
+This describes locally built artifacts; no new package has been published.
+See [distribution verification and limits](agent/IDX_PERSONAL_RESEARCH.md#dev-pack-01--distribusi-web-ui-python).
+
 > [!NOTE]
-> `vibe-trading serve` binds `0.0.0.0` and is loopback-only by default: opening the UI on the **same machine** (`http://localhost:8899`) works with zero config. If you browse from **another machine, a VM host, or a phone on your LAN**, sensitive endpoints return `403` and the chat shows "Remote API access requires an API key" — set a strong `API_AUTH_KEY` in `agent/.env`, restart, and enter the same key once in **Settings**. (Docker Desktop's host gateway: set `VIBE_TRADING_TRUST_DOCKER_LOOPBACK=1` with the default `127.0.0.1` port bind.)
+> `vibe-trading serve` binds `127.0.0.1` by default: opening the UI on the **same machine** (`http://localhost:8899`) works with zero config. If you browse from **another machine, a VM host, or a phone on your LAN**, sensitive endpoints return `403` and the chat shows "Remote API access requires an API key" — set a strong `API_AUTH_KEY` in `agent/.env`, restart, and enter the same key once in **Settings**. (Docker Desktop's host gateway: set `VIBE_TRADING_TRUST_DOCKER_LOOPBACK=1` with the default `127.0.0.1` port bind.)
 
 </details>
 
@@ -1932,7 +2089,7 @@ Posting `{}` schedules a template on its own suggested cadence with its declared
 
 ## 🔌 MCP Plugin
 
-Vibe-Trading exposes 84 MCP tools for any MCP-compatible client. Runs as a stdio subprocess — no server setup needed. Core research tools work with zero API keys for HK/US/crypto; trading connector tools use the selected connector profile, and `run_swarm` needs an LLM key.
+Vibe-Trading exposes 85 MCP tools for any MCP-compatible client. Runs as a stdio subprocess — no server setup needed. Core research tools work with zero API keys for HK/US/crypto; trading connector tools use the selected connector profile, and `run_swarm` needs an LLM key.
 
 **Environment variables:** the client spawns the server itself, so a shell `export` never reaches it — set them in the client's `env` block. Generated backtest code is sandboxed to the allowed run roots, so writing results into a workspace of your own needs `VIBE_TRADING_ALLOWED_RUN_ROOTS`:
 
@@ -2001,7 +2158,7 @@ with `--host` / `--port`.
 
 </details>
 
-**MCP tools exposed (84):** `list_skills`, `load_skill`, `start_research_goal`, `get_research_goal`, `update_research_goal`, `add_goal_evidence`, `update_research_goal_status`, `backtest`, `factor_analysis`, `alpha_zoo`, `alpha_bench`, `analyze_options`, `analyze_options_payoff`, `pattern_recognition`, `read_url`, `read_document`, `web_search`, `write_file`, `read_file`, `read_run_artifact`, `list_backtest_runs`, `list_strategies`, `query_strategies`, `get_strategy_evidence`, `refresh_strategy_evidence`, `adapt_strategy`, `trading_connections`, `trading_select_connection`, `trading_check`, `trading_account`, `trading_positions`, `trading_orders`, `trading_quote`, `trading_history`, `list_swarm_presets`, `run_swarm`, `get_market_data`, `get_fund_flow`, `get_dragon_tiger`, `get_northbound_flow`, `get_southbound_flow`, `get_margin_trading`, `get_block_trades`, `get_shareholder_count`, `get_lockup_expiry`, `get_sector_info`, `get_research_reports`, `get_stock_news`, `get_sec_filings`, `get_financial_statements`, `get_options_chain`, `get_stock_profile`, `screen_market`, `search_symbol`, `get_macro_series`, `iwencai_search`, `qveris_search`, `qveris_inspect`, `qveris_execute`, `get_institutional_holdings`, `etf_holdings`, `prediction_market`, `research_papers`, `get_swarm_status`, `get_run_result`, `list_runs`, `reap_stale_runs`, `retry_run`, `analyze_trade_journal`, `extract_shadow_strategy`, `run_shadow_backtest`, `render_shadow_report`, `scan_shadow_signals`, `quantlib_call`, `cashflow_performance`, `orderbook_depth`, `sentiment`, `technical_indicators`, `get_fundamentals`, `get_fund_nav`, `get_cn_macro_series`, `get_cn_announcements`, `search_broker_reports`, `paper_trade_step`.
+**MCP tools exposed (85):** `list_skills`, `load_skill`, `start_research_goal`, `get_research_goal`, `update_research_goal`, `add_goal_evidence`, `update_research_goal_status`, `backtest`, `factor_analysis`, `alpha_zoo`, `alpha_bench`, `analyze_options`, `analyze_options_payoff`, `pattern_recognition`, `read_url`, `read_document`, `web_search`, `write_file`, `read_file`, `read_run_artifact`, `list_backtest_runs`, `list_strategies`, `query_strategies`, `get_strategy_evidence`, `refresh_strategy_evidence`, `adapt_strategy`, `trading_connections`, `trading_select_connection`, `trading_check`, `trading_account`, `trading_positions`, `trading_orders`, `trading_quote`, `trading_history`, `list_swarm_presets`, `run_swarm`, `get_market_data`, `get_fund_flow`, `get_dragon_tiger`, `get_northbound_flow`, `get_southbound_flow`, `get_margin_trading`, `get_block_trades`, `get_shareholder_count`, `get_lockup_expiry`, `get_sector_info`, `get_research_reports`, `get_stock_news`, `get_sec_filings`, `get_financial_statements`, `get_options_chain`, `get_stock_profile`, `screen_market`, `search_symbol`, `get_macro_series`, `iwencai_search`, `qveris_search`, `qveris_inspect`, `qveris_execute`, `get_institutional_holdings`, `etf_holdings`, `prediction_market`, `research_papers`, `get_swarm_status`, `get_run_result`, `list_runs`, `reap_stale_runs`, `retry_run`, `analyze_trade_journal`, `extract_shadow_strategy`, `run_shadow_backtest`, `render_shadow_report`, `scan_shadow_signals`, `quantlib_call`, `cashflow_performance`, `orderbook_depth`, `sentiment`, `technical_indicators`, `get_fundamentals`, `get_fund_nav`, `get_cn_macro_series`, `get_cn_announcements`, `search_broker_reports`, `paper_trade_step`, `idx_research`.
 
 `web_search` tries its existing Sogou and Bing China fallbacks when ddgs returns
 no results or fails. Set `VIBE_TRADING_SEARCH_BING_FALLBACK=0` to disable both.
@@ -2053,7 +2210,7 @@ Browse on ClawHub: [clawhub.ai/skills/vibe-trading](https://clawhub.ai/skills/vi
 <details>
 <summary><b>OpenSpace — self-evolving skills</b></summary>
 
-All 90 finance skills are published on [open-space.cloud](https://open-space.cloud) and evolve autonomously through OpenSpace's self-evolution engine.
+All 91 finance skills are published on [open-space.cloud](https://open-space.cloud) and evolve autonomously through OpenSpace's self-evolution engine.
 
 To use with OpenSpace, add both MCP servers to your agent config:
 
@@ -2075,7 +2232,7 @@ To use with OpenSpace, add both MCP servers to your agent config:
 }
 ```
 
-OpenSpace will auto-discover all 90 skills, enabling auto-fix, auto-improve, and community sharing. Search for Vibe-Trading skills via `search_skills("finance backtest")` in any OpenSpace-connected agent.
+OpenSpace will auto-discover all 91 skills, enabling auto-fix, auto-improve, and community sharing. Search for Vibe-Trading skills via `search_skills("finance backtest")` in any OpenSpace-connected agent.
 
 </details>
 
@@ -2446,13 +2603,13 @@ Vibe-Trading/
 ├── agent/                          # Backend (Python)
 │   ├── cli/                        # CLI package — interactive TUI + subcommands
 │   ├── api_server.py               # FastAPI server — runs, sessions, upload, swarm, SSE
-│   ├── mcp_server.py               # MCP server — 84 tools for OpenClaw / Claude Desktop
+│   ├── mcp_server.py               # MCP server — 85 tools for OpenClaw / Claude Desktop
 │   │
 │   ├── src/
 │   │   ├── agent/                  # ReAct agent core
 │   │   │   ├── loop.py             #   5-layer compression + read/write tool batching
 │   │   │   ├── context.py          #   system prompt + auto-recall from persistent memory
-│   │   │   ├── skills.py           #   skill loader (90 bundled + user-created via CRUD)
+│   │   │   ├── skills.py           #   skill loader (91 bundled + user-created via CRUD)
 │   │   │   ├── tools.py            #   tool base class + registry
 │   │   │   ├── memory.py           #   lightweight workspace state per run
 │   │   │   ├── frontmatter.py      #   shared YAML frontmatter parser
@@ -2461,7 +2618,7 @@ Vibe-Trading/
 │   │   ├── memory/                 # Cross-session persistent memory
 │   │   │   └── persistent.py       #   file-based memory (~/.vibe-trading/memory/)
 │   │   │
-│   │   ├── tools/                  # 118 auto-discovered agent tools
+│   │   ├── tools/                  # 119 auto-discovered agent tools
 │   │   │   ├── backtest_tool.py    #   run backtests
 │   │   │   ├── remember_tool.py    #   cross-session memory (save/recall/forget)
 │   │   │   ├── skill_writer_tool.py #  skill CRUD (save/patch/delete/file)
@@ -2479,7 +2636,7 @@ Vibe-Trading/
 │   │   ├── api/                    # FastAPI route modules
 │   │   │   └── alpha_routes.py     #   /alpha/list, /alpha/{id}, /alpha/bench, SSE stream
 │   │   │
-│   │   ├── skills/                 # 90 finance skills in 9 categories (SKILL.md each)
+│   │   ├── skills/                 # 91 finance skills in 9 categories (SKILL.md each)
 │   │   ├── swarm/                  # Swarm DAG execution engine
 │   │   │   └── presets/            #   30 swarm preset YAML definitions
 │   │   ├── session/                # Multi-turn chat + FTS5 session search

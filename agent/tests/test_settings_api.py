@@ -684,11 +684,9 @@ def test_get_data_source_settings_lists_default_source_orders(
     assert response.status_code == 200
     entries = response.json()["source_orders"]
     orders = {entry["market"]: entry for entry in entries}
-    assert set(orders) == {
-        "a_share", "us_equity", "hk_equity", "india_equity", "kr_equity",
-        "ca_equity", "ar_equity", "br_equity", "vietnam_equity", "uk_equity", "crypto", "futures",
-        "fund", "macro", "forex", "index",
-    }
+    from backtest.loaders.registry import FALLBACK_CHAINS
+
+    assert set(orders) == set(FALLBACK_CHAINS)
     a_share = orders["a_share"]
     assert a_share["env_var"] == "MARKET_DATA_ORDER_A_SHARE"
     assert a_share["override"] is None
@@ -698,6 +696,11 @@ def test_get_data_source_settings_lists_default_source_orders(
     uk_equity = orders["uk_equity"]
     assert uk_equity["env_var"] == "MARKET_DATA_ORDER_UK_EQUITY"
     assert uk_equity["default_order"][0] == "yahoo"
+    idx = orders["id_equity"]
+    assert idx["env_var"] == "MARKET_DATA_ORDER_ID_EQUITY"
+    assert idx["default_order"] == ["yahoo", "yfinance", "local"]
+    assert idx["effective_order"] == idx["default_order"]
+    assert idx["override"] is None
 
 
 def test_update_source_orders_persists_and_hot_applies(

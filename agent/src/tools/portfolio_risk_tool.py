@@ -16,6 +16,7 @@ from typing import Any, Callable, Mapping
 
 import pandas as pd
 
+from backtest.engines._market_hooks import code_currency
 from backtest.metrics import calc_bars_per_year
 from backtest.risk_xray import MIN_HISTORY_DAYS, PERIODS_PER_YEAR, compute_risk_xray
 from src.agent.tools import BaseTool
@@ -43,7 +44,8 @@ class PortfolioRiskXrayTool(BaseTool):
         "concentration (HHI/effective N), annualized volatility, max drawdown, "
         "historical VaR/expected shortfall, diversification ratio, and "
         "correlation/beta. Long-only; weights are renormalized when they do "
-        "not sum to 1."
+        "not sum to 1. IDX (.JK, IDR) symbols must not be mixed with other "
+        "currencies: there is no FX conversion, so such a basket is refused."
     )
     parameters = {
         "type": "object",
@@ -106,6 +108,7 @@ class PortfolioRiskXrayTool(BaseTool):
             raise ValueError(f"too many symbols ({len(symbols)}); cap is {_MAX_SYMBOLS}")
 
         weights = self._parse_weights(kwargs.get("weights"), symbols)
+        self._reject_idr_blend(symbols)
         source = str(kwargs.get("source") or "auto")
         interval = str(kwargs.get("interval") or "1D").strip()
         start_date, end_date = self._parse_dates(
@@ -148,6 +151,40 @@ class PortfolioRiskXrayTool(BaseTool):
         return json.dumps(envelope, ensure_ascii=False, indent=2, allow_nan=False)
 
     # ------------------------------------------------------------------
+    @staticmethod
+    def _reject_idr_blend(symbols: list[str]) -> None:
+        """Refuse a basket that blends IDR members with any other currency.
+
+        Weighted returns from two currency zones describe no investor's
+        portfolio without FX translation, which this tool does not perform.
+        The check is IDX-scoped so existing non-IDR baskets keep their
+        behavior. A member whose currency cannot be classified counts as a
+        distinct currency, so an IDR basket fails closed rather than guessing.
+
+        Args:
+            symbols: The basket's stripped symbols.
+
+        Raises:
+            ValueError: If an IDR member is combined with another currency.
+        """
+        by_currency: dict[str, list[str]] = {}
+        for sym in symbols:
+            try:
+                currency = code_currency(sym)
+            except ValueError:
+                currency = "UNCLASSIFIED"
+            by_currency.setdefault(currency, []).append(sym)
+        if "IDR" not in by_currency or len(by_currency) == 1:
+            return
+        breakdown = "; ".join(
+            f"{currency}: {', '.join(sorted(members))}"
+            for currency, members in sorted(by_currency.items())
+        )
+        raise ValueError(
+            "portfolio_risk_xray cannot blend IDR with other currencies without "
+            f"FX conversion — {breakdown}. Analyze the IDR members separately."
+        )
+
     @staticmethod
     def _parse_weights(raw: Any, symbols: list[str]) -> dict[str, float]:
         if raw is None:

@@ -1,0 +1,31 @@
+# Review template; not installed or enabled automatically.
+[Unit]
+Description=Vibe-Trading single-operator research
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=exec
+User=vibe-trading
+Group=vibe-trading
+StateDirectory=vibe-trading
+WorkingDirectory=/var/lib/vibe-trading
+Environment=HOME=/var/lib/vibe-trading
+Environment=VIBE_TRADING_HOME=/var/lib/vibe-trading/runtime
+EnvironmentFile=/etc/vibe-trading/server.env
+# Fail before starting the HTTP listener, including when a local proxy is used.
+ExecStartPre=/opt/vibe-trading/venv/bin/python -c "import os,sys; sys.exit(0 if os.environ.get('API_AUTH_KEY', '').strip() else 1)"
+ExecStart=/opt/vibe-trading/venv/bin/vibe-trading serve --host 127.0.0.1 --port 8899
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/vibe-trading
+
+[Install]
+WantedBy=multi-user.target

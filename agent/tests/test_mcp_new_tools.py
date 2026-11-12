@@ -28,6 +28,7 @@ MIRRORED_TOOL_NAMES = (
     "etf_holdings",
     "prediction_market",
     "research_papers",
+    "idx_research",
 )
 
 # Tools that mutate state (is_readonly is not True on the agent side) but are
@@ -75,6 +76,24 @@ def _mcp_tools() -> dict[str, Any]:
     """Return the registered MCP tools keyed by name (public async API)."""
     mod = _import_mcp_server()
     return {tool.name: tool for tool in asyncio.run(mod.mcp.list_tools())}
+
+
+@pytest.mark.parametrize("market, expected", [
+    ("all", {"query": "bank", "limit": 10}),
+    ("idx", {"query": "bank", "limit": 10, "market": "idx"}),
+])
+def test_symbol_search_scope_reaches_registry_without_changing_default_arguments(monkeypatch, market, expected):
+    mod = _import_mcp_server()
+    calls = []
+
+    class RecordingRegistry:
+        def execute(self, name, arguments):
+            calls.append((name, arguments))
+            return '{"ok": true}'
+
+    monkeypatch.setattr(mod, "_get_registry", lambda: RecordingRegistry())
+    assert mod.search_symbol("bank", market=market) == '{"ok": true}'
+    assert calls == [("search_symbol", expected)]
 
 
 def _tool_classes() -> dict[str, Any]:

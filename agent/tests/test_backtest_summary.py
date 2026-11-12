@@ -478,19 +478,19 @@ def test_header_only_equity_csv_yields_empty_preview(summary_run_dir):
 
 
 @pytest.mark.parametrize("relative", ["run_card.json", "artifacts/equity.csv"])
-def test_summary_refuses_artifact_symlink_outside_run(summary_run_dir, tmp_path, relative):
+def test_summary_refuses_artifact_symlink_outside_run(summary_run_dir, tmp_path, relative, make_symlink):
     path = summary_run_dir / relative
     outside = tmp_path / "external"
     outside.write_bytes(path.read_bytes())
     path.unlink()
-    path.symlink_to(outside)
+    make_symlink(path, outside)
     assert try_build_backtest_summary(summary_run_dir) is None
 
 
-def test_ohlcv_paths_skip_external_symlinks_and_directories(summary_run_dir, tmp_path):
+def test_ohlcv_paths_skip_external_symlinks_and_directories(summary_run_dir, tmp_path, make_symlink):
     external = tmp_path / "external.csv"
     external.write_text("timestamp,open\n2024-01-01,1\n")
-    (summary_run_dir / "artifacts/ohlcv_SECRET.csv").symlink_to(external)
+    make_symlink(summary_run_dir / "artifacts/ohlcv_SECRET.csv", external)
     (summary_run_dir / "artifacts/ohlcv_DIRECTORY.csv").mkdir()
     assert set(collect_ohlcv_paths(summary_run_dir)) == {"BTC-USDT"}
 

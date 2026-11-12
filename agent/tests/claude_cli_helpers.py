@@ -7,14 +7,16 @@ subprocess handling runs; every call is logged to disk for the test to inspect.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import textwrap
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Callable
 
 import pytest
 
-from src.providers import claude_cli_models
+from src.providers import claude_cli, claude_cli_models
 
 # Answers one ``claude -p`` turn from a reply list, one reply per call.
 _FAKE_CLI = textwrap.dedent("""\
@@ -23,13 +25,13 @@ _FAKE_CLI = textwrap.dedent("""\
     from pathlib import Path
 
     log = Path(os.environ["FAKE_CLAUDE_LOG"])
-    replies = json.loads(Path(os.environ["FAKE_CLAUDE_REPLIES"]).read_text())
+    replies = json.loads(Path(os.environ["FAKE_CLAUDE_REPLIES"]).read_text(encoding="utf-8"))
     calls = sorted(log.glob("call-*.json"))
     n = len(calls)
     args = sys.argv[1:]
-    system = Path(args[args.index("--system-prompt-file") + 1]).read_text()
+    system = Path(args[args.index("--system-prompt-file") + 1]).read_text(encoding="utf-8")
     record = {{"args": args, "stdin": sys.stdin.read(), "system": system}}
-    (log / f"call-{{n:03d}}.json").write_text(json.dumps(record))
+    (log / f"call-{{n:03d}}.json").write_text(json.dumps(record), encoding="utf-8")
     reply = replies[min(n, len(replies) - 1)]
     if reply.get("sleep"):
         time.sleep(reply["sleep"])
@@ -49,8 +51,8 @@ _FAKE_INIT_CLI = textwrap.dedent("""\
     log = Path(os.environ["FAKE_CLAUDE_LOG"])
     n = len(list(log.glob("init-*.json")))
     record = {{"args": sys.argv[1:], "stdin": sys.stdin.read()}}
-    (log / f"init-{{n:03d}}.json").write_text(json.dumps(record))
-    reply = json.loads(Path(os.environ["FAKE_CLAUDE_REPLIES"]).read_text())
+    (log / f"init-{{n:03d}}.json").write_text(json.dumps(record), encoding="utf-8")
+    reply = json.loads(Path(os.environ["FAKE_CLAUDE_REPLIES"]).read_text(encoding="utf-8"))
     if reply.get("exit"):
         sys.stderr.write("boom")
         sys.exit(reply["exit"])
@@ -71,8 +73,23 @@ def _install(
     script_text: str, log_glob: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> tuple[Path, Calls]:
     script = tmp_path / "claude"
-    script.write_text(script_text.format(python=sys.executable))
+    script.write_text(script_text.format(python=sys.executable), encoding="utf-8")
     script.chmod(0o755)
+    if sys.platform == "win32":
+        # Windows cannot execute a shebang script directly. Adapt only the test
+        # subprocess boundary; keep the real pipes, exit codes and cancellation.
+        def popen(args, **kwargs):
+            return subprocess.Popen([sys.executable, *args], **kwargs)
+
+        def run(args, **kwargs):
+            return subprocess.run([sys.executable, *args], **kwargs)
+
+        monkeypatch.setattr(
+            claude_cli, "subprocess", SimpleNamespace(**{**vars(subprocess), "Popen": popen})
+        )
+        monkeypatch.setattr(
+            claude_cli_models, "subprocess", SimpleNamespace(**{**vars(subprocess), "run": run})
+        )
     log = tmp_path / "log"
     log.mkdir()
     reply_path = tmp_path / "replies.json"
@@ -81,7 +98,7 @@ def _install(
     monkeypatch.setenv("FAKE_CLAUDE_REPLIES", str(reply_path))
 
     def calls() -> list[dict[str, Any]]:
-        return [json.loads(p.read_text()) for p in sorted(log.glob(log_glob))]
+        return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(log.glob(log_glob))]
 
     return reply_path, calls
 
@@ -104,7 +121,7 @@ def install_fake_cli(
     monkeypatch.delenv("CLAUDE_CLI_BASH_POLICY", raising=False)
 
     def set_replies(*replies: dict[str, Any]) -> None:
-        reply_path.write_text(json.dumps(list(replies)))
+        reply_path.write_text(json.dumps(list(replies)), encoding="utf-8")
 
     return set_replies, calls
 
@@ -129,7 +146,7 @@ def install_fake_init_cli(
     monkeypatch.setattr(claude_cli_models, "_model_cache", {})
 
     def set_reply(reply: dict[str, Any]) -> None:
-        reply_path.write_text(json.dumps(reply))
+        reply_path.write_text(json.dumps(reply), encoding="utf-8")
 
     return set_reply, calls
 

@@ -262,6 +262,97 @@ def _compute_bollinger(
     }
 
 
+def summarize_technical_data_json(
+    data: dict[str, Any], symbol: str, interval: str, lookback: int,
+    end_date: str, *, pinned_boundary: bool,
+) -> str:
+    """Compute the existing indicators from one already acquired dataset.
+
+    No fetching, filling or resampling occurs here. The agent tool and watchlist
+    use this same computation so chart rows and indicators share an observation.
+    """
+    df = data.get(symbol)
+    if df is None:
+        return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
+    if isinstance(df, pd.DataFrame) and df.empty:
+        return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
+    if isinstance(df, list) and not df:
+        return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
+    if isinstance(df, dict) and not df:
+        return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
+    if isinstance(df, dict) and df.get("truncated") is True:
+        return json.dumps(
+            {
+                "ok": False,
+                "error": "Indicator calculation requires consecutive, untruncated bars",
+            }
+        )
+
+    close = _extract_close_series(df)
+    if close is None or close.empty:
+        return json.dumps({"ok": False, "error": "No close price column in data"})
+    close = close.sort_index(kind="stable").tail(lookback)
+
+    volume = _extract_volume_series(df)
+    if volume is not None:
+        volume = volume.sort_index(kind="stable")
+        if isinstance(close.index, pd.DatetimeIndex) and isinstance(
+            volume.index, pd.DatetimeIndex
+        ):
+            volume = volume.reindex(close.index)
+        else:
+            volume = volume.tail(len(close)).reset_index(drop=True)
+    volume_stats = (
+        _compute_volume_stats(volume)
+        if volume is not None
+        else {"latest": None, "sma_20": None, "ratio_20": None}
+    )
+    provenance = (data.get("_provenance") or {}).get(symbol)
+    volume_stats["unit"] = (
+        provenance.get("volume_unit") if isinstance(provenance, dict) else None
+    )
+
+    # ── Compute indicators ────────────────────────────────────────────
+    indicators: dict[str, Any] = {
+        "rsi_14": _compute_rsi(close),
+        "macd": _compute_macd(close),
+        "bollinger": _compute_bollinger(close),
+        "volume": volume_stats,
+    }
+    for period in _SMA_PERIODS:
+        indicators[f"sma_{period}"] = _compute_sma(close, period)
+    indicators[f"ema_{_EMA_PERIOD}"] = _compute_ema(close, _EMA_PERIOD)
+
+    latest_close = float(close.iloc[-1]) if len(close) > 0 else None
+    latest_date = (
+        str(close.index[-1])[:10]
+        if isinstance(close.index, pd.DatetimeIndex) and len(close) > 0
+        else None
+    )
+
+    return json.dumps(
+        {
+            "ok": True,
+            "symbol": symbol,
+            "interval": interval,
+            "latest_close": latest_close,
+            "latest_date": latest_date,
+            "read_identity": {
+                "mode": "pinned_boundary" if pinned_boundary else "latest_boundary",
+                "requested_end_date": end_date,
+                "bar_count": len(close),
+                "dataset_fingerprint": _dataset_fingerprint(
+                    close, volume, interval
+                ),
+                "provenance": provenance if isinstance(provenance, dict) else None,
+            },
+            "indicators": indicators,
+        },
+        ensure_ascii=False,
+        default=str,
+    )
+
+
 class TechnicalIndicatorTool(BaseTool):
     """Compute common technical indicators for a symbol.
 
@@ -377,83 +468,7 @@ class TechnicalIndicatorTool(BaseTool):
             logger.debug("fetch_market_data failed for %s: %s", symbol, exc)
             return json.dumps({"ok": False, "error": f"Failed to fetch data: {exc}"})
 
-        df = data.get(symbol)
-        if df is None:
-            return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
-        if isinstance(df, pd.DataFrame) and df.empty:
-            return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
-        if isinstance(df, list) and not df:
-            return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
-        if isinstance(df, dict) and not df:
-            return json.dumps({"ok": False, "error": f"No data returned for {symbol}"})
-        if isinstance(df, dict) and df.get("truncated") is True:
-            return json.dumps(
-                {
-                    "ok": False,
-                    "error": "Indicator calculation requires consecutive, untruncated bars",
-                }
-            )
-
-        close = _extract_close_series(df)
-        if close is None or close.empty:
-            return json.dumps({"ok": False, "error": "No close price column in data"})
-        close = close.sort_index(kind="stable").tail(lookback)
-
-        volume = _extract_volume_series(df)
-        if volume is not None:
-            volume = volume.sort_index(kind="stable")
-            if isinstance(close.index, pd.DatetimeIndex) and isinstance(
-                volume.index, pd.DatetimeIndex
-            ):
-                volume = volume.reindex(close.index)
-            else:
-                volume = volume.tail(len(close)).reset_index(drop=True)
-        volume_stats = (
-            _compute_volume_stats(volume)
-            if volume is not None
-            else {"latest": None, "sma_20": None, "ratio_20": None}
-        )
-        provenance = (data.get("_provenance") or {}).get(symbol)
-        volume_stats["unit"] = (
-            provenance.get("volume_unit") if isinstance(provenance, dict) else None
-        )
-
-        # ── Compute indicators ────────────────────────────────────────────
-        indicators: dict[str, Any] = {
-            "rsi_14": _compute_rsi(close),
-            "macd": _compute_macd(close),
-            "bollinger": _compute_bollinger(close),
-            "volume": volume_stats,
-        }
-        for period in _SMA_PERIODS:
-            indicators[f"sma_{period}"] = _compute_sma(close, period)
-        indicators[f"ema_{_EMA_PERIOD}"] = _compute_ema(close, _EMA_PERIOD)
-
-        latest_close = float(close.iloc[-1]) if len(close) > 0 else None
-        latest_date = (
-            str(close.index[-1])[:10]
-            if isinstance(close.index, pd.DatetimeIndex) and len(close) > 0
-            else None
-        )
-
-        return json.dumps(
-            {
-                "ok": True,
-                "symbol": symbol,
-                "interval": interval,
-                "latest_close": latest_close,
-                "latest_date": latest_date,
-                "read_identity": {
-                    "mode": "pinned_boundary" if end_date_raw else "latest_boundary",
-                    "requested_end_date": end_date,
-                    "bar_count": len(close),
-                    "dataset_fingerprint": _dataset_fingerprint(
-                        close, volume, interval
-                    ),
-                    "provenance": provenance if isinstance(provenance, dict) else None,
-                },
-                "indicators": indicators,
-            },
-            ensure_ascii=False,
-            default=str,
+        return summarize_technical_data_json(
+            data, symbol, interval, lookback, end_date,
+            pinned_boundary=bool(end_date_raw),
         )

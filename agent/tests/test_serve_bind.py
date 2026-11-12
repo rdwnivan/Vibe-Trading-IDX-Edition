@@ -25,6 +25,12 @@ import api_server
 _BIND_WARN = "without API_AUTH_KEY set"
 
 
+@pytest.fixture(autouse=True)
+def isolate_frontend_mounts(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep serve_main's static mount local to the test that starts it."""
+    monkeypatch.setattr(api_server.app.router, "routes", list(api_server.app.routes))
+
+
 @pytest.mark.unit
 @pytest.mark.parametrize(
     "host, expected",
@@ -47,8 +53,8 @@ def test_is_loopback_bind_host(host: str, expected: bool) -> None:
 def _run_serve(argv: list[str]) -> str | None:
     """Invoke serve_main with uvicorn stubbed; return the host it bound to.
 
-    The frontend mount / static-file branches are short-circuited because
-    uvicorn.run raises SystemExit before reaching the server loop.
+    Frontend mounting runs normally; uvicorn.run raises SystemExit before
+    reaching the server loop. The fixture restores the original route list.
     """
     captured: dict[str, object] = {}
 
@@ -67,6 +73,20 @@ def _run_serve(argv: list[str]) -> str | None:
 @pytest.mark.unit
 def test_serve_defaults_to_loopback() -> None:
     assert _run_serve([]) == "127.0.0.1"
+
+
+@pytest.mark.parametrize("backend_host", ["127.0.0.1", "0.0.0.0"])
+def test_dev_frontend_stays_on_loopback(backend_host: str, tmp_path: Path) -> None:
+    from fastapi import FastAPI
+    from src.api.server_cli import serve
+
+    (tmp_path / "frontend").mkdir()
+    with mock.patch("subprocess.Popen") as spawn, mock.patch("uvicorn.run"):
+        result = serve(FastAPI(), ["--dev", "--host", backend_host], repo_root=tmp_path)
+
+    assert result == 0
+    assert spawn.call_args.args[0] == ["npx", "vite", "--host", "127.0.0.1"]
+    spawn.return_value.terminate.assert_called_once_with()
 
 
 @pytest.mark.unit

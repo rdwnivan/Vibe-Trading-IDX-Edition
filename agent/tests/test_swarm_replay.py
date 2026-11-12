@@ -281,7 +281,7 @@ def test_replay_rehomes_only_artifacts_subtree(tmp_path, workers_succeed):
     assert reloaded.status == RunStatus.completed
 
 
-def test_replay_artifact_destination_symlink_escape_blocked(tmp_path, workers_succeed):
+def test_replay_artifact_destination_symlink_escape_blocked(tmp_path, workers_succeed, make_symlink):
     """A symlink planted in the new run's artifact tree must not redirect a
     re-homed artifact outside the run directory."""
     outside = tmp_path / "outside"
@@ -294,7 +294,7 @@ def test_replay_artifact_destination_symlink_escape_blocked(tmp_path, workers_su
     fresh = _make_dag_run("r-new", RunStatus.pending)
     store.create_run(fresh)
     # Plant a symlink where the re-home would create the agent artifact dir.
-    (store.run_dir("r-new") / "artifacts" / "analyst").symlink_to(
+    make_symlink(store.run_dir("r-new") / "artifacts" / "analyst",
         outside, target_is_directory=True
     )
 
@@ -439,7 +439,7 @@ def test_replay_rejects_dotdot_artifact_clobber(tmp_path, workers_succeed):
     assert reloaded.status == RunStatus.completed
 
 
-def test_replay_source_symlink_artifact_dropped(tmp_path, workers_succeed):
+def test_replay_source_symlink_artifact_dropped(tmp_path, workers_succeed, make_symlink):
     """A symlinked component in the SOURCE artifact tree (artifacts/analyst ->
     tasks) must not redirect a re-homed artifact onto task files."""
     store = SwarmStore(base_dir=tmp_path)
@@ -462,7 +462,7 @@ def test_replay_source_symlink_artifact_dropped(tmp_path, workers_succeed):
     run_dir = store.run_dir(original.id)
     analyst = run_dir / "artifacts" / "analyst"
     analyst.parent.mkdir(parents=True, exist_ok=True)
-    analyst.symlink_to(run_dir / "tasks", target_is_directory=True)
+    make_symlink(analyst, run_dir / "tasks", target_is_directory=True)
 
     fresh = _make_dag_run("r-new", RunStatus.pending)
     store.create_run(fresh)
@@ -570,7 +570,7 @@ def test_replay_reexecutes_dependents_of_reexecuted_upstream(tmp_path, workers_s
     assert [tid for tid, _ in workers_succeed.calls] == ["t-x", "t-y", "t-z"]
 
 
-def test_replay_destination_artifacts_dir_symlink_escape_blocked(tmp_path, workers_succeed):
+def test_replay_destination_artifacts_dir_symlink_escape_blocked(tmp_path, workers_succeed, make_symlink):
     """A symlink replacing the NEW run's whole artifacts/ dir must not let a
     re-homed artifact write outside the run — the containment check is against
     both the run root and the artifacts subtree, so the symlink cannot redefine
@@ -588,7 +588,7 @@ def test_replay_destination_artifacts_dir_symlink_escape_blocked(tmp_path, worke
     # dir (as a tampering process with run-dir access could before the overlay).
     artifacts_rd = store.run_dir("r-new") / "artifacts"
     artifacts_rd.rmdir()
-    artifacts_rd.symlink_to(outside, target_is_directory=True)
+    make_symlink(artifacts_rd, outside, target_is_directory=True)
 
     runtime._execute_run(fresh, threading.Event(), resume_from=original)
 

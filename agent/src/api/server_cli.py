@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from fastapi import FastAPI
+from src.api.frontend import resolve_frontend_dist
 from src.api.security import (
     _is_loopback_bind_host, _configured_api_key, install_access_log_redaction_filter,
 )
@@ -31,14 +32,16 @@ def serve(app: FastAPI, argv: list[str] | None, *, repo_root: Path) -> int:
             f"but consider using --host 127.0.0.1 for local-only access."
         )
 
-    frontend_dist = repo_root / "frontend" / "dist"
+    frontend_dist = resolve_frontend_dist(repo_root)
     frontend_root = repo_root / "frontend"
 
     vite_proc = None
     if args.dev and frontend_root.exists():
         print("[dev] Starting Vite dev server on :5173 ...")
         vite_proc = subprocess.Popen(
-            ["npx", "vite", "--host", "0.0.0.0"],
+            # Vite is an unauthenticated development server, even when the
+            # separately authenticated API is explicitly bound remotely.
+            ["npx", "vite", "--host", "127.0.0.1"],
             cwd=str(frontend_root),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -46,7 +49,7 @@ def serve(app: FastAPI, argv: list[str] | None, *, repo_root: Path) -> int:
         print(f"[dev] Vite PID={vite_proc.pid}")
         print("[dev] Frontend: http://localhost:5173")
         print(f"[dev] API: http://localhost:{args.port}")
-    elif frontend_dist.exists():
+    elif (frontend_dist / "index.html").is_file():
         if not any(getattr(route, "path", None) == "/" for route in app.routes):
             app.mount("/", SPAStaticFiles(directory=str(frontend_dist), html=True), name="frontend")
         print(f"[prod] Frontend served from {frontend_dist}")

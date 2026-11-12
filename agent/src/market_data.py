@@ -230,6 +230,7 @@ def fetch_market_data(
     """
     from backtest.engines._market_hooks import _detect_market
     from backtest.loaders.base import NoAvailableSourceError, resample_bars, source_interval
+    from backtest.loaders.idx_contract import validate_idx_interval
     from backtest.loaders.registry import (
         FALLBACK_CHAINS,
         _NO_NETWORK_FALLBACK_SOURCES,
@@ -244,6 +245,7 @@ def fetch_market_data(
     # another code path). Snapshot-gated: no-op when nothing changed.
     refresh_source_order_overrides()
 
+    validate_idx_interval(codes, interval)
     results: dict[str, Any] = {}
     provenance: dict[str, dict[str, Any]] = {}
     diagnostics: dict[str, list[dict[str, str]]] = {}
@@ -276,6 +278,10 @@ def fetch_market_data(
         market_chain = FALLBACK_CHAINS.get(market, [])
         if src in market_chain:
             return market_chain
+        if market == "id_equity":
+            # An explicit non-IDX source cannot lend its other-market chain
+            # to .JK. Try only the requested source and report its absence.
+            return [src]
         for chain in FALLBACK_CHAINS.values():
             if src in chain:
                 return chain
@@ -348,6 +354,10 @@ def fetch_market_data(
                 logger.debug("loader %r resolver failed: %s", attempt_src, exc)
                 continue
             serving_source = getattr(loader_cls, "name", None) or attempt_src
+            if market == "id_equity" and market not in getattr(loader_cls, "markets", set()):
+                record(remaining, serving_source, "source_unavailable")
+                logger.warning("market-data source %r does not declare IDX support", serving_source)
+                continue
             if serving_source in attempted_providers:
                 continue
             attempted_providers.add(serving_source)
@@ -447,23 +457,37 @@ def fetch_market_data(
             quote_currency = frame_attrs.get("quote_currency")
             if isinstance(quote_currency, str) and quote_currency:
                 entry["quote_currency"] = quote_currency
+            if market == "id_equity":
+                entry.update(
+                    symbol=symbol, market=market, exchange="IDX",
+                    exchange_timezone="Asia/Jakarta", interval=interval,
+                    reporting_period=None,
+                    attempts=diagnostics.get(symbol, []),
+                )
+                for key in ("retrieved_at", "data_as_of", "freshness", "data_delay", "data_quality"):
+                    entry[key] = frame_attrs.get(key, "unknown")
             if extra_provenance:
                 entry.update(extra_provenance)
             provenance[symbol] = entry
 
     for (src, market), src_codes in groups.items():
-        data_map, used_source, provider_cls, symbol_sources = _fetch_via_chain(
-            src, market, src_codes
-        )
-        for symbol, df in data_map.items():
-            symbol_source, symbol_provider_cls = symbol_sources.get(
-                symbol, (used_source, provider_cls)
+        # IDX loaders raise on a defective series. Isolate that rejection so
+        # one symbol cannot discard healthy peers or give them false failure
+        # provenance. Other markets retain their existing batch acquisition.
+        batches = [[code] for code in dict.fromkeys(src_codes)] if market == "id_equity" else [src_codes]
+        for batch in batches:
+            data_map, used_source, provider_cls, symbol_sources = _fetch_via_chain(
+                src, market, batch
             )
-            _emit(
-                symbol, df,
-                src=src, used_source=symbol_source, provider_cls=symbol_provider_cls,
-                market=market,
-            )
+            for symbol, df in data_map.items():
+                symbol_source, symbol_provider_cls = symbol_sources.get(
+                    symbol, (used_source, provider_cls)
+                )
+                _emit(
+                    symbol, df,
+                    src=src, used_source=symbol_source, provider_cls=symbol_provider_cls,
+                    market=market,
+                )
 
     unresolved = [
         code

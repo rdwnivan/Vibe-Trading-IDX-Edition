@@ -214,10 +214,10 @@ def test_run_dir_outside_allowed_roots_rejected(
     assert "run roots" in env["error"]
 
 
-def test_symlink_escape_rejected(run_dir: Path, tmp_path: Path) -> None:
+def test_symlink_escape_rejected(run_dir: Path, tmp_path: Path, make_symlink) -> None:
     secret = tmp_path / "secret.csv"
     secret.write_text("a\n1\n", encoding="utf-8")
-    (run_dir / "artifacts" / "trades.csv").symlink_to(secret)
+    make_symlink(run_dir / "artifacts" / "trades.csv", secret)
     env = json.loads(read_run_artifact(str(run_dir), "trades"))
     assert env["ok"] is False
 
@@ -292,11 +292,12 @@ def test_tampered_manifest_absolute_path_refused(run_dir: Path, tmp_path: Path) 
 
 
 def test_manifest_symlink_entry_escaping_run_dir_refused(
-    run_dir: Path, tmp_path: Path
+    run_dir: Path, tmp_path: Path,
+    make_symlink,
 ) -> None:
     secret = tmp_path / "secret.csv"
     secret.write_text("a\n1\n", encoding="utf-8")
-    (run_dir / "artifacts" / "link.csv").symlink_to(secret)
+    make_symlink(run_dir / "artifacts" / "link.csv", secret)
     _write_run_card(run_dir, [_manifest_entry(run_dir, "artifacts/link.csv")])
     env = json.loads(read_run_artifact(str(run_dir), "artifacts/link.csv"))
     assert env["ok"] is False

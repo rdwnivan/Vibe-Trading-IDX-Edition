@@ -20,11 +20,9 @@ def test_session_models_emit_timezone_aware_iso_timestamps() -> None:
 
 
 def test_sending_a_message_keeps_updated_at_aware_and_sessions_in_order(
-    monkeypatch, tmp_path: Path
+    monkeypatch, tmp_path: Path, local_timezone
 ) -> None:
     import asyncio
-    import os
-    import time
 
     from src.session.events import EventBus
     from src.session.service import SessionService
@@ -37,9 +35,6 @@ def test_sending_a_message_keeps_updated_at_aware_and_sessions_in_order(
         def index_message(self, *args, **kwargs) -> None:
             pass
 
-    # Off UTC a naive local stamp sorts by wall-clock digits, not by instant.
-    monkeypatch.setenv("TZ", "Asia/Shanghai")
-    time.tzset()
     monkeypatch.setattr("src.session.service.get_shared_index", lambda: _NoIndex())
     service = SessionService(
         store=SessionStore(tmp_path / "sessions"), event_bus=EventBus(), runs_dir=tmp_path / "runs"
@@ -55,11 +50,7 @@ def test_sending_a_message_keeps_updated_at_aware_and_sessions_in_order(
         await service.send_message(older.session_id, "hello")
         await service._active_tasks[older.session_id]
 
-    try:
-        asyncio.run(_send())
-        service.create_session(title="newer")
-        assert datetime.fromisoformat(service.get_session(older.session_id).updated_at).tzinfo is not None
-        assert [s.title for s in service.list_sessions()] == ["newer", "older"]
-    finally:
-        monkeypatch.undo()
-        time.tzset()
+    asyncio.run(_send())
+    service.create_session(title="newer")
+    assert datetime.fromisoformat(service.get_session(older.session_id).updated_at).tzinfo is not None
+    assert [s.title for s in service.list_sessions()] == ["newer", "older"]

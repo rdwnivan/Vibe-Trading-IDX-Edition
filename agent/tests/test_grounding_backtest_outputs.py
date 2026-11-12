@@ -457,11 +457,11 @@ def test_real_engine_archive_is_accepted_only_for_its_own_call(
     assert checked.valid, checked.issues
 
 
-def test_metrics_symlink_cannot_supply_another_runs_evidence(tmp_path: Path) -> None:
+def test_metrics_symlink_cannot_supply_another_runs_evidence(tmp_path: Path, make_symlink) -> None:
     active, sibling = tmp_path / "active", tmp_path / "sibling"
     _write_backtest(sibling, RP)
     (active / "artifacts").mkdir(parents=True)
-    (active / "artifacts" / "metrics.csv").symlink_to(sibling / "artifacts" / "metrics.csv")
+    make_symlink(active / "artifacts" / "metrics.csv", sibling / "artifacts" / "metrics.csv")
     ledger = GroundingLedger(run_dir=active, user_message="Compare backtests")
     _backtest(ledger, active, "bt-active")
     assert not ledger._analysis_metrics
@@ -916,12 +916,12 @@ def test_structured_reader_checks_engine_hash_and_scope(
     assert not two_runs.validate_final_answer(wrong).valid
 
 
-def test_external_symlink_is_not_registered_as_engine_table(tmp_path: Path) -> None:
+def test_external_symlink_is_not_registered_as_engine_table(tmp_path: Path, make_symlink) -> None:
     _write_backtest(tmp_path / "rp", RP)
     _write_backtest(tmp_path / "ew", EW)
     target = tmp_path / "rp" / "artifacts" / "target_positions.csv"
     target.unlink()
-    target.symlink_to(tmp_path / "ew" / "artifacts" / "target_positions.csv")
+    make_symlink(target, tmp_path / "ew" / "artifacts" / "target_positions.csv")
     ledger = GroundingLedger(run_dir=tmp_path, user_message="回测风险平价")
     _backtest(ledger, tmp_path / "rp", "bt-rp")
     _read(ledger, target, "read-sibling")

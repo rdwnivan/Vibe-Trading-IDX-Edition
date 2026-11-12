@@ -345,11 +345,11 @@ def test_auxiliary_operations_refuse_parent_traversal(tmp_path, action):
 
 
 @pytest.mark.parametrize("action", ["write", "remove"])
-def test_auxiliary_operations_refuse_symlink_into_forbidden_sibling(tmp_path, action):
+def test_auxiliary_operations_refuse_symlink_into_forbidden_sibling(tmp_path, action, make_symlink):
     skill = tmp_path / "demo"
     (skill / "private").mkdir(parents=True)
     (skill / "private/data").write_text("original")
-    (skill / "assets").symlink_to(skill / "private", target_is_directory=True)
+    make_symlink(skill / "assets", skill / "private", target_is_directory=True)
     with patch("src.tools.skill_writer_tool.USER_SKILLS_DIR", tmp_path):
         result = json.loads(SkillFileTool().execute(action=action, skill_name="demo", path="assets/data", content="poison"))
     assert result["status"] == "error"

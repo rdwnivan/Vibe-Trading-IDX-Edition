@@ -54,10 +54,7 @@ if str(AGENT_DIR) not in sys.path:
 # test redirecting home gets its own root on every platform and needs no
 # knowledge of this sandbox. On Windows ``Path.home()`` ignores $HOME and reads
 # %USERPROFILE%, so both spellings are set.
-_PRIOR_SANDBOX_ENV = {
-    key: os.environ.get(key)
-    for key in ("VIBE_TRADING_HOME", "HOME", "USERPROFILE", "PYTHONPATH")
-}
+_PRIOR_SANDBOX_ENV = {key: os.environ.get(key) for key in ("VIBE_TRADING_HOME", "HOME", "USERPROFILE", "PYTHONPATH")}
 
 # Outcome guard, armed BEFORE the redirect so it reuses the app's own resolution
 # rather than restating it. The assertions in _sandbox_runtime_root check that
@@ -69,9 +66,7 @@ _PRIOR_SANDBOX_ENV = {
 # they move only on a real live action, so they cannot produce noise.
 from src.config.paths import get_runtime_root  # noqa: E402 — needs AGENT_DIR above
 
-_REAL_LEDGERS = tuple(
-    get_runtime_root() / "live" / name for name in ("audit.jsonl", "audit_chain.jsonl")
-)
+_REAL_LEDGERS = tuple(get_runtime_root() / "live" / name for name in ("audit.jsonl", "audit_chain.jsonl"))
 # The sandbox root is RESOLVED. On macOS ``tempfile.mkdtemp()`` returns a path
 # under ``/var/folders/...``, which is a symlink to ``/private/var/folders/...``.
 # Handing the unresolved form to HOME breaks every guard that compares a
@@ -90,8 +85,7 @@ os.environ["USERPROFILE"] = str(_SANDBOX_HOME)
 # Scrub them for the session; override tests set them explicitly and restore
 # defaults themselves. Must run before any test module imports the registry.
 _PRIOR_SOURCE_ORDER_ENV = {
-    key: os.environ.pop(key)
-    for key in [k for k in list(os.environ) if k.startswith("MARKET_DATA_ORDER_")]
+    key: os.environ.pop(key) for key in [k for k in list(os.environ) if k.startswith("MARKET_DATA_ORDER_")]
 }
 
 # Tests that spawn a subprocess hand it this environment, HOME included. On a
@@ -106,9 +100,7 @@ _PRIOR_SOURCE_ORDER_ENV = {
 if site.ENABLE_USER_SITE and site.USER_SITE and Path(site.USER_SITE).is_dir():
     _prior_path = os.environ.get("PYTHONPATH", "")
     if site.USER_SITE not in _prior_path.split(os.pathsep):
-        os.environ["PYTHONPATH"] = os.pathsep.join(
-            part for part in (site.USER_SITE, _prior_path) if part
-        )
+        os.environ["PYTHONPATH"] = os.pathsep.join(part for part in (site.USER_SITE, _prior_path) if part)
 
 
 def _ledger_state() -> dict[str, tuple[int, int] | None]:
@@ -201,3 +193,37 @@ def _reset_env_config():
     os.environ.clear()
     os.environ.update(saved_environ)
     reset_env_config()
+
+
+@pytest.fixture
+def make_symlink():
+    """Create a real symlink or report missing Windows symlink privilege."""
+
+    def create(link: Path, target: Path, *, target_is_directory: bool = False) -> None:
+        try:
+            link.symlink_to(target, target_is_directory=target_is_directory)
+        except OSError as exc:
+            if getattr(exc, "winerror", None) != 1314:
+                raise
+            pytest.skip("WinError 1314: native symlink privilege unavailable; symlink assertion not exercised")
+
+    return create
+
+
+@pytest.fixture(params=[None, "Asia/Shanghai"], ids=["host-timezone", "non-utc-timezone"])
+def local_timezone(request, monkeypatch):
+    """Keep timestamp assertions runnable when the host lacks POSIX tzset."""
+    import time
+
+    if request.param is None:
+        yield
+        return
+    if not hasattr(time, "tzset"):
+        pytest.skip("Changing the process timezone requires POSIX time.tzset")
+    try:
+        with monkeypatch.context() as patch:
+            patch.setenv("TZ", request.param)
+            time.tzset()
+            yield
+    finally:
+        time.tzset()

@@ -1,0 +1,3 @@
+# Fixture manifests identify exact bytes across Windows and POSIX checkouts.
+agent/tests/fixtures/paper_trade/market/*.json text eol=lf
+agent/tests/fixtures/paper_trade/5m/*/*.csv text eol=lf

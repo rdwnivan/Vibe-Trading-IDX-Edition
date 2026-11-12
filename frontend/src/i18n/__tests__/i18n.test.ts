@@ -175,6 +175,15 @@ describe("i18n utilities", () => {
 // Key parity cannot detect a locale filled with copied English or mojibake.
 // International names and words also used verbatim in Turkish stay unchanged.
 describe("new locale content", () => {
+  it.each(Object.entries(locales).filter(([code]) => !["id", "tr"].includes(code)))("%s translates IDX research and navigation text", (_code, locale) => {
+    const copied = Object.entries(collectStrings(locale))
+      .filter(([key, value]) => (
+        key.startsWith("idxResearch.") || key.endsWith(".idxResearch")
+      ) && value === enStrings[key])
+      .map(([key]) => key);
+    expect(copied).toEqual([]);
+  });
+
   it("Turkish does not ship copied English UI text", () => {
     const sharedTerms = new Set([
       "SDK", "Sharpe", "Model", "AppID", "AppSecret", "IMAP SSL", "IMAP STARTTLS",

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shlex
 import sys
 from types import SimpleNamespace
 
@@ -166,7 +168,8 @@ def test_shared_execution_rewrites_allowed_python(tmp_path, shared_policy) -> No
     _call(agent, "bash", {"command": "python report.py"}, tmp_path)
 
     assert len(tool.calls) == 1
-    assert tool.calls[0]["command"].startswith(sys.executable)
+    words = shlex.split(tool.calls[0]["command"], posix=os.name != "nt")
+    assert words[0].strip('"') == sys.executable
 
 
 def test_shared_execution_fail_closed_for_a_directly_denied_tool(tmp_path, shared_policy) -> None:
@@ -272,6 +275,61 @@ def test_python_screening_is_idempotent_across_adapter_and_registry():
     second, reason = tool_policy.check_bash_command(first)
     assert reason is None
     assert second == first
+
+
+@pytest.mark.parametrize("command", [
+    'python -c "print(1)"',
+    "python -c 'print(\"quoted\")'",
+    r"python script.py 'data\bars.csv'",
+    "python script.py 'argument with spaces'",
+    "python script.py 'ends\\'",
+])
+def test_python_screening_preserves_arguments_after_repeated_checks(command):
+    first, reason = tool_policy.check_bash_command(command)
+    assert reason is None
+    second, reason = tool_policy.check_bash_command(first)
+    assert reason is None
+    assert second == first
+
+
+@pytest.mark.parametrize("operator", [";", "&&", "||", "|", ">", "<", "(", ")", "&"])
+def test_normalized_python_command_does_not_allow_appended_shell_operators(operator):
+    first, reason = tool_policy.check_bash_command('python -c "print(1)"')
+    assert reason is None
+
+    rewritten, reason = tool_policy.check_bash_command(f"{first} {operator} echo injected")
+
+    assert rewritten is None
+    assert reason
+
+
+@pytest.mark.parametrize(("raw", "expected"), [
+    ("python -c 'print(\"policy fixture\")'", "policy fixture"),
+    ('python -c "print(\'literal&text\')"', "literal&text"),
+    ('python -c "print(\'literal|text\')"', "literal|text"),
+])
+def test_normalized_python_command_executes_with_real_shell_quoting(tmp_path, raw, expected):
+    import subprocess
+
+    command, reason = tool_policy.check_bash_command(raw)
+    assert reason is None
+    checked, reason = tool_policy.check_bash_command(command)
+    assert reason is None
+
+    result = subprocess.run(checked, shell=True, cwd=tmp_path, capture_output=True, text=True, timeout=10)
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == expected
+
+
+@pytest.mark.parametrize("operator", ["&", "|", "<", ">"])
+def test_windows_rejects_quoted_metacharacters_that_cmd_would_reinterpret(monkeypatch, operator):
+    patch_module_os(monkeypatch, tool_policy, name="nt")
+
+    command, reason = tool_policy.check_bash_command(f"python -c 'print(\"literal{operator}text\")'")
+
+    assert command is None
+    assert ".py script" in reason
 
 
 def test_windows_python_paths_use_cmd_quoting(monkeypatch):

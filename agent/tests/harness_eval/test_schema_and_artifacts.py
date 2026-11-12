@@ -93,11 +93,32 @@ def test_trace_sidecar_cannot_escape_trace_directory(artifact_dir: Path) -> None
     assert "secret" not in bundle.errors["trace"]
 
 
-def test_known_artifact_symlink_cannot_escape_run_directory(artifact_dir: Path) -> None:
+def test_known_artifact_resolving_outside_run_directory_is_rejected(
+    artifact_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Exercise confinement even on hosts that cannot create native symlinks."""
+    outside = tmp_path / "outside.json"
+    outside.write_text(json.dumps({"prompt": "private"}), encoding="utf-8")
+    real_resolve = Path.resolve
+    request_path = artifact_dir / "req.json"
+
+    def resolve(path: Path, *args, **kwargs):
+        return outside if path == request_path else real_resolve(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", resolve)
+
+    bundle = ArtifactBundle.load(artifact_dir)
+
+    assert bundle.req is None
+    assert "escaped" in bundle.errors["req"]
+    assert '"prompt"' not in bundle.errors["req"]
+
+
+def test_known_artifact_symlink_cannot_escape_run_directory(artifact_dir: Path, make_symlink) -> None:
     outside = artifact_dir.parent / "outside.json"
     outside.write_text(json.dumps({"prompt": "private"}), encoding="utf-8")
     (artifact_dir / "req.json").unlink()
-    (artifact_dir / "req.json").symlink_to(outside)
+    make_symlink(artifact_dir / "req.json", outside)
 
     bundle = ArtifactBundle.load(artifact_dir)
 

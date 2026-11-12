@@ -31,6 +31,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.live.paths import broker_dir, live_root
+from src.atomic_file import replace_with_retry
 from src.live.runtime.scheduler import Job
 
 logger = logging.getLogger(__name__)
@@ -157,7 +158,7 @@ class JobStore:
                         raise OSError("job store write made no progress")
                     remaining = remaining[written:]
                 os.fsync(handle.fileno())
-            os.replace(tmp, target)
+            replace_with_retry(tmp, target, replace=os.replace)
             self._fsync_dir(target.parent)
         finally:
             tmp.unlink(missing_ok=True)

@@ -13,6 +13,7 @@ from __future__ import annotations
 import ast
 import inspect
 import json
+from importlib import metadata
 from pathlib import Path
 
 import pytest
@@ -245,15 +246,17 @@ def test_manifest_rejects_empty_run_id_or_timestamp() -> None:
 def test_collect_key_package_versions_reflects_real_environment() -> None:
     """Sanity check against the actual installed environment (no mocking).
 
-    vibe-trading-ai is installed editable in this checkout (pyproject.toml
-    pins 0.1.13 at the time this test was written); numpy is a hard
-    dependency so it must resolve; arch is an optional 'stats' extra that is
-    NOT installed in this environment, proving the None-when-absent path is
-    real, not merely a documented intent.
+    Source-tree testing does not require an installed project distribution.
+    Missing distribution metadata must remain None instead of borrowing the
+    source version. Numpy is a hard dependency and must resolve.
     """
     versions = collect_key_package_versions()
     assert versions["numpy"] is not None
-    assert versions["vibe-trading-ai"] is not None
+    try:
+        installed_version = metadata.distribution("vibe-trading-ai").version
+    except metadata.PackageNotFoundError:
+        installed_version = None
+    assert versions["vibe-trading-ai"] == installed_version
     assert "python" in versions and versions["python"]
     # Not asserting a specific arch install state (that is an environment
     # fact, not a manifest.py contract) -- but the key must be present.

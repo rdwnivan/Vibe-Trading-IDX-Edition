@@ -853,6 +853,7 @@ _MARKET_TO_SOURCE = {
     "us_equity": "yfinance",
     "hk_equity": "yfinance",
     "india_equity": "yahoo",
+    "id_equity": "yahoo",
     "kr_equity": "pykrx",
     "ca_equity": "yahoo",
     "ar_equity": "yahoo",
@@ -1760,6 +1761,14 @@ def _select_market_engine(source: str, config: dict, codes: List[str]):
     """
     # Detect dominant market type from codes
     markets = {_detect_market(c) for c in codes} if codes else set()
+
+    if "id_equity" in markets:
+        raise ValueError(
+            "IDX (id_equity) backtesting is unavailable: a verified historical "
+            "rulebook, calendar and corporate-action model are required. "
+            "Daily research data is supported; other markets' execution rules "
+            "must not be applied to IDX shares."
+        )
 
     # The Hong Kong pool books in HKD. HKEX numbers its RMB and USD counters
     # in their own code ranges, and no source in the hk_equity chain but Yahoo

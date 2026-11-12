@@ -25,6 +25,7 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+from src.atomic_file import replace_with_retry
 from src.tools.redaction import redact_text
 
 SCHEMA_VERSION = 1
@@ -169,7 +170,7 @@ class BackgroundTaskStore:
             finally:
                 if fd >= 0:
                     os.close(fd)
-            os.replace(temporary, path)
+            replace_with_retry(Path(temporary), path, replace=os.replace)
         except BaseException:
             try:
                 os.unlink(temporary)

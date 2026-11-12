@@ -182,14 +182,15 @@ def test_run_id_filter_and_bad_arguments(runs: Path) -> None:
 
 
 def test_symlinks_and_unsafe_files_are_never_followed(
-    runs: Path, tmp_path_factory
+    runs: Path, tmp_path_factory,
+    make_symlink,
 ) -> None:
     foreign = _turn(tmp_path_factory.mktemp("outside"), "20261026_090000_evil00")
-    (runs / "20261026_090000_evil00").symlink_to(foreign, target_is_directory=True)
+    make_symlink(runs / "20261026_090000_evil00", foreign, target_is_directory=True)
     turn = _turn(runs, "20261026_100000_aaaaaa", subs=("ok", "broken", "huge"))
-    (turn / "linked").symlink_to(foreign / "a", target_is_directory=True)
+    make_symlink(turn / "linked", foreign / "a", target_is_directory=True)
     (turn / "stolen").mkdir()
-    (turn / "stolen" / "run_card.json").symlink_to(foreign / "a" / "run_card.json")
+    make_symlink(turn / "stolen" / "run_card.json", foreign / "a" / "run_card.json")
     (turn / "broken" / "run_card.json").write_text("{not json", encoding="utf-8")
     (turn / "huge" / "run_card.json").write_text(
         " " * (backtest_runs_tool._MAX_JSON_BYTES + 1), encoding="utf-8"

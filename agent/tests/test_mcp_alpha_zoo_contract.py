@@ -253,7 +253,7 @@ def test_alpha_bench_rejects_output_outside_allowed_roots(monkeypatch) -> None:
 @pytest.mark.skipif(
     os.name == "nt", reason="symlink creation requires privileges unavailable on Windows"
 )
-def test_alpha_bench_does_not_follow_preexisting_report_symlink(monkeypatch, tmp_path: Path) -> None:
+def test_alpha_bench_does_not_follow_preexisting_report_symlink(monkeypatch, tmp_path: Path, make_symlink) -> None:
     class _BenchRegistry:
         def get(self, alpha_id: str) -> object:
             return SimpleNamespace(meta=None)
@@ -268,8 +268,8 @@ def test_alpha_bench_does_not_follow_preexisting_report_symlink(monkeypatch, tmp
     external_target = tmp_path / "external.html"
     predictable_report_link = output_dir / "alpha_bench_20260102T030405Z.html"
     report_link = output_dir / "alpha_bench_20260102T030405Z_fixed.html"
-    predictable_report_link.symlink_to(external_target)
-    report_link.symlink_to(external_target)
+    make_symlink(predictable_report_link, external_target)
+    make_symlink(report_link, external_target)
 
     monkeypatch.setattr("src.factors.registry.get_default_registry", lambda: _BenchRegistry())
     monkeypatch.setattr(alpha_bench_module, "datetime", _FixedDateTime)

@@ -298,6 +298,7 @@ class DataConfig(_EnvBase):
     market_data_order_a_share: str = Field(alias="MARKET_DATA_ORDER_A_SHARE", default="")
     market_data_order_us_equity: str = Field(alias="MARKET_DATA_ORDER_US_EQUITY", default="")
     market_data_order_hk_equity: str = Field(alias="MARKET_DATA_ORDER_HK_EQUITY", default="")
+    market_data_order_id_equity: str = Field(alias="MARKET_DATA_ORDER_ID_EQUITY", default="")
     market_data_order_india_equity: str = Field(alias="MARKET_DATA_ORDER_INDIA_EQUITY", default="")
     market_data_order_kr_equity: str = Field(alias="MARKET_DATA_ORDER_KR_EQUITY", default="")
     market_data_order_ca_equity: str = Field(alias="MARKET_DATA_ORDER_CA_EQUITY", default="")
