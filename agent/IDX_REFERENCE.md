@@ -519,6 +519,8 @@ KEP-0045/DIR/KSEI/0826), Negotiated-market fee relief:
   appears in any tab. Either one decree covered both rules, or one of the two
   sources is wrong. Neither the II-Q attachment nor any 2025 II-A text was read,
   so this is not resolved. Kep-00003 is **not** added to the II-A version chain.
+  *Resolved later the same day:* BEI used the number twice; see
+  [the II-A version chain follow-up](#ii-a-version-chain-trading-halts-and-share-sale-tax-2026-11-12).
 - Its deadlines are written as "pukul 17:00 WIB" (items 6 and 9). These are
   administrative deadlines in a different document. They do not define JATS time.
 
@@ -596,10 +598,11 @@ also returns HTTP 200 to plain `curl`.
   exchange announcement. It neither enacts nor amends II-A. Its only II-A
   reference (II.1) says that liquidity-provider quotes follow II-A on trading,
   settlement, surveillance, fees and halts.
-- Kep-00120's recital, "II-A … Kep-00003/BEI/04-2025 dated 8 April 2025", does
-  not match this document: the number, rule and date all differ. The II-A text in
-  force on 14 August 2026 is therefore still unidentified. Nothing about II-A
-  before Kep-00136 is inferred from this.
+- Kep-00120's recital, "II-A … Kep-00003/BEI/04-2025 dated 8 April 2025", shares
+  this document's number but not its rule or date. *Corrected later the same
+  day:* BEI's own sources show that the number was used twice, once for an II-A
+  amendment dated 8 April 2025. See
+  [the next follow-up](#ii-a-version-chain-trading-halts-and-share-sale-tax-2026-11-12).
 - Incidentally, its recitals cite an earlier I-X version, **Kep-00076/BEI/06-2024
   (20 June 2024)**, with liquidity-provider exit routes in IV.1.4–IV.1.5. That
   version is unread. Kep-00035/BEI/06-2025, which the current I-X revokes, came
@@ -725,6 +728,155 @@ interval, the texts of Kep-00136 and Kep-00157, the VAT rate, the final income
 tax on share sales, the holiday list and the JATS–WIB mapping stay open. No
 rulebook JSON, `IDXRegularRules` default or code change was made; backtests stay
 refused.
+
+### II-A version chain, trading halts and share-sale tax, 2026-11-12
+
+These leads came from web searches limited to official domains. Every document
+below was opened and read in the browser; search summaries are not used as
+evidence. Nothing was saved to disk or committed. The `idx.co.id` files return
+HTTP 403 to plain `curl` and 200 in the browser; the JDIH BPK file returns 200 to
+both.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| II-A Kep-00061/BEI/07-2021 | 615,993 | Fri, 23 Jul 2021 12:46:30 GMT | 32 | `46301c47ca438db434b5247228274ee918611a40c6864070a53e94e083d060f6` |
+| IDXbell newsletter, edition 27 (January 2025) | 6,268,404 | Thu, 23 Jan 2025 08:21:41 GMT | 22 | `93e79bd39667dd57202dd6aa04f470d4640faaf846a2fdb2ff13b736280212c2` |
+| BEI governance report 2025 | 7,010,018 | Thu, 30 Apr 2026 09:41:27 GMT | 88 | `ea7cb5033e7256c758c5fcbb3b369d192bf5f4d3871757d1bfdf649c02f2c1ad` |
+| Emergency trading-continuity guideline Kep-00002/BEI/04-2025 | 781,838 | Mon, 07 Apr 2025 23:44:27 GMT | 8 | `59b34aecf2358cbf6c947c5c5ff4f213c9cece7baad0631cd0acf4dc8858f83a` |
+| I-X Kep-00076/BEI/06-2024 | 815,719 | Thu, 20 Jun 2024 14:31:25 GMT | 10 | `aafc7a2837ad310077b6dfd1119631429c8aa5aa3cc26d850d29baea9595fade` |
+| PP 41/1994 (JDIH BPK) | 36,705 | Mon, 04 Dec 2017 07:16:44 GMT | 7 | `7feda5bbae40f475605001e84c256eb8ee9fc4202f0d8b6048700ce66cb2ed5b` |
+| PP 14/1997 (JDIH BPK) | 39,682 | Wed, 29 Nov 2017 01:55:40 GMT | 8 | `1c97d344d0308c2ff8d843111bb3d13b90114c5b65c4fcd1b9ec7c18de86538c` |
+
+URLs: [II-A Kep-00061](https://www.idx.co.id/media/10022/peraturan_ii_a_perdagangan_efek_bersifat_ekuitas.pdf),
+[IDXbell 27](https://www.idx.co.id/Media/y5agatkd/idxbell-edisi-27-januari-2025.pdf),
+[governance report 2025](https://www.idx.co.id/media/bpgni45v/laporan-tata-kelola-bei-tahun-2025.pdf),
+[Kep-00002 guideline](https://www.idx.co.id/Media/il0h5rov/signed_sk_perubahan_panduan_kelangsungan_perdagangan_kondisi_darurat.pdf),
+[I-X Kep-00076](https://www.idx.co.id/Media/gkbivhjb/peraturan_i_x_penempatan_pencatatan_ebe_pada_papan_pemantauan_khusus_signed.pdf),
+[PP 41/1994](https://peraturan.bpk.go.id/Details/57263/pp-no-41-tahun-1994),
+[PP 14/1997](https://peraturan.bpk.go.id/Details/56237/pp-no-14-tahun-1997).
+
+**Correction: Kep-00003/BEI/04-2025 is two documents.** The governance report
+(p. 25) lists both "II-A … Kep-00003/BEI/04-2025 dated 8 April 2025" and "II-Q …
+Kep-00003/BEI/04-2025 dated 30 April 2025". The signed Kep-00002 guideline cites
+II-A as "Kep-00003/BEI/04-2025 dated 8 April 2025 on the amendment of II-A", the
+same citation as Kep-00120. Three BEI sources therefore agree that an **II-A
+amendment numbered Kep-00003 and dated 8 April 2025** exists, alongside the II-Q
+decree with the same number. Its signed text was not found; a search turned up
+only an unsigned "konsep bersih" draft, which is not used. The earlier note that
+the Kep-00120 citation "does not match" is withdrawn.
+
+**II-A versions now evidenced**, by in-force date:
+
+| Version | In force | Evidence | Text read |
+|---|---|---|---|
+| Kep-00108/BEI/12-2020 | 4 December 2020 issue date (per Kep-00061 recital) | cited | no |
+| Kep-00061/BEI/07-2021 | 26 July 2021 | signed decree | yes, decree |
+| Kep-00055/BEI/03-2023 | 3 April 2023 | signed decree | yes |
+| Kep-00196/BEI/12-2024 | 9 December 2024 (issued 6 December 2024) | IDXbell newsletter | no |
+| Kep-00003/BEI/04-2025 | 8 April 2025 (date given; in-force date not shown) | governance report, Kep-00002, Kep-00120 | no |
+| Kep-00136/BEI/09-2026 | 21 September 2026 (date given) | Kep-00138 recital | no |
+| Kep-00157/BEI/10-2026 | 19 October 2026 (date given) | Kep-00158 decree | no |
+| Kep-00158/BEI/10-2026 | 20 October 2026 | signed decree | yes |
+
+The regime of Kep-00055 therefore ended no later than 9 December 2024. Whether
+another version came between 3 April 2023 and 9 December 2024 is not shown. The
+newsletter says only that Kep-00196 widened the pre-opening session from LQ45
+stocks to all stocks on the Main, Development and New Economy boards. Its other
+contents and the 8 April 2025 changes are unread and must not be guessed. The
+date of the 8 April 2025 version matches the emergency auto-rejection change
+below, but its values were not read.
+
+**Kep-00061/BEI/07-2021**, decree items read:
+
+- Issued 23 July 2021, in force 26 July 2021; revokes II-A Kep-00108/BEI/12-2020
+  (4 December 2020).
+- Trading hours in the annex (IV.2–IV.4) were deferred. Two temporary schedules
+  applied instead, Monday to Friday alike:
+  - 26 July – 3 December 2021: pre-opening 08:45:00–08:55:00, session I
+    09:00:00–11:30:00, session II 13:30:00–14:49:59, pre-closing 14:50:00–15:00:00,
+    post-closing 15:05:00–15:15:00.
+  - From 6 December 2021 "until set later by the exchange": pre-opening to
+    08:59:00, the same sessions, random close 14:58:00–15:00:00, post-closing
+    15:01:00–15:15:00.
+  - Kep-00055 restored the annex hours from 3 April 2023. The days 4–5 December
+    2021 were a weekend.
+- Market orders took effect on 6 December 2021.
+- Auto-rejection in the annex (VI.7.1.2) was deferred. A temporary
+  **asymmetric** schedule applied instead: +35/+25/+20% upper and **−7% lower**
+  for every price band. This is consistent with the 3 April – 31 May 2023 stage
+  of Kep-00055. Minimum share price Rp50 (VI.6.1).
+- Decree item 3b sets a reporting deadline of "16:00:00 WIB". That is an
+  administrative deadline, as in Kep-00120, and does not define JATS time.
+
+**Emergency trading-continuity guideline Kep-00002/BEI/04-2025:**
+
+- Issued and in force **8 April 2025**, on an OJK order (S-28/D.04/2025, 7 April
+  2025) to adjust trading-halt limits and auto-rejection. It revokes the
+  guideline in Kep-00024/BEI/03-2020 (10 March 2020). It is listed in the current
+  Keputusan Direksi register. No later version was found; that is not proof that
+  none exists.
+- A trading halt keeps open orders in JATS, which members may withdraw. A trading
+  suspend withdraws them all automatically (III.1). A halt can become a suspend
+  for the rest of the day (III.2).
+- **Index-drop thresholds (III.3.8):** if the composite index (IHSG) falls more
+  than **8%**, trading halts for 30 minutes. A further fall past **15%** brings
+  another 30-minute halt. A further fall past **20%** suspends trading to the end
+  of the session, or longer with OJK approval or order. The base the percentage
+  is measured from is not defined in the text read.
+- Other triggers (III.3.1–III.3.7) are operational: disasters, JATS faults, more
+  than 30 members disconnected or members holding more than 60% market share,
+  power, and clearing or settlement failures.
+- Simulation consequence: market-wide halts are dated events. They can be
+  reconstructed from announcements or intraday data, not from daily bars. The
+  thresholds before 8 April 2025 (Kep-00024/2020) are unread.
+
+**I-X Kep-00076/BEI/06-2024**, special-monitoring placement (an earlier version):
+
+- Issued 20 June 2024, in force 21 June 2024; revokes I-X Kep-00315/BEI/11-2023
+  (1 December 2023). Free-float criteria phase in on 2 July 2024 (Main and
+  Development boards) and 31 October 2025 (Acceleration board). The
+  liquidity-provider exit routes wait for the liquidity-provider rules (II-Q, in
+  force 8 May 2025).
+- Placement criteria in this version include **III.1.1**: over the last 3 months,
+  an average price below **Rp51**, average daily value below Rp5,000,000 **and**
+  average daily volume below 10,000 shares. Other criteria are **III.1.6** (no
+  longer meets continued-listing requirements, apart from free float) and
+  **III.1.7** (average daily value below Rp5,000,000 and volume below 10,000
+  shares over 3 months). These carry the numbers of three items that Kep-00139
+  marks "Dihapus". Kep-00035 may have renumbered the criteria, so the numbers
+  are not proof that these are the deleted texts.
+- What Kep-00035/BEI/06-2025, the version between Kep-00076 and Kep-00139, said
+  is unread. So it is not known whether these criteria still applied from 4 June
+  2025 to 27 September 2026. They are evidenced only from 21 June 2024 until an
+  unknown date no later than 4 June 2025.
+
+**Final income tax on share sales (PP 41/1994 as amended by PP 14/1997):**
+
+- PP 41/1994 was enacted 23 December 1994 and **applies from 1 January 1995**
+  (Art. 5). Income from selling shares on the exchange bears a **final** income
+  tax (Art. 1(1)). The exchange operator collects it on every sale, pays it
+  monthly and reports it (Art. 2). Its explanatory note includes the parallel
+  exchange. Because the tax is final, it is neither combined with other income
+  nor credited in the annual return.
+- PP 14/1997 (in force 29 May 1997, on promulgation) replaces Art. 1(2): the tax
+  is **0.1% of the gross sale value** of every share sale. Founder shares instead
+  bear a one-off additional 0.5% of the share value: the year-end 1996 closing
+  price, or the IPO price for listings after 1 January 1997 (Art. 1A, 2A). A
+  founder may opt for normal income tax instead (Art. 3A). The original
+  founder-share surcharge of 5% of each sale (PP 41/1994 Art. 1(2)b) was replaced.
+- JDIH BPK lists PP 41/1994 as "Berlaku" (in force), amended only by PP 14/1997.
+  The implementing Minister of Finance decree and any later change through income
+  tax law amendments were not checked.
+- Simulation consequence: a **sell-side 0.1% of gross proceeds**, charged whether
+  the trade gains or loses. It applies to ordinary shares on the exchange. The
+  founder surcharge is not a per-trade cost.
+
+**Still unverified:** the VAT rate on exchange fees (not checked), the KPEI
+clearing fee, broker commission, and the texts of II-A Kep-00108, Kep-00196,
+Kep-00003 (8 April 2025), Kep-00136 and Kep-00157. I-X Kep-00315 and Kep-00035,
+the official holiday list and the JATS–WIB mapping are also unread. No rulebook
+JSON, `IDXRegularRules` default, fee model or code change was made; backtests
+stay refused.
 
 ### Additional public-access checks, 2026-11-03
 
