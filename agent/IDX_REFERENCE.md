@@ -636,6 +636,96 @@ charges billed to the member. Whether and how a broker passes them to a client
 is a commercial term. The final income tax on share sales is a government rule
 and still unread. No fee model is defined from this partial picture.
 
+### KPEI retry and II-A Kep-00055/BEI/03-2023 read, 2026-11-12
+
+**KPEI is unreachable from this network, not refused.** After the user allowed
+the site, the built-in browser still failed on both `www.kpei.co.id` and
+`kpei.co.id`. Plain `curl` explains why: `www.kpei.co.id` does not resolve
+(curl exit 6; `nslookup` times out), and `kpei.co.id` resolves to
+202.155.72.168 but the connection times out (curl exit 28). `www.idx.id`
+answers normally from the same machine. KPEI II-5 therefore stays unread.
+
+A web search limited to official domains returned KPEI's
+[equity page](https://www.kpei.co.id/page/ekuitas) and
+[equity rules page](https://www.kpei.co.id/regulation/peraturan-ekuitas). The
+search engine's summary said the equity page lists a Regular-market clearing fee
+of **0.009%** per transaction with a monthly minimum of Rp10,000,000. Neither
+page was opened, so this is a **search-snippet claim, not evidence**. It is
+recorded only as a pointer for the next KPEI read and is not used anywhere.
+
+**II-A Kep-00055/BEI/03-2023**, found through the same search, read in the
+browser:
+[signed attachment](https://idx.co.id/Media/y0vjxqur/signed_peraturan_ii_a_perdagangan_efek_bersifat_ekuitas.pdf)
+(`curl` 403, browser 200). The current Peraturan BEI register does not list it;
+it is an older file still served on the official domain.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| II-A Kep-00055/BEI/03-2023 | 771,686 | Thu, 30 Mar 2023 13:13:23 GMT | 30 | `c62046378cfa889a0ffabcfd92cef87d399a3b6e0e34d68b5ca83fe40ea363c8` |
+
+Decree:
+
+- Issued 30 March 2023, in force **3 April 2023**. It sets the II-A annex and
+  **revokes II-A Kep-00061/BEI/07-2021** (23 July 2021, in force 26 July 2021).
+  The annex header reads "Kep-00061/BEI/07-2021 … amended by Kep-00055/BEI/03-2023".
+  OJK approvals cited: S-1153/PM.21/2020 (16 November 2020) and S-52/PM.01/2023
+  (29 March 2023).
+- Context: it ends the COVID-19 relaxations (POJK 7/POJK.04/2021 as amended,
+  expiring 31 March 2023). It restores the trading hours in IV.2–IV.4 and the
+  V.12 reporting deadline from its in-force date.
+- **Auto-rejection was normalised in stages** (decree item 4). The upper limits
+  were already +35% (Rp50–Rp200), +25% (>Rp200–Rp5,000) and +20% (>Rp5,000).
+  The lower limit changed by period:
+
+| Period | Lower limit |
+|---|---|
+| 3 April – 31 May 2023 | −7% |
+| 5 June – 1 September 2023 | −15% |
+| From 4 September 2023 | symmetric, per annex VI.7.1.2 (−35/−25/−20%) |
+
+  The decree does not cover 1–4 June 2023, and nothing is assumed for it.
+- Reference-price provisions VI.7.3 and VI.9.1–VI.9.2 wait for a later exchange
+  date (item 5). Until then the reference price is the previous close, the
+  theoretical post-corporate-action price, the IPO price, or an appraised fair
+  value.
+
+Annex clauses (Regular and Cash markets) that differ from or match Kep-00158:
+
+- **Minimum price Rp50** for shares (VI.6.1) and Rp1 for rights (HMETD,
+  VI.6.2). VI.6.3 sets Rp1 for one more class, which was cut off in the extract
+  read. Kep-00158 has Rp1 for shares, and the bands below Rp50 that Kep-00158
+  defines do not exist here.
+- Round lot 100 (VI.4.1–VI.4.2), the same as Kep-00158.
+- Tick sizes Rp1/2/5/10/25 with maximum steps Rp10/20/50/100/250 at the
+  200/500/2,000/5,000 previous-close breaks (VI.5.2), the same as Kep-00158.
+- Volume rejection above 50,000 lots or 5% of listed shares, whichever is
+  smaller (VI.7.2), the same as Kep-00158.
+- Settlement: Regular T+2 (I.27); Cash same day (I.28).
+- Sessions follow JATS time (IV.1). Mon–Thu: pre-opening 08:45:00–08:59:00, with
+  price formation 08:59:01–08:59:59; session I 09:00:00–12:00:00; session II
+  13:30:00–15:49:59; pre-closing order entry 15:50:00–16:00:00, with a random
+  close between 15:58:00 and 16:00:00 and price formation 16:00:01–16:00:59;
+  post-closing 16:01:00–16:15:00. Friday: session I ends 11:30:00 and session II
+  starts 14:00:00. These pre-opening and pre-closing boundaries differ from
+  Kep-00158 IV.1–IV.2.
+- Exchange fee **0.018%** per transaction on Regular and Cash, excluding
+  clearing and settlement (XI.1.1), the same as Kep-00158.
+
+Version chain now evidenced by read documents: Kep-00061/BEI/07-2021 (in force
+26 July 2021; annex not read separately) → **Kep-00055/BEI/03-2023 (in force
+3 April 2023)** → … → Kep-00136 (21 September 2026, unread) → Kep-00157
+(19 October 2026, unread) → Kep-00158 (in force 20 October 2026). Whether any
+version came between Kep-00055 and Kep-00136, and so **when the Kep-00055 regime
+ended**, is not shown. Kep-00055 values therefore apply from 3 April 2023 only
+up to an end date that is still unknown. They must not be extended to later dates
+or backfilled before 3 April 2023.
+
+Limits of this evidence: the KPEI clearing fee, the end of the Kep-00055
+interval, the texts of Kep-00136 and Kep-00157, the VAT rate, the final income
+tax on share sales, the holiday list and the JATS–WIB mapping stay open. No
+rulebook JSON, `IDXRegularRules` default or code change was made; backtests stay
+refused.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
