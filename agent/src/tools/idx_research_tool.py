@@ -25,6 +25,39 @@ MAX_LOOKBACK = 500
 # Personal research alarm only, independent of loader-health availability gates.
 # Calendar age cannot establish missing sessions, suspension, or provider delay.
 RECENCY_WARNING_DAYS = 14
+# Acquisition metadata is a few levels deep. Bound nesting explicitly: from
+# Python 3.14 the C JSON encoder checks the real stack, so deep containers
+# no longer raise RecursionError and cannot be relied on to fail.
+MAX_METADATA_DEPTH = 64
+
+
+def _exceeds_depth(value: Any, limit: int = MAX_METADATA_DEPTH) -> bool:
+    """Return True when dict/list/tuple nesting exceeds ``limit`` (iterative, cycle-safe)."""
+    stack = [(value, 1)]
+    seen: set[int] = set()
+    while stack:
+        current, depth = stack.pop()
+        if not isinstance(current, (dict, list, tuple)):
+            continue
+        if depth > limit:
+            return True
+        if id(current) in seen:
+            continue  # cycles are rejected by json.dumps itself
+        seen.add(id(current))
+        children = current.values() if isinstance(current, dict) else current
+        stack.extend((child, depth + 1) for child in children)
+    return False
+
+
+def _is_json_metadata(value: Any) -> bool:
+    """True when ``value`` is bounded, strict JSON (no NaN/Infinity, cycles or foreign types)."""
+    if _exceeds_depth(value):
+        return False
+    try:
+        json.dumps(value, allow_nan=False)
+    except (TypeError, ValueError, RecursionError):
+        return False
+    return True
 
 
 def _failure(message: str) -> str:
@@ -114,9 +147,7 @@ class IDXResearchTool(BaseTool):
                 # Provenance is returned even for unavailable symbols and is
                 # also embedded in the indicator read identity. Reject a broken
                 # declaration before either path can poison watchlist JSON.
-                try:
-                    json.dumps(provenance, allow_nan=False)
-                except (TypeError, ValueError, RecursionError):
+                if not _is_json_metadata(provenance):
                     logger.warning("IDX research invalid acquisition provenance for %s", code)
                     provenance = None
             frame = data.get(code)
@@ -137,9 +168,7 @@ class IDXResearchTool(BaseTool):
                     # numbers or cycles. Isolate optional metadata failure here
                     # before serializing the whole watchlist; never stringify
                     # arbitrary values or expose serializer exception messages.
-                    try:
-                        json.dumps(diagnostics, allow_nan=False)
-                    except (TypeError, ValueError, RecursionError):
+                    if not _is_json_metadata(diagnostics):
                         logger.warning("IDX research invalid acquisition diagnostics for %s", code)
                         diagnostics = None
                 item.update(reason="no_data_or_source_failure", diagnostics=diagnostics)
