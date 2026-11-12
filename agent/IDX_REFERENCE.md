@@ -571,6 +571,71 @@ including whether Kep-00003/BEI/04-2025 contains one, the official holiday list
 and the JATS–WIB mapping also stay open. No rulebook JSON, `IDXRegularRules` default or code change was made;
 backtests stay refused.
 
+### II-Q Kep-00003 and KSEI VI-A read; KPEI not reached, 2026-11-12
+
+Same in-browser method; no file was saved to disk or committed.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| BEI II-Q Kep-00003/BEI/04-2025 | 1,009,054 | Wed, 30 Apr 2025 17:28:38 GMT | 8 | `134c9d9b4d6d638a119744653b72037d74bfae7a0d6de4aa0517ba1c7cd66932` |
+| KSEI KEP-0017/DIR/KSEI/0422 (decree) | 63,856 | Tue, 26 Apr 2022 07:46:55 GMT | 3 | `e78c859264b6fde8577dab288b8ef8f7527efb3324872b3e2d97b62456bf4e89` |
+| KSEI VI-A annex to KEP-0017 | 274,294 | Tue, 26 Apr 2022 07:47:31 GMT | 10 | `ea18c8940b5953cf5d490c91e2036af50505bf82910de767ea05f32eff30addf` |
+| KSEI fee list "Daftar Biaya Layanan Jasa" | 441,769 | Wed, 05 Oct 2022 10:00:52 GMT | 10 | `71b71340b0860374c73ff4a79cc112c0dd1210580f1cb82bb658f2cbe83d9c12` |
+
+The II-Q URL is
+[signed attachment](https://www.idx.co.id/Media/4cmfnb3n/signed_peraturan_nomor_ii-q_tentang_kegiatan_liquidity_provider_saham_di_bursa.pdf)
+(`curl` 403, browser 200). The KSEI files come from the
+[Peraturan KSEI](https://web.ksei.co.id/regulations/csd-regulation) and
+[fee](https://web.ksei.co.id/regulations/services_fee) pages; the VI-A annex
+also returns HTTP 200 to plain `curl`.
+
+**II-Q Kep-00003/BEI/04-2025 resolves its identity, not the II-A citation.**
+
+- The decree covers only II-Q, on liquidity-provider activity. It was issued
+  **30 April 2025** and in force **8 May 2025**; clause IV.4 waits for a later
+  exchange announcement. It neither enacts nor amends II-A. Its only II-A
+  reference (II.1) says that liquidity-provider quotes follow II-A on trading,
+  settlement, surveillance, fees and halts.
+- Kep-00120's recital, "II-A … Kep-00003/BEI/04-2025 dated 8 April 2025", does
+  not match this document: the number, rule and date all differ. The II-A text in
+  force on 14 August 2026 is therefore still unidentified. Nothing about II-A
+  before Kep-00136 is inferred from this.
+- Incidentally, its recitals cite an earlier I-X version, **Kep-00076/BEI/06-2024
+  (20 June 2024)**, with liquidity-provider exit routes in IV.1.4–IV.1.5. That
+  version is unread. Kep-00035/BEI/06-2025, which the current I-X revokes, came
+  later.
+
+**KSEI VI-A (KEP-0017/DIR/KSEI/0422)**, settlement fee:
+
+- Issued and effective **26 April 2022**, with OJK approval S-373/PM.21/2022
+  (19 April 2022). The BI-FAST withdrawal fee applies from 1 May 2022. It revokes
+  fee items 1.5, 2.1.4 and 3.6.4 of the KSEI central-custody rule
+  (KEP-0013/DIR/KSEI/0612). This is the version Kep-00120 cites.
+- **4.6.1:** the settlement fee for exchange transactions in equity securities,
+  including structured warrants and exchange-traded fund units, is **0.003% of the
+  cumulative monthly value of exchange transactions**. Debt securities pay 20% of
+  the exchange fee instead (4.6.2). The fee is charged to the exchange member and
+  collected through the exchange (4.6.3). It is not limited to the Negotiated
+  market.
+- The fee list repeats 0.003% (item 13). The fee page, however, says the list is
+  based on VI-A **Kep-0005/DIR/KSEI/0121**, while the register gives KEP-0017 as
+  the current VI-A. The list itself carries no decree number or date, so the label
+  conflict stays open. It does not change the 0.003% figure. The register shows no
+  VI-A amendment after KEP-0017; that is not proof that none exists.
+
+**KPEI not reached.** Navigating the built-in browser to `www.kpei.co.id` was
+refused ("denied or failed"). It was not retried and no other route was tried.
+KPEI II-5 (KEP-031/DIR/KPEI/0626) and its **Regular-market clearing fee** stay
+unread. The 0.009% figure that Kep-00120 cites is for the Negotiated market only.
+
+Cost picture so far, for a member's equity trade on the Regular market: exchange
+0.018% per transaction (II-A XI.1.1) plus KSEI settlement 0.003% of monthly
+cumulative value (VI-A 4.6.1), plus a KPEI clearing fee that is still unknown,
+plus VAT at an unstated rate. These are exchange, clearing and depository
+charges billed to the member. Whether and how a broker passes them to a client
+is a commercial term. The final income tax on share sales is a government rule
+and still unread. No fee model is defined from this partial picture.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
