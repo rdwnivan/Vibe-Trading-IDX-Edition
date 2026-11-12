@@ -271,6 +271,64 @@ guidelines, fees/taxes, suspensions and corporate-action handling stay open. No
 rulebook JSON or default `IDXRegularRules` instance was added; backtests remain
 refused.
 
+### II-X and trading guideline read, 2026-11-12
+
+Both attachments now return HTTP 200 to the same browser session and were read
+with the same in-browser method; neither file was saved to disk.
+
+**II-X Kep-00140/BEI/09-2026**, special-monitoring board: `application/pdf`,
+1,155,373 bytes, `Last-Modified: Fri, 25 Sep 2026 15:15:28 GMT`, SHA-256
+`9421501e43920b04fed6148956ef7b73b8e0cb911e5da503f6718ab5930fb509`, 13 pages.
+
+- Issued 25 September 2026, in force **28 September 2026**; amends and replaces
+  the annex of Kep-00316/BEI/11-2023 (in force 1 December 2023). The new
+  non-cancellation period in its call-auction sessions starts only when the PSPP
+  trading-system upgrade goes live, as later announced by the exchange.
+- Everything follows II-A except (II.1): the board trades by **periodic call
+  auction** on Regular (T+2) and Cash (T+0) call-auction markets plus the
+  negotiated market; minimum price Rp1; auto-rejection **±Rp1 for Rp1–Rp10 and
+  ±10% above Rp10**; no maximum price step; the closing price is the **last
+  traded price** (II.1.9).
+- Regular call-auction sessions (II.1.7): Monday–Thursday five sessions starting
+  09:00, 10:00, 11:00, 14:00 and 15:00, each with order entry to xx:55:00, a
+  random end between xx:53:00 and xx:55:00 and price formation by xx:59:59
+  (session V by 16:00:00); post-closing 16:01:00–16:15:00 at the last price.
+  Friday has four sessions (09:00, 10:00–11:25, 14:00, 15:00) and the same
+  post-closing. The Cash call-auction market runs the morning sessions only.
+- Which listed companies are placed on the board is a listing rule (I-X), not
+  read here. A `.JK` ticker does not reveal board placement.
+
+**Trading guideline Kep-00138/BEI/09-2026**: `application/pdf`, 2,374,343 bytes,
+`Last-Modified: Fri, 25 Sep 2026 15:16:00 GMT`, SHA-256
+`55157e7f5eeb3d42ebff811b6661b3b9ab7f0c2621868c3db13619d0dd57db92`, 89 pages.
+Only the decree, the table of contents and section IV were read.
+
+- Issued 25 September 2026, in force 28 September 2026; revokes the guideline
+  in Kep-00096/BEI/12-2022 (28 December 2022). Its recitals cite II-A
+  **Kep-00136/BEI/09-2026 (21 September 2026)** and say that change adjusted the
+  minimum tradable price and the auto-rejection percentages. The values before
+  that change are not stated in the parts read and must not be inferred.
+- **II-A version chain observed:** Kep-00136 (21 September 2026) → Kep-00157
+  (19 October 2026) → Kep-00158 (20 October 2026, in force). Only Kep-00158 has
+  been read. Rules for simulation dates before 20 October 2026 stay unverified.
+- **Corporate actions (section IV):** covers cash, stock and interim dividends,
+  rights issues, bonus shares, stock split, reverse split and merger-delisting.
+  The exchange sets the trading period, adjusts the reference price and/or
+  suspends market segments per security.
+  - Cum/ex relative to the recording date (RD): Regular and Negotiated markets
+    cum until RD−2, ex from RD−1; Cash market cum through RD, ex from RD+1.
+    Selling during the ex period does not forfeit the entitlement.
+  - On the Regular-market ex date, Regular and Negotiated prices are reset to the
+    exchange's **theoretical post-action price** computed from the company's
+    ratio. Cash-market prices are reset only at the Cash ex date. Formulas are
+    set per security and action type; none are given in this section.
+- Neither document ties JATS time to WIB in the parts read.
+
+Calendar recheck: the [BEI holiday page](https://www.idx.id/id/tentang-bei/jadwal-libur-bursa)
+loads in the browser but shows only its heading and the site clock, with no date
+list. This is the same state as before, not an access change, and was not
+pursued further.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
