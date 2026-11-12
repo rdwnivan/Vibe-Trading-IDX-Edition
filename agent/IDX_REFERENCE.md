@@ -329,6 +329,139 @@ loads in the browser but shows only its heading and the site clock, with no date
 list. This is the same state as before, not an access change, and was not
 pursued further.
 
+### I-X, I-L and I-I read; II-A register check, 2026-11-12
+
+The [Peraturan BEI](https://www.idx.id/id/peraturan/peraturan-bei) register
+(Peraturan Pencatatan tab) lists these three attachments. The I-L and I-I URLs
+match those recorded under the 2026-11-03 checks below:
+
+- I-X **Kep-00139/BEI/09-2026**, placement on the special-monitoring board:
+  [signed attachment](https://www.idx.co.id/Media/uw4lipoa/signed_peraturan_i_x_penempatan_pencatatan_ebe_pada_papan_pemantauan_khusus.pdf).
+- I-L **Kep-00077/BEI/05-2023**, suspensions (URL above).
+- I-I **Kep-00044/BEI/04-2024**, stock split and reverse split (URL above).
+
+All three now return HTTP 200 to the browser session; ordinary `curl` without
+header changes still gets HTTP 403 `text/html` for each. They were read with the
+same in-browser method as II-A (fetch on the PDF's own page, pdf.js 4.4.168 from
+cdnjs). No PDF bytes or extracted text were saved to disk or committed.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| I-X Kep-00139 | 1,022,101 | Fri, 25 Sep 2026 15:15:07 GMT | 7 | `e49cae1ad76c231385cd19bd391376ae97bda533a62de4345dd9d73b15d7cbe3` |
+| I-L Kep-00077 | 556,258 | Wed, 31 May 2023 12:53:57 GMT | 8 | `c1948ad050ba36f7a379c829eb953a404f2c76e8069b64c672ec0aa90896c342` |
+| I-I Kep-00044 | 1,396,687 | Mon, 15 Jun 2026 04:57:30 GMT | 17 | `c1334cf876203293da5fef344c87ff43a4cd6151b1940097459413c6b0c71dd1` |
+
+All three are `application/pdf`. The I-I `Last-Modified` is two years after its
+decree date; the decree and annex read carry only the April 2024 dates, so this
+timestamp does not show an amendment, and none was found in the register.
+
+**I-X Kep-00139/BEI/09-2026**, special-monitoring board placement:
+
+- Issued 25 September 2026, in force **28 September 2026**. It revokes I-X in
+  Kep-00035/BEI/06-2025 (3 June 2025; the annex header gives in force 4 June
+  2025). OJK approval S-285/PM.01/2026 (24 September 2026) covers both I-X and
+  II-X. Clause V.5 (lifting a suspension for a corporate action) starts only once
+  a separate exchange circular is issued.
+- The exchange announces placement on or removal from the board at least one
+  exchange day before it takes effect (II.3) and may add a special notation to the
+  company code (II.4–II.5). The exchange may change the criteria parameters by
+  directors' decree with OJK approval (II.8).
+- Placement criteria (III.1), any one of: disclaimer opinion on the latest audited
+  statements (III.1.2); no revenue or no change in revenue versus the prior report
+  (III.1.3); minerals/coal companies, or holding companies of such, with no core
+  revenue by the end of the fourth financial year after listing (III.1.4); negative
+  equity on the latest statements (III.1.5); a PKPU, bankruptcy or annulment
+  petition against the company (III.1.8) or a material subsidiary (III.1.9) judged
+  material by the exchange; other conditions set with OJK approval (III.1.11).
+  III.1.1, III.1.6, III.1.7 and III.1.10 read "Dihapus" (deleted). What they said
+  before deletion is not in this text and must not be reconstructed.
+- Exit (IV.1–IV.3): once the condition no longer holds, or revenue is booked for
+  III.1.4, on the date in the exchange announcement; the company returns to its
+  previous listing board. The exchange may keep a company on the board on
+  substance (IV.4).
+- Suspension (V.1–V.4): after **more than one consecutive year** on the board, a
+  company meeting III.1.2–III.1.5, III.1.8 or III.1.9 is suspended on all markets;
+  under III.1.11 it may be suspended on markets the exchange or OJK sets. The
+  suspension is lifted on exit unless another rule supports it.
+- Simulation consequence: placement depends on financial-statement and court
+  facts plus dated exchange announcements. Neither a ticker nor price data
+  reveals it, so a board flag needs an announcement-dated event history. The
+  criteria before 28 September 2026 (Kep-00035 and earlier) are unread.
+
+**I-L Kep-00077/BEI/05-2023**, suspension of securities:
+
+- Issued and in force **31 May 2023**. It revokes circular SE-008/BEJ/08-2004
+  (27 August 2004). OJK approval S-112/PM.01/2023 (13 May 2023). No later
+  amendment is listed in the register; that is not proof that none exists.
+- The exchange may suspend trading on all markets or on a given market for a set
+  period (II.1). Detailed explanations are delegated to an exchange circular
+  (II.3), which was not read.
+- Conditions (III.1): two consecutive disclaimer opinions or one adverse opinion
+  (III.1.1); a company or material subsidiary files its own bankruptcy or PKPU
+  petition (III.1.2); a bankruptcy ruling (III.1.3); missing, incomplete or wrong
+  material disclosure (III.1.4); going-concern doubt (III.1.5); planned delisting
+  (III.1.6); a rule breach carrying a suspension sanction (III.1.7); an OJK order
+  (III.1.8); other conditions the exchange decides (III.1.9).
+- Scope (III.2): III.1.1–III.1.5 suspend on all markets; delisting, sanctions,
+  OJK orders and III.1.9 use the market set under those rules or by OJK or the
+  exchange.
+- Lifting (III.3–III.9): case by case, at the exchange's discretion
+  ("dapat mempertimbangkan"). It can be partial: for example, the negotiated
+  market can be reopened first after a disclaimer or a PKPU (III.3.1, III.4.1).
+- The rule sets **no fixed suspension length** and no price or volume trigger.
+- Simulation consequence: suspensions are discretionary, per market and open-ended.
+  They can only come from a dated exchange suspension/lifting history, never from
+  a rule formula or from missing bars.
+- I-L does not address trading halts for unusual market activity (UMA); where
+  such halts are governed was not checked.
+
+**I-I Kep-00044/BEI/04-2024**, stock split and reverse split:
+
+- Issued and in force **1 April 2024**. It revokes I-A provisions II.15
+  (Annex I) and V.4, VI.2.1 and VI.3.1 (Annex II) of Kep-00101/BEI/12-2021 and
+  prevails over other exchange rules on splits. Applications for in-principle
+  approval filed before 1 April 2024 must also comply. It follows POJK
+  15/POJK.04/2022; OJK approval S-68/PM.01/2024 (14 March 2024).
+- Trading of post-split or post-reverse-split shares follows II-A's
+  corporate-action trading provisions (II.7). Split execution price at least
+  **Rp100** (II.8). Before applying, the 25-exchange-day average Regular-market
+  close multiplied by the split ratio must be at least Rp100 (III.1). A suspended
+  stock instead uses the average of daily highs over the last 12 months (III.2).
+  The split ratio must not create odd lots (III.5).
+- Exchange timing: in-principle decision within 9 exchange days (IV.3, VI.3);
+  listing decision within 3 exchange days (IV.9, VI.10); an announcement of the
+  additional listing and the **price adjustment** at least one exchange day before
+  the effective date (IV.11.2, VI.12).
+- Reverse split: the company appoints one buyer for odd lots (V.1) at the higher
+  of the price at the reverse split or the price during the odd-lot buying period
+  (V.2). The recording date for odd-lot holders is one exchange day after the
+  effective date (VI.6).
+- The application forms (annexes I-I.1–I-I.4) list separate dates for the last
+  trade at the old nominal value on all markets, the first Regular/Negotiated
+  trade at the new value and the first Cash-market trade at the new value.
+- No price-adjustment formula is given; the exchange announces the adjusted price.
+  Simulation consequence: adjustment factors need the announced ratio and dates
+  per event. The odd-lot buyback is a cash event outside exchange matching. Rules
+  before 1 April 2024 (I-A Kep-00101/BEI/12-2021 provisions) are unread.
+
+**II-A Kep-00136 and Kep-00157 search:** the
+[Keputusan Direksi](https://www.idx.id/id/peraturan/keputusan-direksi) register
+filter, checked by first confirming it finds Kep-00138, returns no rows for
+`00136`, `00157` or `00158`. In the Peraturan BEI register, all three tabs
+return nothing for `00136`. The only II-A entry is Kep-00158/BEI/10-2026. The
+`00157` hit is **II-H Kep-00157/BEI/10-2024**, a different document with the
+same sequence number in another year, not the II-A Kep-00157/BEI/10-2026 that
+Kep-00158 revokes. The site-wide search for each full number returns only
+unrelated fuzzy matches. Neither text is publicly listed, so nothing about their
+content is recorded. Rules for simulation dates before 20 October 2026 depend on
+obtaining them, or the versions before them, another way.
+
+Limits of this evidence: each document fixes its own regime from its stated
+in-force date only. Prior I-X versions, the I-L and I-X implementing circulars,
+I-A before 2024, POJK 15/POJK.04/2022, the I-N delisting rule, II-A Kep-00136
+and Kep-00157, holidays, JATS–WIB mapping, fees and taxes stay open. No rulebook
+JSON, `IDXRegularRules` default or code change was made; backtests stay refused.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
