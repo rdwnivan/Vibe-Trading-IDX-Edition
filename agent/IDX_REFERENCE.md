@@ -773,7 +773,7 @@ the Kep-00120 citation "does not match" is withdrawn.
 | Kep-00108/BEI/12-2020 | 7 December 2020 (issued 4 December 2020) | signed decree | yes, decree and annex ([read later](#vat-basis-ii-a-kep-00108-and-i-x-kep-00315-read-2026-11-12)) |
 | Kep-00061/BEI/07-2021 | 26 July 2021 | signed decree | yes, decree |
 | Kep-00055/BEI/03-2023 | 3 April 2023 | signed decree | yes |
-| Kep-00196/BEI/12-2024 | 9 December 2024 (issued 6 December 2024) | IDXbell newsletter | no |
+| Kep-00196/BEI/12-2024 | 9 December 2024 (issued 6 December 2024) | IDXbell newsletter; Peng-00251/BEI.POP/12-2024 ([read later](#bei-calendar-amendments-ii-a-context-and-vat-exemptions-2026-11-12)) | no |
 | Kep-00003/BEI/04-2025 | 8 April 2025 (date given; in-force date not shown) | governance report, Kep-00002, Kep-00120 | no |
 | Kep-00136/BEI/09-2026 | 21 September 2026 (date given) | Kep-00138 recital | no |
 | Kep-00157/BEI/10-2026 | 19 October 2026 (date given) | Kep-00158 decree | no |
@@ -940,7 +940,8 @@ a rate. The rate comes from the VAT law (UU 8/1983 as amended):
   passes any of it to a client, was not read and is not assumed.
 - Not checked: whether UU 6/2023 (Cipta Kerja) changed Pasal 7 after UU 7/2021,
   how the exchange's own invoices apply the 11/12 base, and any VAT rule before
-  1 April 2010.
+  1 April 2010. (UU 6/2023 and PP 49/2022 were read later; see
+  [VAT exemption and the UU 6/2023 check](#bei-calendar-amendments-ii-a-context-and-vat-exemptions-2026-11-12).)
 
 **II-A Kep-00108/BEI/12-2020** (decree file with the directors' names; the file
 name has no "signed" marker):
@@ -1154,7 +1155,168 @@ Limits of this evidence: the BEI texts of Peng-00030/BEI.POP/02-2024, the
 original 2024 notice and Peng-00149/BEI.POP/08-2025, all calendars before 2024,
 and any change to 2026 or 2027 after the notices read. No calendar artifact,
 `complete: true` flag, rulebook JSON or code change was made; backtests stay
-refused.
+refused. (Peng-00030 and Peng-00149 were found and read later; see
+[the next section](#bei-calendar-amendments-ii-a-context-and-vat-exemptions-2026-11-12).)
+
+### BEI calendar amendments, II-A context and VAT exemptions, 2026-11-12
+
+**How the BEI files were found.** The `idx.co.id` announcement pages render
+their list from a JSON endpoint, `/primary/NewsAnnouncement/GetAllAnnouncement`
+(parameters `keywords`, `dateFrom`, `dateTo`, `pageNumber`, `pageSize`, `lang`).
+Called from a page on `idx.co.id` in the built-in browser, it returned HTTP 200
+JSON with each notice's number, date and attachment URLs. Searches for "Kalender
+Libur Bursa", "Libur Bursa" and "Perubahan Kalender" over 2018–2026 returned the
+calendar notices already read plus Peng-00030/BEI.POP/02-2024 and
+Peng-00149/BEI.POP/08-2025. Web searches limited to official domains found
+neither. PDFs were then fetched on their own page and read with pdf.js 4.4.168
+from cdnjs. Peng-00030 is published only as a zip; the zip was fetched from an
+`idx.co.id` page and opened in memory with JSZip 3.10.1 from cdnjs. Plain `curl`
+was not used for `idx.co.id`. The two JDIH BPK files were fetched with plain
+`curl` (HTTP 200) into `%TEMP%` and read with the project's `pypdf`. Nothing was
+saved to the repository, and the temporary files were deleted.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| BEI Peng-00030/BEI.POP/02-2024, zip as published | 260,047 | Mon, 05 Feb 2024 12:18:40 GMT | – | `feafdae5874bd58f52b7d947e74f54b4f87938ac997540228806fba1ef2961fb` |
+| PDF inside that zip | 372,966 | (zip entry dated 6 February 2024) | 3 | `a70dc3184b4ed8646b4dea814c402a5fc01b64631576562890444f06f1b9ff5a` |
+| BEI Peng-00149/BEI.POP/08-2025, 2025 calendar change | 431,390 | Fri, 08 Aug 2025 09:45:34 GMT | 3 | `c0f59975d73c136e954b0c10508d483832f15029b91d91d056bfaf5e3e31192c` |
+| BEI Peng-00251/BEI.POP/12-2024, pre-opening list | 729,167 | Sat, 07 Dec 2024 12:21:09 GMT | 18 | `00878713b9d310861b33c4b161571f1ec6d64cbebc475d3056b644da73ff80fc` |
+| IDXbell newsletter, edition 27 (re-read) | 6,268,404 | Thu, 23 Jan 2025 08:21:41 GMT | 22 | `93e79bd39667dd57202dd6aa04f470d4640faaf846a2fdb2ff13b736280212c2` |
+| PP 49/2022, JDIH BPK | 8,092,351 | Thu, 15 Dec 2022 02:37:45 GMT | 78 | `5b262aef226ce5d2cb7d19aae419aafbcc57582b06ef0809bcdc8af74234e2c5` |
+| UU 6/2023, JDIH BPK | 85,354,383 | Sat, 01 Apr 2023 05:09:08 GMT | 1,127 | `de73c84f11d4e721a4c0e66cadadac7f698941ec8adff5934e70f32dc885fdae` |
+
+The zip returned `application/x-zip-compressed`; every other file returned HTTP
+200 `application/pdf`. The IDXbell hash matches the earlier record.
+URLs: [Peng-00030 zip](https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/Peng-00030_BEI.POP_02-2024-ID.zip),
+[Peng-00149](https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/Libur%20Bursa%20Peng-00149-No.%20Peng-00149BEI.POP08-2025.pdf),
+[Peng-00251](https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/Exchange/PreOp%20Peng-00251-No.%20Peng-00251BEI.POP12-2024.pdf),
+[IDXbell 27](https://www.idx.co.id/Media/y5agatkd/idxbell-edisi-27-januari-2025.pdf),
+[PP 49/2022](https://peraturan.bpk.go.id/Details/232943/pp-no-49-tahun-2022),
+[UU 6/2023](https://peraturan.bpk.go.id/Details/246523/uu-no-6-tahun-2023).
+
+**Calendar change notices, weekday closures** (dates are day-month):
+
+| Year | Notice | Change | Closures | Trading days | Dates |
+|---|---|---|---|---|---|
+| 2024 | Peng-00030/BEI.POP/02-2024 (5 February 2024) | adds 14-02 (general election) | 23 | 239 | 01-01; 08-02, 09-02, 14-02; 11-03, 12-03, 29-03; 08-04 to 12-04, 15-04; 01-05, 09-05, 10-05, 23-05, 24-05; 17-06, 18-06; 16-09; 25-12, 26-12 |
+| 2025 | Peng-00149/BEI.POP/08-2025 (8 August 2025) | adds 18-08 (collective leave, Independence Day) | 25 | 236 | Peng-00213/BEI.POP/10-2024 dates plus 18-08 |
+
+- **Arithmetic check.** In both attachments every listed date is a weekday, and
+  weekdays minus closures reproduce every monthly "Hari Bursa" figure and the
+  annual total (2024: 22/18/18/16/18/18/23/22/20/23/21/20 = 239; 2025:
+  19/20/19/16/17/18/23/20/21/23/20/20 = 236).
+- **Peng-00030/BEI.POP/02-2024.** Cites UU 7/2017 Pasal 167(3) (voting on a
+  national holiday), KPU regulation 3/2022 and decree 21/2022, and OJK letter
+  S-33/PM.122/2024 (5 February 2024). It sets 14 February 2024 as an exchange
+  holiday and attaches the full revised list. It does **not** cite the number or
+  date of the original 2024 calendar. It may be readjusted for Bank Indonesia
+  clearing changes or government holiday changes. Peng-00233/BEI.POP/11-2024
+  later adds 27 November and 31 December (25 closures, 237 days); its other 23
+  dates match Peng-00030 date for date.
+- **Peng-00149/BEI.POP/08-2025.** Cites the amended joint ministerial decree
+  (Minister of Religious Affairs 933/2025, Manpower 1/2025, Administrative
+  Reform 3/2025, amending 1017/2024, 2/2024, 2/2024). Item 1 sets 18 August 2025
+  as an exchange holiday, "revising" Peng-00213/BEI.POP/10-2024. Item 2 allows
+  further adjustment. Its attachment lists the 24 Peng-00213 dates plus 18
+  August, with 236 trading days. This is the BEI text that the KSEI notices
+  PENG-0004/DIR/KSEI/0825 and PENG-0007/DIR/KSEI/1225 cited; the 18 August
+  closure is now evidenced directly.
+- **Version chains now read.** 2024: original notice (not found) →
+  Peng-00030 (5 February 2024) → Peng-00233 (11 November 2024). 2025:
+  Peng-00213 (16 October 2024) → Peng-00149 (8 August 2025). The index also
+  lists Peng-00029/BEI.POP/02-2024, Peng-00234/BEI.POP/11-2024 and
+  Peng-00150/BEI.POP/08-2025, which change the debt-securities and sukuk
+  operating calendar. They were not read and do not set equity holidays.
+
+**Calendars 2020 to 2023 and the original 2024 notice: not found.**
+
+- The announcement index has no item dated before 3 July 2023. For 2019–2022 it
+  returned 0 items even with an empty keyword, and for 2023 it returned 42,067
+  items, the earliest dated 3 July 2023. A 2023 calendar would have been
+  published in late 2022, so it is outside the index. From 3 July 2023 to
+  4 February 2024 the index returned no BEI item with "Libur" or "Kalender" in
+  its title. The original 2024 calendar is therefore also not found. The
+  index's coverage of BEI's own notices in late 2023 is sparse; this is not
+  evidence that no such notice exists.
+- Searches limited to `idx.co.id` and `idx.id` returned only prospectuses that
+  define "Hari Bursa".
+- KSEI: the operating index links only the 2025, 2026 and 2027 holiday notices.
+  Probing the same file-name pattern for 2020–2024 returned 404 or 500, and the
+  KSEI news archive returned HTTP 500 after page 3. No KSEI notice citing a BEI
+  calendar number for 2020–2024 was found, so no indirect evidence either.
+- Leads, **not verified**: news-site search summaries say the 2022 calendar was
+  revised in April 2022 to add 29 April and 4–6 May, and that the 2023 calendar
+  listed 18 closures and 242 trading days, later revised to add 28 and 30 June
+  2023. No BEI document was opened for either, so no date for 2020–2023 is
+  recorded here.
+
+**II-A Kep-00196/BEI/12-2024 context.** Neither document is the rule text; the
+II-A version table keeps "Text read: no" for Kep-00196.
+
+- **Peng-00251/BEI.POP/12-2024** (7 December 2024, signed by the heads of the
+  trading-regulation and research divisions). It cites provision **VI.8.1** of
+  Kep-00196/BEI/12-2024 of 6 December 2024 (amending II-A): pre-opening trades
+  all shares listed on the Main, New Economy and Development boards. It lists
+  the shares in the pre-opening session from **9 December 2024**; the annex
+  numbers 685 shares. Its footnote says the list changes when a share leaves or
+  enters the special-monitoring board.
+- **IDXbell edition 27, page 12.** Says the exchange issued updated II-A and II-P
+  on Friday 6 December 2024, effective Monday 9 December 2024, under
+  **Kep-00196/BEI/12-2024** (equity trading) and **Kep-00197/BEI/12-2024**
+  (structured warrants). The only II-A change it describes is pre-opening
+  widened from LQ45 stocks to all stocks on the Main, Development and New
+  Economy boards, to improve price discovery at the open. Its page-9 timeline
+  labels the 9 December 2024 item "expansion of pre-opening shares, warrant AR,
+  AR and MPM SW". It gives no values for those, and they are not inferred.
+- Simulation consequence: from 9 December 2024 every share on the three boards
+  could trade in pre-opening, and the list depends on special-monitoring
+  placement. IDXbell describes the earlier scope as LQ45 stocks; Kep-00108
+  VI.8.2 (read earlier) said LQ45 and others the exchange chose. The scope under
+  Kep-00055 was not checked. Kep-00196's other values (hours, auto-rejection,
+  tick, lot) remain unread.
+
+**VAT exemption and the UU 6/2023 check.**
+
+- **PP 49/2022** (set and promulgated 12 December 2022, in force on promulgation,
+  Pasal 38). Pasal 10 lists the strategic taxable services exempted from VAT;
+  "jasa keuangan" is item **d** and "jasa asuransi" item e. **Pasal 14** limits
+  the exempt financial services to five kinds: (a) taking deposits, savings and
+  similar funds; (b) placing, borrowing or lending funds; (c) financing (finance
+  leases with option, factoring, credit cards, consumer finance, including
+  sharia); (d) pawn and fiduciary lending; (e) guarantees. The explanation
+  defines only the item (c) financing types. Neither the article nor the
+  explanation mentions exchange, clearing, settlement or custody services; the
+  words bursa, kliring, kustodian and efek do not appear in the extracted text.
+  So exchange, KPEI and KSEI services are not in the exempt list. PP 49/2022
+  revokes PP 146/2000, PP 81/2015, PP 40/2015 and PP 50/2019 (Pasal 37); JDIH
+  BPK shows it as "Berlaku".
+- **UU 6/2023** (enacting Perppu 2/2022 on job creation; signed and promulgated
+  31 March 2023, in force on promulgation). Its annex lists UU 8/1983 among the
+  laws it changes (Pasal 105 item g). **Pasal 112** of the annex amends only two
+  provisions of the VAT law: Pasal 1A (item 1, what counts as a delivery of
+  taxable goods) and Pasal 13 (item 2, tax invoices). **Pasal 7 (rate) is not
+  amended.** The extracted text has no other amendment of UU 8/1983. The JDIH
+  BPK page lists the laws that later amended or partly revoked UU 6/2023, and
+  none of them is a tax law. So the rate chain recorded in
+  [the VAT section](#vat-basis-ii-a-kep-00108-and-i-x-kep-00315-read-2026-11-12)
+  (10%, 11%, 12% on an 11/12 base) is unchanged by UU 6/2023.
+- Not checked: UU 4/2023 (financial sector) and any later tax law for a change to
+  Pasal 7 or Pasal 4A; VAT on KSEI and KPEI fees as actually invoiced; broker
+  pass-through.
+
+**Simulation consequence.** For 2025 the calendar is now read from BEI itself:
+weekdays minus the 25 closures of Peng-00149, which gives 236 days. For 2024, a
+replay as of a date between 5 February and 10 November 2024 would use the 23
+Peng-00030 closures. Without the original notice, dates before 5 February 2024
+are not shown. In particular, before Peng-00030 was issued, nothing read shows
+whether 14 February was a holiday. Years before 2024 have no read calendar, so a
+session calendar for 2020–2023 cannot be built from this evidence. VAT on the
+exchange fee stays 0.018% × 10%/11%/11% by period, with no exemption.
+
+Limits of this evidence: no BEI calendar for 2020–2023 and no original 2024
+notice; no change to 2026 or 2027 after the notices read; the Kep-00196 rule
+text; KPEI fees; UU 4/2023. No calendar artifact, `complete: true` flag,
+rulebook JSON, fee model or code change was made; backtests stay refused.
 
 ### Additional public-access checks, 2026-11-03
 
