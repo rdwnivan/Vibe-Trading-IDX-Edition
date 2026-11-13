@@ -965,3 +965,63 @@ satisfy DATA-01: there is no accuracy warranty, the volume definition is
 unexplained, JK history depth is unknown, LLM use is not addressed, and display
 is prohibited. No adapter, loader, fallback-chain entry or env-schema key was
 added. DATA-01 stays open, and IDX backtests stay refused.
+
+### EODHD volume gap analysis — 2026-11-13
+
+**Inputs.** The two saved EODHD files above, with the same SHA-256 hashes, and a
+fresh yfinance 1.5.2 fetch of the same window: `history(auto_adjust=False)` daily
+and `interval="60m"`, saved as CSV outside the repository. The daily Yahoo CSVs
+hash to `61115fc928f14b5952e55119111fb94d206a79a9e7785a561154fb7b742dd1cf` (BBCA)
+and `d032d05c1877e43f1b20ba93f2883b52edf461d001544203ca82c602078e9f55` (BBRI).
+No new EODHD request was made. The scratch scripts sit in the session
+scratchpad under `%TEMP%`.
+
+**Small gaps are lot rounding, not added odd lots.**
+
+- On BBCA, 223 of the 240 day gaps are under 100 shares, from −62 to +44. Their
+  signs are balanced: EODHD is higher on 102 days, lower on 97, and equal on 24.
+  If EODHD added odd lots, it would always be the higher figure.
+- Yahoo equals EODHD rounded to the nearest 100 shares on 222 of 240 BBCA days.
+  It equals EODHD rounded down on only 126.
+- On BBRI, EODHD volume is always a multiple of 100, and 222 of 240 days match
+  Yahoo exactly.
+
+So EODHD carries a share-level figure for BBCA but lot multiples for BBRI, and
+Yahoo publishes lot-rounded figures. Why the BBCA figure is not a lot multiple
+(odd-lot trades or something else) is still unproven, but it does not explain
+the difference between the two vendors.
+
+**Large gaps fall on the same dates in both stocks.**
+
+- A gap of at least 10,000 shares occurred on 11 BBCA dates and 13 BBRI dates.
+  Ten dates are shared: 2026-02-23, 03-11, 04-07, 05-07, 05-29, 06-11, 07-08,
+  07-17, 09-02 and 10-05.
+- On every shared date EODHD is higher, by 0.01% to 7.5%. The largest gaps are
+  on 2026-09-02: +7.53% for BBCA and +3.99% for BBRI.
+- The one large gap in the other direction is BBRI on 2026-10-16, where EODHD is
+  4.81% (60.3 million shares) lower. It is a BBRI-only date.
+- The gaps are not explained by a shift of one day: on the five largest BBCA
+  gaps, Yahoo's figures for the neighbouring days do not match EODHD.
+
+A shared date set points to a difference in what each vendor captured for those
+trading days, such as a late or corrected print, or trades from another market
+segment, rather than a per-stock rule. The data cannot tell which vendor is
+right. BBCA's 2026-09-02 open (EODHD 6,675, Yahoo 6,650) differs on the day with
+the largest gap.
+
+**Yahoo intraday bars do not reconcile either daily total.** On all 240 days for
+both stocks, the sum of Yahoo 60m volumes equals neither vendor's daily volume.
+On the gap dates the sum is 49–93% of the daily figure. Both daily totals
+therefore include volume outside the hourly bars, for example the closing
+auction or non-regular segments, so intraday data cannot settle the gap.
+
+**Disposition.** The volume definition is still unexplained, and an official
+figure is needed. The narrowest next input is a BEI publication giving
+per-stock volume, split by market, for one shared gap date (2026-09-02) and the
+reversed date (2026-10-16). The IDX Daily Statistics PDF downloaded normally on
+2026-11-05, but whether it lists BBCA and BBRI volume by market has not been
+checked, and fetching it needs the user's approval. Until then, research use
+should treat volume from either vendor as approximate to within the observed
+gaps (up to 7.5% on the dates seen) and should not mix the two sources in one
+series. DATA-01 stays open. No code, loader or fallback entry changed, and IDX
+backtests stay refused.
