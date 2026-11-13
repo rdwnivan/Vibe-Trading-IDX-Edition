@@ -1318,6 +1318,69 @@ notice; no change to 2026 or 2027 after the notices read; the Kep-00196 rule
 text; KPEI fees; UU 4/2023. No calendar artifact, `complete: true` flag,
 rulebook JSON, fee model or code change was made; backtests stay refused.
 
+### UU 4/2023 read; Kep-00196 and 2026 calendar recheck, 2026-11-13
+
+**UU 4/2023** (financial-sector development and strengthening, "P2SK"). The JDIH
+BPK page shows it as "Berlaku", in force 12 January 2023, and amended by
+**UU 4/2026** (below). The signed PDF was fetched with plain `curl` (HTTP 200)
+into `%TEMP%`, with the user's approval for the 81.8 MB download, read with the
+project's `pypdf` and deleted; nothing was saved to the repository.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| UU 4/2023, JDIH BPK download 295189 | 81,823,248 | Mon, 16 Jan 2023 01:42:40 GMT | 819 | `2be1b1e49af7c729fc2b09c16fcd94da0c601f70b9b6066e81e6b56d980b0e12` |
+
+- The PDF is a scan with an OCR text layer; every page yielded text, but OCR
+  errors (for example `2OLl` for 2011) mean a search can miss a spelling. Searches
+  covered "Pertambahan", "PPN", "Pasal 4A", "Barang Mewah", "Pajak" and OCR
+  variants of "1983".
+- The statutes it amends ("Beberapa ketentuan dalam Undang-Undang Nomor …
+  diubah") are all financial-sector laws: crisis prevention (UU 9/2016), LPS
+  (UU 24/2004), OJK (UU 21/2011), Bank Indonesia (UU 23/1999), currency
+  (UU 7/2011), banking (UU 7/1992), Islamic banking (UU 21/2008), **capital
+  markets (UU 8/1995)**, insurance (UU 40/2014), social security (UU 40/2004)
+  and microfinance (UU 1/2013). **The VAT law (UU 8/1983) is not among them**,
+  and no text amends its Pasal 7 (rate) or Pasal 4A.
+- Its tax provisions only point to tax law. For example, **Pasal 307** lets the
+  government grant tax treatment or incentives for certain financial services
+  "berdasarkan ketentuan peraturan perundang-undangan di bidang perpajakan". The
+  elucidation names UU 7/2021 as the separate tax-sector reform.
+- **UU 4/2026** (amending UU 4/2023): set, promulgated and in force
+  **17 June 2026**, status "Berlaku" on JDIH BPK. Its abstract lists LPS status
+  and governance, OJK supervision of mineral and strategic-commodity exchanges,
+  **demutualisation of BEI**, financial-sector investigation and restorative
+  justice, and the commodity exchanges. The abstract mentions no tax change. Its
+  text (download 413875, 13,974,767 bytes, `Last-Modified` 22 June 2026) was
+  **not downloaded or read**, so this rests on the abstract only.
+
+**Simulation consequence.** The VAT rate chain on the exchange fee recorded in
+[the VAT section](#vat-basis-ii-a-kep-00108-and-i-x-kep-00315-read-2026-11-12)
+stays as it was: UU 4/2023 does not change it. Whether UU 4/2026 touches tax is
+unverified beyond its abstract. BEI demutualisation is governance and does not by
+itself change any trading rule read here.
+
+**II-A Kep-00196/BEI/12-2024: still no rule text.** The `idx.co.id` announcement
+index (`/primary/NewsAnnouncement/GetAllAnnouncement`, called from an
+`idx.co.id` page in the built-in browser) returned no notice for the keywords
+"Kep-00196", "Pra-pembukaan", "Pre-opening", "Peraturan Nomor II-A", "Perubahan
+Peraturan" or "Perdagangan Efek Bersifat Ekuitas" between 1 November 2024 and
+31 January 2025. "II-A" matched only issuer filings. Rule changes are evidently
+not published through that index, so the version-table row stays "Text read: no".
+
+**2026 calendar recheck.** Over 1 January to 13 November 2026, "Libur Bursa"
+and "Kalender" returned only Peng-00169 and Peng-00171/BEI.POP/09-2026 (2027,
+already read) and Peng-00170 and Peng-00172/BEI.POP/09-2026. The last two are
+calendars for EBUS (the debt-securities market), are out of scope for equities,
+and were not read. "Cuti Bersama", "Hari Bursa" and "Perubahan Kalender"
+returned nothing. So the index holds **no amendment to the 2026 equity calendar**
+issued during 2026 up to today. That is an absence in one index, not proof that
+no change exists.
+
+Limits of this evidence: the UU 4/2026 text; tax laws after UU 7/2021 other than
+UU 6/2023 and UU 4/2023; the Kep-00196 text; BEI calendars for 2020–2023 and the
+original 2024 notice; KPEI fees. No code, rulebook JSON, calendar artifact or fee
+model changed; backtests stay refused.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
