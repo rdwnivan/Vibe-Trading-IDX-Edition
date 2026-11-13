@@ -1085,3 +1085,62 @@ EODHD.
   exact, and the two vendors should not be mixed in one series.
 - DATA-01 stays open. No code, loader or fallback entry changed, and IDX
   backtests stay refused.
+
+### Monthly regular-market reconciliation against BEI — 2026-11-13
+
+**Source.** BEI's Digital Statistic report
+[Table of Stock Trading](https://www.idx.id/en/market-data/statistical-reports/digital-statistic/monthly/trading-summary/table-of-stock-trading)
+gives each stock's monthly **Regular Market** and **Total Market** volume (in
+thousands of shares, one decimal), value and frequency. The page loads ten rows
+at a time from its own endpoint, `/primary/DigitalStatistic/GetApiDataPaginated`
+with `urlName=LINK_TABLE_STOCK_TRADING`, which accepts a `search` parameter.
+Four single lookups were made through that endpoint from the open page: BBCA and
+BBRI for September and October 2026. All returned HTTP 200 JSON. This is the
+request the page itself makes, not a crawl, and nothing was saved to a file. The
+BEI site terms prohibit scraping and crawling, so this route should stay limited
+to occasional single lookups.
+
+| Stock, month | BEI regular | BEI total | EODHD sum (22 days) | Yahoo sum (22 days) |
+|---|---|---|---|---|
+| BBCA 2026-09 | 2,716,745,900 | 3,443,015,261 | 2,716,745,929 (+29) | 2,709,138,100 (−7,607,800) |
+| BBRI 2026-09 | 4,009,458,000 | 4,255,057,128 | 4,009,458,000 (0) | 4,001,254,900 (−8,203,100) |
+| BBCA 2026-10 | 7,220,911,100 | 7,950,214,655 | 7,220,911,237 (+137) | 7,220,900,900 (−10,200) |
+| BBRI 2026-10 | 7,613,796,900 | 7,877,248,628 | 7,613,796,900 (0) | 7,674,104,600 (+60,307,700) |
+
+BEI and both vendors count 22 trading days in each month.
+
+**Findings.**
+
+- **Vendor daily volume is regular-market volume.** Summed over a month, EODHD
+  equals BEI's regular-market volume exactly for BBRI. For BBCA it is within
+  29 and 137 shares, which is BEI's rounding to hundreds of shares. Both
+  vendors fall 3–21% below BEI's total-market volume, which also counts
+  negotiated and cash-market trades. This settles the open question from the
+  official check above.
+- **Yahoo's large gaps are Yahoo errors.** Yahoo's monthly shortfalls and
+  excess match its daily gaps to EODHD on the same dates:
+  - BBCA September: −7,607,800 against −7,601,998 on 2026-09-02.
+  - BBRI September: −8,203,100, mainly −8,193,900 on 2026-09-02.
+  - BBRI October: +60,307,700 against +60,323,500 on 2026-10-16.
+
+  BEI's monthly figure agrees with EODHD in all three cases. The small BBCA
+  gaps are Yahoo's rounding to whole lots, as found earlier.
+- **Scope.** This covers 2 stocks and 2 months (88 of the 480 stock-days
+  compared). EODHD matched BEI on every stock-month checked; that is
+  evidence, not a warranty over all symbols and dates.
+
+**Disposition.** For daily IDX volume, EODHD reproduces BEI regular-market
+totals on every stock-month checked, and Yahoo does not. In personal research,
+EODHD can serve as the volume reference and Yahoo as a fallback, with Yahoo's
+lot rounding and occasional missed or doubled days stated. The volume part of
+DATA-01 is answered for these samples. DATA-01 as a whole stays open, because
+these items are still unresolved:
+
+- EODHD's accuracy disclaimer and its display and redistribution limits;
+- unknown JK history depth;
+- untested split adjustment;
+- corporate-action vintages;
+- LLM-use terms.
+
+No loader, fallback entry or env key was added, and IDX backtests stay
+refused.

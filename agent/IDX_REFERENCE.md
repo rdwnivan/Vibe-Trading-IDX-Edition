@@ -1421,6 +1421,78 @@ after UU 7/2021 other than UU 6/2023, UU 4/2023 and UU 4/2026; the Kep-00196 tex
 original 2024 notice; KPEI fees. No code, rulebook JSON, calendar artifact or fee
 model changed; backtests stay refused.
 
+### KPEI II-5 fee read via IDClear; calendar and II-A leads, 2026-11-13
+
+**KPEI is reachable again under its new name.** KPEI now publishes as IDClear
+at `www.idclear.co.id`, which loads in the browser. The equity fee page
+(`/id/segmentasi/ekuitas/fee`) rendered only its heading. A web search on the
+domain found the regulation file below, which WebFetch saved; the text was
+extracted locally with pypdf.
+
+**Peraturan KPEI II-5** (clearing and settlement guarantee of exchange
+transactions in equity securities), annex to **Kep-016/DIR/KPEI/0822**, dated
+15 August 2022. The file is
+[Peraturan-KPEI-II-5-(Rev1208).pdf](https://assets-website.idclear.co.id/idclear/storage/32357/Peraturan-KPEI-II-5-(Rev1208).pdf):
+1,302,941 bytes, 16 pages, SHA-256
+`02420b94795724a0701b9ba6c200e3b0f35e6a8c9495cca5ff29f44f25a1038`. Its
+signature timestamp is 12 August 2022. The extracted text states no separate
+effective date or revoked regulation. Chapter VIII:
+
+- VIII.1.1: the clearing and settlement guarantee fee for equities in the
+  **Regular and Cash Markets is 0.009%** of each Clearing Member's transaction
+  value.
+- VIII.1.2: the Negotiated Market clearing fee is 0.009% "or as otherwise set
+  by KPEI policy".
+- VIII.1.3: the VIII.1.1 fee has a **minimum of Rp10,000,000 per month** per
+  Clearing Member, which still applies during suspension.
+- VIII.3: the fee **excludes VAT** (PPN), income tax and other taxes, which are
+  collected through KPEI.
+- VIII.4–VIII.6: payment is due monthly by the 12th calendar day of the next
+  month. Late payment costs 1% per calendar day, capped at Rp500,000,000.
+
+**Later version.** A web search lists **KEP-031/DIR/KPEI/0626** (June 2026) as
+the newer II-5, but both of its indexed file links return HTTP 404. An undated
+draft change matrix for II-5
+([Matriks-Perubahan](https://assets-website.idclear.co.id/idclear/storage/32806/Matriks-Perubahan-Peraturan-KPEI-No.-II-5_Clean-Version_v1.pdf),
+49 pages, SHA-256
+`0b97ce22252cd8ced2a30868e62bd2e92f3683b829bd9eaa026bd3efabc41ff`) proposes
+only "Penyesuaian Penomoran" (renumbering) for chapter VIII. This fits the
+14 August 2026 negotiated-fee SKB citing the fee as "X.1.2". So 0.009% plausibly
+still holds, but the 2026 text itself has not been read.
+
+**What this settles for the fee model.** Together with the earlier rows, the
+per-transaction exchange-side charges on a regular-market trade are:
+
+- exchange fee 0.018% (II-A);
+- KPEI clearing fee 0.009% (II-5 VIII.1.1), from 15 August 2022 at the latest;
+- KSEI settlement fee 0.003% of the monthly cumulative transaction value
+  (VI-A 4.6.1);
+- VAT on these fees at the dated rates already recorded.
+
+The monthly minimums fall on the member, not on each trade. Broker commission
+is separate and still unmodelled. KPEI fees before August 2022 are unproven.
+
+**2023 calendar leads (not read).** News reports cite Peng-00252/BEI.POP/10-2022
+as the original 2023 calendar (242 trading days) and Peng-00152/BEI.POP/06-2023
+as the Idul Adha change (28 and 30 June 2023). They also report extra
+Lebaran holidays on 19 and 20 April 2023 and a Maulid Nabi holiday on
+28 September 2023. Sources:
+[Bisnis](https://market.bisnis.com/read/20221013/7/1587286/bei-umumkan-kalender-libur-bursa-2023-cek-detailnya),
+[ANTARA](https://www.antaranews.com/berita/3598974/perdagangan-bursa-efek-libur-sesuaikan-cuti-bersama-idul-adha).
+These are announcement numbers to look for, not BEI text. The `idx.co.id`
+announcement index starts on 3 July 2023, so Peng-00252 is outside it.
+
+**II-A leads (not read).** Hukumonline lists Kep-00196/BEI/12-2024 behind its
+Pro paywall, with "ditetapkan 5 December 2024, berlaku 8 December 2024". That
+conflicts with BEI's own 6 and 9 December. A third-party copy of
+`Kep-00003_BEI_04-2025.pdf` on `wplibrary.co.id` returned HTTP 403 to WebFetch
+and in the browser, and was not pursued.
+
+**Still open:** the 2026 II-5 text; KPEI fees before August 2022; official BEI
+calendar text for 2020–2023 and the original 2024 notice; and the II-A texts for
+Kep-00025, Kep-00196, Kep-00003, Kep-00136 and Kep-00157. No fee model, rulebook
+JSON or code was added.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
