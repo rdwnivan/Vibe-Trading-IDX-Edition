@@ -1402,6 +1402,20 @@ returned nothing. So the index holds **no amendment to the 2026 equity calendar*
 issued during 2026 up to today. That is an absence in one index, not proof that
 no change exists.
 
+**Register and KPEI retry, 2026-11-13.**
+
+- The Peraturan BEI register (Peraturan Pencatatan tab, read today) lists
+  25 rules with one current version each (for example I-X Kep-00139, I-L
+  Kep-00077, I-I Kep-00044). It has no superseded versions or archive view, so a
+  revoked II-A text such as Kep-00196 cannot be recovered from it. Guessed
+  `/primary/Regulation/…` endpoints on `idx.co.id` returned HTTP 503 and were not
+  pursued.
+- KPEI is still unreachable from this network. `www.kpei.co.id` fails DNS
+  resolution, and `kpei.co.id` (202.155.72.168) times out after 20 seconds.
+  The Wayback Machine holds `kpei.co.id` captures from 1999 onward, but its
+  filtered CDX search answered "Temporarily Offline". No archived KPEI fee
+  document was found, and the Regular-market clearing fee stays unread.
+
 Limits of this evidence: the UU 4/2026 margin-transfer article in full; tax laws
 after UU 7/2021 other than UU 6/2023, UU 4/2023 and UU 4/2026; the Kep-00196 text; BEI calendars for 2020–2023 and the
 original 2024 notice; KPEI fees. No code, rulebook JSON, calendar artifact or fee
