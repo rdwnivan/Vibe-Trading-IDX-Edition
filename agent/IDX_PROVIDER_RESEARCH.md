@@ -886,3 +886,82 @@ response do not resolve storage/cloud/LLM/display/redistribution rights. Obtain
 those terms and a permitted original artifact before accepting an adapter or
 reference import. RULE-01, DATA-01 and RESEARCH-01 remain open; backtests stay
 disabled. This increment changes documentation only; tests/Ruff were not rerun.
+
+## EODHD free-plan probe and Yahoo comparison — 2026-11-13
+
+**Why this candidate.** A search for providers not yet evaluated found EODHD
+(eodhd.com) listing the Jakarta exchange as `JK` (MIC XIDX) with
+[924 active IDR tickers](https://eodhd.com/exchange/JK). Twelve Data also lists
+XIDX instruments, but its [pricing page](https://twelvedata.com/pricing) does not
+say whether IDX is in the free plan or how deep daily history goes, so it stays a
+fallback candidate. Two open-source IDX sources were rejected without use:
+[NeaByteLab IDX-API](https://gh.hhj520.top/NeaByteLab/IDX-API) reads the exchange
+website, which the BEI site terms forbid scraping, and
+[saham-mcp](https://glama.ai/mcp/servers/baguskto/saham-mcp) relies on a GitHub
+dataset with no stated licence.
+
+**Published terms read (not a signed agreement).**
+
+- [Pricing](https://eodhd.com/pricing): personal plans. The free Sandbox has 1 year
+  of history and 20 calls per day. Historian costs $19.99 per month and gives
+  "30+ yrs" of end-of-day data with 100,000 calls per day. Commercial plans are
+  separate and were not read.
+- [Historical EOD API](https://eodhd.com/financial-apis/api-for-historical-data-and-volumes):
+  - `/api/eod/{SYMBOL}` returns date, open, high, low, close, adjusted_close and
+    volume.
+  - OHLC is unadjusted, "as they printed on the tape that day".
+  - Volume is in shares and split-adjusted only.
+  - `adjusted_close` covers splits and dividends and is recomputed, so past values
+    change when new dividends arrive.
+  - Delisted tickers keep their history. Non-US history depth varies by market,
+    and no JK start date is stated.
+- [Terms](https://eodhd.com/financial-apis/terms-conditions): non-professional
+  users may "store, manipulate, and analyze the data for private, non-commercial
+  purposes". Redistribution and "displaying" are prohibited. The data "is not
+  necessarily real-time nor accurate", and EODHD gives no warranties. Use with LLM
+  services and caching are not addressed.
+
+**Probe.** The user created a free account and saved the token in the gitignored
+`agent/.env` as `EODHD_API_KEY`. The token was read from that file by a scratch
+script and never printed or committed. One request per symbol, with
+`from=2025-11-01`, returned HTTP 200 `application/json`. The free plan clipped
+the history to one year. The JSON files stay outside the repository, which the
+terms allow for private use.
+
+| Symbol | Bytes | Rows | First | Last | SHA-256 |
+|---|---|---|---|---|---|
+| BBCA.JK | 27,547 | 240 | 2025-11-13 | 2026-11-13 | `6354320873f10468e90be28af60913cb3fbceb419ba4a67024a97dbab255de49` |
+| BBRI.JK | 27,196 | 240 | 2025-11-13 | 2026-11-13 | `6fdd118113c481b994f382b27efcf2e7842a07ff9780137a30f5186ae5ce155e` |
+
+**Comparison with Yahoo.** yfinance 1.5.2 `history(auto_adjust=False)` over the
+same dates. Yahoo timestamps were converted to Asia/Jakarta session dates.
+
+| Check | BBCA.JK | BBRI.JK |
+|---|---|---|
+| Session dates | 240 = 240, identical sets | 240 = 240, identical sets |
+| High, low, close | identical on all 240 | identical on all 240 |
+| Open | identical except 2026-09-02 (EODHD 6,675, Yahoo 6,650) | identical on all 240 |
+| Volume equal | 24 of 240 | 222 of 240 |
+| Volume difference | median 5 shares, 90th percentile 19, max 7,601,998 (2026-09-02) | max 60,323,500 (2026-10-16, EODHD lower) |
+| Volumes divisible by 100 | EODHD 27 of 240, Yahoo 240 of 240 | both 240 of 240 |
+| Zero-volume bars | none in either | none in either |
+| `adjusted_close`/close | 0.9451–1.0000 | 0.9052–1.0000 |
+
+Yahoo reported dividends on the same window (BBCA: 55, 281, 20 and 25 IDR; BBRI:
+137 and 209 IDR), consistent with EODHD's falling adjustment ratio. Splits were
+not observed in this window, so split handling is untested.
+
+**What this shows.** On this window two vendors agree on session dates and on
+almost every price. EODHD's BBCA volumes are mostly not round lots while Yahoo's
+always are, which suggests a different aggregation such as odd lots or another
+market segment. Nothing read establishes the cause. Where the two disagree, for
+example BBCA on 2026-09-02, neither can be called correct without an official BEI
+figure. Agreement between two vendors is not independent proof, because they may
+share an upstream source.
+
+**Disposition.** EODHD is a usable second source for cross-checking Yahoo in
+personal research, and the paid personal plan could extend history. It does not
+satisfy DATA-01: there is no accuracy warranty, the volume definition is
+unexplained, JK history depth is unknown, LLM use is not addressed, and display
+is prohibited. No adapter, loader, fallback-chain entry or env-schema key was
+added. DATA-01 stays open, and IDX backtests stay refused.
