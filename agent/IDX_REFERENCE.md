@@ -1349,15 +1349,41 @@ project's `pypdf` and deleted; nothing was saved to the repository.
   **17 June 2026**, status "Berlaku" on JDIH BPK. Its abstract lists LPS status
   and governance, OJK supervision of mineral and strategic-commodity exchanges,
   **demutualisation of BEI**, financial-sector investigation and restorative
-  justice, and the commodity exchanges. The abstract mentions no tax change. Its
-  text (download 413875, 13,974,767 bytes, `Last-Modified` 22 June 2026) was
-  **not downloaded or read**, so this rests on the abstract only.
+  justice, and the commodity exchanges. The abstract mentions no tax change. The
+  text was then read too (next point).
+- **UU 4/2026 text**, read the same way after a second approved download and then
+  deleted:
+
+  | Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+  |---|---|---|---|---|
+  | UU 4/2026, JDIH BPK download 413875 | 13,974,767 | Mon, 22 Jun 2026 13:01:26 GMT | 207 | `dab7d3f02b6b4755c4f64eb3859ea6d717559465fc7947b0f10d0cb79a884483` |
+
+  - Article I amends only UU 4/2023. Its other amendment points are UU 4/2023's
+    own articles, among them the capital-markets article (Pasal 22). Article II
+    holds transitional dates, and the law is in force on promulgation.
+  - Capital markets (items 63–68, amending UU 8/1995 through UU 4/2023
+    Pasal 22): **Pasal 8** makes the exchange a limited company whose
+    shareholders may be individuals or Indonesian legal entities, members or not
+    (demutualisation; details left to an OJK regulation). Pasal 8A is deleted.
+    New **Pasal 8B** lets the Ministry of Finance, Bank Indonesia and BPI
+    Danantara hold exchange shares while keeping the exchange independent.
+    Pasal 100A and new 100E cover OJK's choice not to proceed to investigation,
+    and Pasal 101 is deleted. **None of these items sets lots, ticks, price
+    limits, hours, settlement, fees or holidays.**
+  - Items 69–70 insert a new Pasal 39A on margin transfer for transactions in
+    financial markets (initial margin as collateral). That passage was not read
+    beyond its opening, and it sets no BEI equity trading value.
+  - Tax: the text has no VAT, UU 8/1983 or Pasal 4A reference. Tax appears only
+    in these places: an LPS or OJK levy that "bukan merupakan objek pajak
+    penghasilan" (corporate income tax, effective for 2027 levies under
+    Article II item 3); special-debt instruments that cannot be a tax basis; and
+    special tax treatment for an Indonesian international financial centre,
+    left to a separate law.
 
 **Simulation consequence.** The VAT rate chain on the exchange fee recorded in
 [the VAT section](#vat-basis-ii-a-kep-00108-and-i-x-kep-00315-read-2026-11-12)
-stays as it was: UU 4/2023 does not change it. Whether UU 4/2026 touches tax is
-unverified beyond its abstract. BEI demutualisation is governance and does not by
-itself change any trading rule read here.
+stays as it was: neither UU 4/2023 nor UU 4/2026 changes it. BEI demutualisation
+is governance and does not by itself change any trading rule read here.
 
 **II-A Kep-00196/BEI/12-2024: still no rule text.** The `idx.co.id` announcement
 index (`/primary/NewsAnnouncement/GetAllAnnouncement`, called from an
@@ -1376,8 +1402,8 @@ returned nothing. So the index holds **no amendment to the 2026 equity calendar*
 issued during 2026 up to today. That is an absence in one index, not proof that
 no change exists.
 
-Limits of this evidence: the UU 4/2026 text; tax laws after UU 7/2021 other than
-UU 6/2023 and UU 4/2023; the Kep-00196 text; BEI calendars for 2020–2023 and the
+Limits of this evidence: the UU 4/2026 margin-transfer article in full; tax laws
+after UU 7/2021 other than UU 6/2023, UU 4/2023 and UU 4/2026; the Kep-00196 text; BEI calendars for 2020–2023 and the
 original 2024 notice; KPEI fees. No code, rulebook JSON, calendar artifact or fee
 model changed; backtests stay refused.
 
