@@ -1318,6 +1318,109 @@ notice; no change to 2026 or 2027 after the notices read; the Kep-00196 rule
 text; KPEI fees; UU 4/2023. No calendar artifact, `complete: true` flag,
 rulebook JSON, fee model or code change was made; backtests stay refused.
 
+### UU 4/2023 read; Kep-00196 and 2026 calendar recheck, 2026-11-13
+
+**UU 4/2023** (financial-sector development and strengthening, "P2SK"). The JDIH
+BPK page shows it as "Berlaku", in force 12 January 2023, and amended by
+**UU 4/2026** (below). The signed PDF was fetched with plain `curl` (HTTP 200)
+into `%TEMP%`, with the user's approval for the 81.8 MB download, read with the
+project's `pypdf` and deleted; nothing was saved to the repository.
+
+| Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+|---|---|---|---|---|
+| UU 4/2023, JDIH BPK download 295189 | 81,823,248 | Mon, 16 Jan 2023 01:42:40 GMT | 819 | `2be1b1e49af7c729fc2b09c16fcd94da0c601f70b9b6066e81e6b56d980b0e12` |
+
+- The PDF is a scan with an OCR text layer; every page yielded text, but OCR
+  errors (for example `2OLl` for 2011) mean a search can miss a spelling. Searches
+  covered "Pertambahan", "PPN", "Pasal 4A", "Barang Mewah", "Pajak" and OCR
+  variants of "1983".
+- The statutes it amends ("Beberapa ketentuan dalam Undang-Undang Nomor …
+  diubah") are all financial-sector laws: crisis prevention (UU 9/2016), LPS
+  (UU 24/2004), OJK (UU 21/2011), Bank Indonesia (UU 23/1999), currency
+  (UU 7/2011), banking (UU 7/1992), Islamic banking (UU 21/2008), **capital
+  markets (UU 8/1995)**, insurance (UU 40/2014), social security (UU 40/2004)
+  and microfinance (UU 1/2013). **The VAT law (UU 8/1983) is not among them**,
+  and no text amends its Pasal 7 (rate) or Pasal 4A.
+- Its tax provisions only point to tax law. For example, **Pasal 307** lets the
+  government grant tax treatment or incentives for certain financial services
+  "berdasarkan ketentuan peraturan perundang-undangan di bidang perpajakan". The
+  elucidation names UU 7/2021 as the separate tax-sector reform.
+- **UU 4/2026** (amending UU 4/2023): set, promulgated and in force
+  **17 June 2026**, status "Berlaku" on JDIH BPK. Its abstract lists LPS status
+  and governance, OJK supervision of mineral and strategic-commodity exchanges,
+  **demutualisation of BEI**, financial-sector investigation and restorative
+  justice, and the commodity exchanges. The abstract mentions no tax change. The
+  text was then read too (next point).
+- **UU 4/2026 text**, read the same way after a second approved download and then
+  deleted:
+
+  | Document | Bytes | `Last-Modified` | Pages | SHA-256 |
+  |---|---|---|---|---|
+  | UU 4/2026, JDIH BPK download 413875 | 13,974,767 | Mon, 22 Jun 2026 13:01:26 GMT | 207 | `dab7d3f02b6b4755c4f64eb3859ea6d717559465fc7947b0f10d0cb79a884483` |
+
+  - Article I amends only UU 4/2023. Its other amendment points are UU 4/2023's
+    own articles, among them the capital-markets article (Pasal 22). Article II
+    holds transitional dates, and the law is in force on promulgation.
+  - Capital markets (items 63–68, amending UU 8/1995 through UU 4/2023
+    Pasal 22): **Pasal 8** makes the exchange a limited company whose
+    shareholders may be individuals or Indonesian legal entities, members or not
+    (demutualisation; details left to an OJK regulation). Pasal 8A is deleted.
+    New **Pasal 8B** lets the Ministry of Finance, Bank Indonesia and BPI
+    Danantara hold exchange shares while keeping the exchange independent.
+    Pasal 100A and new 100E cover OJK's choice not to proceed to investigation,
+    and Pasal 101 is deleted. **None of these items sets lots, ticks, price
+    limits, hours, settlement, fees or holidays.**
+  - Items 69–70 insert a new Pasal 39A on margin transfer for transactions in
+    financial markets (initial margin as collateral). That passage was not read
+    beyond its opening, and it sets no BEI equity trading value.
+  - Tax: the text has no VAT, UU 8/1983 or Pasal 4A reference. Tax appears only
+    in these places: an LPS or OJK levy that "bukan merupakan objek pajak
+    penghasilan" (corporate income tax, effective for 2027 levies under
+    Article II item 3); special-debt instruments that cannot be a tax basis; and
+    special tax treatment for an Indonesian international financial centre,
+    left to a separate law.
+
+**Simulation consequence.** The VAT rate chain on the exchange fee recorded in
+[the VAT section](#vat-basis-ii-a-kep-00108-and-i-x-kep-00315-read-2026-11-12)
+stays as it was: neither UU 4/2023 nor UU 4/2026 changes it. BEI demutualisation
+is governance and does not by itself change any trading rule read here.
+
+**II-A Kep-00196/BEI/12-2024: still no rule text.** The `idx.co.id` announcement
+index (`/primary/NewsAnnouncement/GetAllAnnouncement`, called from an
+`idx.co.id` page in the built-in browser) returned no notice for the keywords
+"Kep-00196", "Pra-pembukaan", "Pre-opening", "Peraturan Nomor II-A", "Perubahan
+Peraturan" or "Perdagangan Efek Bersifat Ekuitas" between 1 November 2024 and
+31 January 2025. "II-A" matched only issuer filings. Rule changes are evidently
+not published through that index, so the version-table row stays "Text read: no".
+
+**2026 calendar recheck.** Over 1 January to 13 November 2026, "Libur Bursa"
+and "Kalender" returned only Peng-00169 and Peng-00171/BEI.POP/09-2026 (2027,
+already read) and Peng-00170 and Peng-00172/BEI.POP/09-2026. The last two are
+calendars for EBUS (the debt-securities market), are out of scope for equities,
+and were not read. "Cuti Bersama", "Hari Bursa" and "Perubahan Kalender"
+returned nothing. So the index holds **no amendment to the 2026 equity calendar**
+issued during 2026 up to today. That is an absence in one index, not proof that
+no change exists.
+
+**Register and KPEI retry, 2026-11-13.**
+
+- The Peraturan BEI register (Peraturan Pencatatan tab, read today) lists
+  25 rules with one current version each (for example I-X Kep-00139, I-L
+  Kep-00077, I-I Kep-00044). It has no superseded versions or archive view, so a
+  revoked II-A text such as Kep-00196 cannot be recovered from it. Guessed
+  `/primary/Regulation/…` endpoints on `idx.co.id` returned HTTP 503 and were not
+  pursued.
+- KPEI is still unreachable from this network. `www.kpei.co.id` fails DNS
+  resolution, and `kpei.co.id` (202.155.72.168) times out after 20 seconds.
+  The Wayback Machine holds `kpei.co.id` captures from 1999 onward, but its
+  filtered CDX search answered "Temporarily Offline". No archived KPEI fee
+  document was found, and the Regular-market clearing fee stays unread.
+
+Limits of this evidence: the UU 4/2026 margin-transfer article in full; tax laws
+after UU 7/2021 other than UU 6/2023, UU 4/2023 and UU 4/2026; the Kep-00196 text; BEI calendars for 2020–2023 and the
+original 2024 notice; KPEI fees. No code, rulebook JSON, calendar artifact or fee
+model changed; backtests stay refused.
+
 ### Additional public-access checks, 2026-11-03
 
 The KSEI operational index was checked again: its 2026 item still resolves to
