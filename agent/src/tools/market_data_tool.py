@@ -97,6 +97,7 @@ class MarketDataTool(BaseTool):
     parameters = {
         "type": "object",
         "properties": {
+            "run_dir": {"type": "string", "description": "Workspace for a saved full JSON result usable by quantlib_call; injected by agent sessions."},
             "codes": {
                 "type": "array",
                 "items": {"type": "string"},
@@ -118,6 +119,8 @@ class MarketDataTool(BaseTool):
                 "enum": _SOURCE_ENUM,
                 "description": (
                     "Data source. 'auto' detects from symbol format with fallback. "
+                    "Use 'gildata' only if the user asks for Gildata quotes; requires a token "
+                    "and the market quotes opt-in, with no fallback in either direction. "
                     "Use 'longbridge' explicitly for US/HK OHLCV through the "
                     "Longbridge OpenAPI (requires Longbridge credentials). "
                     "Free, no key: yfinance/yahoo (US/HK/Canada equities; "
@@ -128,7 +131,7 @@ class MarketDataTool(BaseTool):
                     "bars for <CODE>.KS / <CODE>.KQ; needs the optional pykrx "
                     "package, else Korea falls back to yahoo/yfinance). Key-gated "
                     "REST: tushare (China A-shares), finnhub/alphavantage/tiingo/fmp "
-                    "(US/global), qveris (premium marketplace). india_broker: "
+                    "(US/global). india_broker: "
                     "read-only Shoonya/Dhan bars for .NS/.BO. mt5: forex/metals "
                     "from a local MetaTrader 5 terminal (Windows; e.g. EUR/USD, "
                     "XAUUSD.FX); tickerall: the same feed hosted, no terminal, "
@@ -242,4 +245,5 @@ class MarketDataTool(BaseTool):
         loader_resolver = kwargs.get("loader_resolver")
         if loader_resolver is not None:
             fetch_kwargs["loader_resolver"] = loader_resolver
-        return fetch_market_data_json(**fetch_kwargs)
+        from src.agent.result_artifacts import persist_calculation_result
+        return persist_calculation_result(fetch_market_data_json(**fetch_kwargs), kwargs.get("run_dir"))
