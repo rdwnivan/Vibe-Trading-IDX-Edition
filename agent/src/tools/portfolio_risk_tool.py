@@ -43,9 +43,10 @@ class PortfolioRiskXrayTool(BaseTool):
         "recent closes through the data fallback chain and compute "
         "concentration (HHI/effective N), annualized volatility, max drawdown, "
         "historical VaR/expected shortfall, diversification ratio, and "
-        "correlation/beta. Long-only; weights are renormalized when they do "
-        "not sum to 1. IDX (.JK, IDR) symbols must not be mixed with other "
-        "currencies: there is no FX conversion, so such a basket is refused."
+        "correlation/beta. Long-only baskets are normalized to sum to 1; "
+        "baskets with short positions preserve their signed exposure scale. "
+        "IDX (.JK, IDR) symbols must not be mixed with other currencies: there "
+        "is no FX conversion, so such a basket is refused."
     )
     parameters = {
         "type": "object",

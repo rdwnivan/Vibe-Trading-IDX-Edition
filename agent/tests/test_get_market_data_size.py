@@ -12,6 +12,7 @@ legacy behavior; a negative `max_rows` is invalid and enforces the cap.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pandas as pd
 
@@ -34,9 +35,25 @@ def _loader_with_rows(n: int):
     return _L
 
 
+def _full_result(raw: str) -> dict:
+    """Return the complete payload, following a saved-result receipt if one is used.
+
+    get_market_data now saves every result in the calculation workspace. A result
+    over the tool-response limit comes back as a receipt (``_result_file`` plus a
+    preview) instead of inline symbols; the cap logic is checked on the full JSON.
+    """
+    out = json.loads(raw)
+    ref = out.get("_result_file")
+    if ref and "_delivery" in out:
+        return json.loads(Path(ref["path"]).read_text(encoding="utf-8"))
+    return out
+
+
 def _call(monkeypatch, n, **kw):
     monkeypatch.setattr(mcp_server, "_get_loader", lambda src: _loader_with_rows(n))
-    return json.loads(_gmd(codes=["X.US"], start_date="2025-01-01", end_date="2026-01-01", source="yfinance", **kw))
+    return _full_result(
+        _gmd(codes=["X.US"], start_date="2025-01-01", end_date="2026-01-01", source="yfinance", **kw)
+    )
 
 
 def test_oversized_symbol_is_capped_with_metadata(monkeypatch):
@@ -108,7 +125,7 @@ def test_multi_symbol_capped_independently(monkeypatch):
             return {"BIG.US": _frame(big), "SMALL.US": _frame(small)}
 
     monkeypatch.setattr(mcp_server, "_get_loader", lambda src: _Multi)
-    out = json.loads(
+    out = _full_result(
         _gmd(
             codes=["BIG.US", "SMALL.US"],
             start_date="2025-01-01",

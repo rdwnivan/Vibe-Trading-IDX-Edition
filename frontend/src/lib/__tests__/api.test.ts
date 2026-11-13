@@ -35,6 +35,16 @@ describe("api request helper", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/research/idx/symbols?query=Bank+%26+.JK", expect.objectContaining({ headers: { Authorization: "Bearer synthetic-api-key", "Content-Type": "application/json" }, signal: expect.any(AbortSignal) }));
   });
 
+  it("preserves the structured error code when a connection is still in use", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      detail: { code: "connection_in_use", message: "remove this connection from the portfolio before deleting it" },
+    }), { status: 400, headers: { "content-type": "application/json" } })));
+    const { api } = await loadApiModule();
+    await expect(api.deleteConnection("main-alpaca")).rejects.toMatchObject({
+      status: 400, code: "connection_in_use", message: "remove this connection from the portfolio before deleting it",
+    });
+  });
+
   it("translates the server's message-size error into a recovery instruction", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
       detail: { code: "message_too_long", max_length: 100_000, message: "Shorten input" },
@@ -42,6 +52,24 @@ describe("api request helper", () => {
     const { api } = await loadApiModule();
     await expect(api.sendMessage("session", "oversized")).rejects.toMatchObject({
       status: 422, code: "message_too_long", message: expect.stringContaining("Shorten it"),
+    });
+  });
+
+  it("surfaces FastAPI validation arrays instead of reducing them to HTTP 422", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      detail: [{
+        loc: ["body", "observations"],
+        msg: "List should have at most 400 items after validation, not 401",
+        type: "too_long",
+      }],
+    }), { status: 422, headers: { "content-type": "application/json" } })));
+    const { api } = await loadApiModule();
+    await expect(api.computeVolatilitySurface({
+      observations: [{ strike: 90, time_to_expiry: 30 / 365, implied_volatility: 0.24 }],
+      spot: 100,
+    })).rejects.toMatchObject({
+      status: 422,
+      message: "body.observations: List should have at most 400 items after validation, not 401",
     });
   });
   beforeEach(() => {
