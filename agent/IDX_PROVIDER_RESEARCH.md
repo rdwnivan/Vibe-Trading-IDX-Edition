@@ -1222,3 +1222,33 @@ reason not to use EODHD without calendar filtering. DATA-01 stays open for the
 terms (accuracy disclaimer, no display or redistribution, LLM use not
 addressed), JK price-history depth and corporate-action vintages. No loader,
 fallback entry or env key was added, and IDX backtests stay refused.
+
+### MLPT zero-volume row on 27 March 2026: a suspension — 2026-11-14
+
+**Question.** Both EODHD and Yahoo carry one zero-volume, flat row for MLPT.JK
+on Friday 27 March 2026, a normal BEI trading day (previous section).
+
+**BEI lookup.** One visit to BEI's announcements page
+(`idx.co.id/id/berita/pengumuman/`) in the built-in browser returned **HTTP
+503**: a maintenance page saying the site is being developed and is
+temporarily unavailable. It was not retried. The BEI announcement itself, and
+its number, were therefore not read.
+
+**News reports.** Two reports, which quote BEI but cite no announcement number:
+
+- [Pasardana, 27 March 2026](https://pasardana.id/news/2026/3/27/bei-hentikan-sementara-perdagangan-saham-mlpt-3):
+  BEI halted trading in MLPT **in all markets from session I on 27 March
+  2026** until further notice. MLPT had closed at Rp14,450 on 26 March, down
+  7.07% on the day. The article gives no official reason.
+- [Pasardana, 30 March 2026](https://pasardana.id/news/2026/3/30/bei-buka-suspensi-perdagangan-saham-mlpt):
+  trading reopened in the **Regular and Cash Markets from session I on 30
+  March 2026**, per a written BEI statement dated 27 March.
+
+**Result.** The zero-volume row is a full-day suspension, not a day without
+trades, on the evidence of news reports; it is not yet confirmed from BEI's own
+announcement. Both vendors fill the suspended day with the previous close and
+volume 0, and nothing in either response marks it. A loader cannot tell a
+suspension from an untraded day from vendor bars alone: it would need BEI's
+suspension announcements as a separate, dated source. This is a further
+reason, alongside the holiday rows, to keep a suspension record (RULE-01,
+DATA-03) apart from the price series. No loader, fixture or code was added.
