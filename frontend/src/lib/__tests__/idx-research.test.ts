@@ -1,4 +1,31 @@
-import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXRecency, getIDXVolumeCoverage } from "../idx-research";
+import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXBarAudit, getIDXRecency, getIDXVolumeCoverage } from "../idx-research";
+
+function barAudit(dates: unknown = ["2026-01-12", "2026-01-13"]) {
+  return { policy: "idx_daily_bar_audit_v1", calendar_verified: false, zero_volume_price_change_dates: dates };
+}
+
+it.each([[[]], [["2026-01-12"]], [["2026-01-12", "2026-01-13"]]])("accepts a backend bar audit with dates %j unchanged", (dates) => {
+  const value = barAudit(dates);
+  expect(getIDXBarAudit(value)).toBe(value);
+});
+
+it.each([undefined, null, true, "2026-01-12", [], [["2026-01-12"]]])("keeps unsupported bar audit container %j unavailable", (value) => {
+  expect(getIDXBarAudit(value)).toBeNull();
+});
+
+it.each([
+  { ...barAudit(), policy: "idx_daily_bar_audit_v2" },
+  { ...barAudit(), calendar_verified: true },
+  { policy: "idx_daily_bar_audit_v1", calendar_verified: false },
+  barAudit(null),
+  barAudit("2026-01-12"),
+  barAudit(["2026-01-12", "2026-02-30"]),
+  barAudit(["2026-01-12", "2026-1-13"]),
+  barAudit(["2026-01-12T00:00:00Z"]),
+  barAudit(["2026-01-12", 20260113]),
+])("marks the whole bar audit unavailable instead of filtering it: %j", (value) => {
+  expect(getIDXBarAudit(value)).toBeNull();
+});
 
 function volumeCoverage() {
   return { bar_count: 20, available_bar_count: 19, missing_bar_count: 1, zero_bar_count: 1 };

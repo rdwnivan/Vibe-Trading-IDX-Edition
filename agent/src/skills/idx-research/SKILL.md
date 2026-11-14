@@ -22,7 +22,8 @@ untuk riset pribadi lokal. Nama perusahaan belum membuktikan identitas instrumen
    observasi watchlist. Gunakan `end_date="YYYY-MM-DD"` bila pengguna menetapkan
    batas tanggal; parameter itu membatasi harga, bukan tanggal fundamental.
 3. Untuk tiap item sehat, baca `analysis.latest_close`, `latest_date`,
-   `indicators`, `read_identity`, `provenance`, `recency` dan `volume_coverage`.
+   `indicators`, `read_identity`, `provenance`, `recency`, `volume_coverage` dan
+   `bar_audit`.
    Gunakan SMA/RSI/MACD/Bollinger/volume yang sudah dihitung tool; pertahankan
    null sebagai belum tersedia. Analisis pendek boleh memiliki indikator yang
    belum cukup warmup. Hindari akuisisi kedua hanya untuk menghitung ulang
@@ -32,6 +33,12 @@ untuk riset pribadi lokal. Nama perusahaan belum membuktikan identitas instrumen
    tanggal permintaan, bukan kalender sesi, suspensi atau status real-time.
    Volume nol adalah observasi; volume null adalah belum tersedia. Volume
    saham bukan lot, turnover transaksi, free float atau bukti smart money.
+   `bar_audit.zero_volume_price_change_dates` berisi bar bervolume nol yang
+   harganya berbeda dari close terakhir yang bertransaksi. Itu bisa harga
+   pengganti vendor, tetapi bar dan indikator tetap memuatnya. Sebutkan tanggal
+   itu sebagai risiko data dan jangan menarik kesimpulan harga dari bar
+   tersebut. Kalender tidak diperiksa (`calendar_verified: false`), jadi baris
+   hari libur dan suspensi tidak terdeteksi.
 
 ## Profil snapshot opsional
 

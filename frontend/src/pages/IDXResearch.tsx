@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
 import type { IDXBar, IDXResearchResponse, IDXSymbolSearchResponse } from "@/lib/idx-research";
-import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXRecency, getIDXVolumeCoverage } from "@/lib/idx-research";
+import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXBarAudit, getIDXRecency, getIDXVolumeCoverage } from "@/lib/idx-research";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
 import { useChartLifecycle } from "@/hooks/useChartLifecycle";
 import { getChartTheme } from "@/lib/chart-theme";
@@ -119,6 +119,7 @@ export function IDXResearch() {
   const provenance = item?.provenance;
   const recency = getIDXRecency(item?.recency);
   const volumeCoverage = getIDXVolumeCoverage(item?.volume_coverage);
+  const priceChangeDates = getIDXBarAudit(item?.bar_audit)?.zero_volume_price_change_dates ?? null;
   // Backend hexdigest only; do not derive identity from chart rows or normalize it.
   const rawFingerprint = item?.analysis?.read_identity?.dataset_fingerprint;
   const fingerprint = typeof rawFingerprint === "string" && rawFingerprint.length === 64 && /^[a-f0-9]+$/.test(rawFingerprint)
@@ -250,6 +251,12 @@ export function IDXResearch() {
             {[[t("idxResearch.volumeBars"), format(volumeCoverage?.bar_count)], [t("idxResearch.volumeAvailable"), format(volumeCoverage?.available_bar_count)], [t("idxResearch.volumeMissing"), format(volumeCoverage?.missing_bar_count)], [t("idxResearch.volumeZero"), format(volumeCoverage?.zero_bar_count)]].map(([label, value]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 tabular-nums">{value}</dd></div>)}
           </dl>
           <p className="mt-3 text-xs text-muted-foreground">{t("idxResearch.volumeCoverageScope")}</p>
+          <p className={`mt-3 text-xs [overflow-wrap:anywhere] ${priceChangeDates?.length ? "font-semibold" : "text-muted-foreground"}`}>
+            {priceChangeDates === null ? t("idxResearch.barAuditUnknown")
+              : priceChangeDates.length ? t("idxResearch.barAuditPriceChange", { bars: format(priceChangeDates.length), dates: priceChangeDates.join(", ") })
+                : t("idxResearch.barAuditClean")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("idxResearch.barAuditScope")}</p>
         </div>
         <div role="status" className="mt-4 border-y py-3 text-sm">
           <h3 className="font-medium">{t("idxResearch.recencyTitle")}</h3>
