@@ -1746,6 +1746,73 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Audit bar harian vendor
+
+Slice **2026-11-14, Asia/Jakarta**. Pemicunya temuan EODHD/Yahoo yang dicatat
+di [riset provider](IDX_PROVIDER_RESEARCH.md#eodhd-split-handling-history-depth-and-holiday-rows--2026-11-14):
+baris bervolume nol pada hari libur BEI, sebagian berharga sentinel
+999.999,9999, dan hari suspensi MLPT yang
+[diisi close sebelumnya](IDX_PROVIDER_RESEARCH.md#mlpt-zero-volume-row-on-27-march-2026-a-suspension--2026-11-14).
+Semua bar itu lolos invariant OHLC yang ada, karena bar datar tetap valid.
+
+**Implementasi.** [idx_bar_quality.py](src/markets/idx_bar_quality.py)
+menambah `audit_daily_bars(symbol, frame, calendar=None, suspensions=())` dan
+record `IDXSuspension` (simbol IDX, sumber, hari pertama dan terakhir,
+inklusif). Fungsi ini hanya melaporkan. Ia tidak membuang, memperbaiki atau
+mengisi bar, dan tidak mengubah frame input. Temuan berupa daftar tanggal ISO:
+
+| Field | Arti |
+|---|---|
+| `off_calendar_dates` | bar pada tanggal yang ditandai tutup oleh kalender yang diberikan |
+| `uncovered_dates` | bar di luar cakupan kalender, status tidak diketahui (bukan error) |
+| `missing_session_dates` | sesi di antara bar pertama dan terakhir tanpa bar; tidak ada bar yang dibuat |
+| `zero_volume_flat_bars` | bar datar bervolume nol di luar daftar off-calendar; `status` `suspended` bila record suspensi yang diberikan mencakup hari itu, selain itu `untraded_or_suspended` |
+| `zero_volume_price_change_dates` | volume nol, tetapi ada harga OHLC yang berbeda dari close terakhir bervolume positif (tanpa transaksi tidak ada harga baru) |
+| `traded_during_suspension_dates` | volume positif di dalam suspensi yang diberikan |
+
+Batasnya:
+
+- Kalender wajib berupa `IDXSessionCalendar` yang disuplai pemanggil. Tidak
+  ada kalender, hari libur atau suspensi default. Tanpa kalender, tiga temuan
+  kalender bernilai `None` (tidak diperiksa), bukan daftar kosong.
+- Record suspensi untuk simbol lain diabaikan; sumbernya ikut di
+  `suspension_sources`.
+- Volume NaN tetap tidak diketahui, bukan nol. Bar bervolume nol sebelum bar
+  bertransaksi pertama tidak dinilai untuk perubahan harga.
+- Harga dibandingkan persis, tanpa toleransi. Seri mentah juga bisa berubah
+  harga tanpa transaksi pada tanggal aksi korporasi, jadi temuan ini bukan
+  vonis.
+- Sentinel berurutan sama-sama tertangkap karena pembandingnya close terakhir
+  bervolume positif, bukan bar sebelumnya.
+
+**Belum tersambung ke permukaan mana pun.** Tool `idx_research`, API, MCP, CLI
+dan UI tidak memanggilnya. Tes `volume_coverage` yang ada membandingkan dict
+secara persis, dan belum ada kalender bersumber untuk diberikan. Menyambungkan
+temuan tanpa kalender (`zero_volume_price_change_dates`) ke tool riset dan UI
+adalah slice terpisah.
+
+**Verifikasi.** [Tes](tests/test_idx_bar_quality.py) memakai kalender,
+suspensi dan harga sintetis tahun 2030, bukan data IDX. Run awal gagal saat
+koleksi karena modul belum ada. Satu tes awal kemudian diperbaiki: baris
+sentinel dilaporkan sekali, sebagai perubahan harga, bukan juga sebagai sesi
+ambigu. Hasil akhir:
+
+```powershell
+.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_bar_quality.py agent/tests/test_idx_foundation.py agent/tests/test_idx_reference.py -q --disable-socket   # 135 passed (33 baru)
+.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_research_quality.py agent/tests/test_idx_research.py -q --allow-hosts=127.0.0.1,::1   # 160 passed
+.venv/idx312/Scripts/python.exe -m ruff check agent/src/markets/idx_bar_quality.py agent/tests/test_idx_bar_quality.py   # lulus
+.venv/idx312/Scripts/python.exe -m ruff format --check agent/src/markets/idx_bar_quality.py agent/tests/test_idx_bar_quality.py   # lulus
+```
+
+Tes riset dengan `--disable-socket` menghasilkan 13 kegagalan HTTP, karena
+asyncio Windows butuh socket loopback. Dengan `--allow-hosts` semuanya lulus.
+Black tanpa konfigurasi memakai lebar 88 dan menolak file IDX yang sudah ada
+(`idx_rules.py`, `idx_research_tool.py`) maupun file baru. Proyek memakai
+`line-length = 120` milik Ruff, jadi file baru mengikuti `ruff format`. Suite
+penuh, frontend dan probe provider tidak dijalankan. DATA-03 penuh tetap
+terbuka: delisting, dividen, data basi berbasis sesi dan kalender bersumber
+belum ada.
+
 ## DATA-03 — List tanpa mapping Local Data Bridge
 
 Audit subset **2026-11-04, Asia/Jakarta**. Grounded: status/backlog,
