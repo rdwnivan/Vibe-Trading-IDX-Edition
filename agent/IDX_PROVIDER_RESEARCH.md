@@ -1144,3 +1144,81 @@ these items are still unresolved:
 
 No loader, fallback entry or env key was added, and IDX backtests stay
 refused.
+
+### EODHD split handling, history depth and holiday rows — 2026-11-14
+
+**Cases.** Two `.JK` stocks split during the free plan's one-year window. The
+issuer disclosure of **RAJA** (Rukun Raharja, 9 June 2026; file 323,696 bytes,
+SHA-256 `4a581ce38b25db59d92481016bd02b6fe5fb56fd574dd43acf3298909170031a`,
+read with `pypdf`) sets a 1:5 split, nominal Rp25 to Rp5, with a *tentative*
+schedule: last trading at the old nominal on 13 July 2026 and first trading at
+the new nominal on **16 July 2026**. **MLPT** (Multipolar Technology) split
+1:25; its date was taken from the vendor data below, not from an issuer
+document.
+
+**Requests.** Five EODHD calls with the user's free token, read from the
+gitignored `agent/.env` by a scratch script that never printed it. Responses
+stay outside the repository, as the terms allow for private use.
+
+| Call | Status | Bytes | Rows | SHA-256 |
+|---|---|---|---|---|
+| `/api/eod/RAJA.JK?from=2025-11-01` | 200 | 28,315 | 253 | `7bf213c212ce4f61f8216e3c00b7f308fbfb7880cfeb19edc13d38f81235e0c7` |
+| `/api/splits/RAJA.JK` | 200 | 103 | 2 | `b04285d19d82a10481110febc923a4f885168a82d7951632b899d2ddb121fba4` |
+| `/api/eod/MLPT.JK?from=2025-11-01` | 200 | 28,595 | 253 | `76569ab51025fe637f9058746b9d7ad6d8ee1ef55eb89dbd3d45ef9cfcf508d7` |
+| `/api/splits/MLPT.JK` | 200 | 53 | 1 | `314fc3c16a9a6de7a47d42b134235e4536bc38a6526e564dafd896ca4afe9fa0` |
+| `/api/eod/BBCA.JK?from=2025-11-01` | 200 | 27,431 | 239 | `38711d9ee99878e7f72968171fc92d8eb577439ff598acf25953b1edee4e1e4b` |
+
+**Split handling.**
+
+- The **splits endpoint works on the free plan and is not clipped to one
+  year**: RAJA returns 2016-06-07 (4:1) and **2026-07-16 (5:1)**; MLPT returns
+  **2026-07-21 (25:1)**. RAJA's date matches the issuer's first day at the new
+  nominal.
+- **OHLC is unadjusted**, as documented. On the split day RAJA's close moves
+  from 4,600 to 875, and MLPT's from 25,950 to 1,300. `adjusted_close` divides
+  pre-split closes by exactly the ratio (`adjusted_close`/close = 0.2 and 0.04
+  on the days just before the split, lower further back because of dividends).
+- **Volume is split-adjusted**, as documented, so pre-split price × volume
+  overstates traded value by the split ratio. Checked against BEI's monthly
+  Table of Stock Trading (two single lookups from the open page, June 2026,
+  regular market, 20 days): RAJA BEI 700,637,600 shares, EODHD sum 3,503,002,000
+  = 5 × 700,600,400; MLPT BEI 1,038,600, EODHD 25,955,000 = 25 × 1,038,200.
+  The remainders (−37,200 and −400 shares) were not explained.
+- **Yahoo** (yfinance 1.5.2, `auto_adjust=False`) reports the same split dates
+  and ratios, but its OHLC is already split-adjusted. On every pre-split day
+  the EODHD close is exactly 5× (RAJA, 154 days) or 25× (MLPT, 156 days) the
+  Yahoo close; after the split all 85 and 82 closes are equal. Daily volume is
+  identical on every common day.
+
+**Holiday rows: a data-quality hazard.** RAJA and MLPT each have 14 extra rows,
+on exactly the 14 BEI holidays in the window (Peng-00149/BEI.POP/08-2025 for
+late 2025, Peng-00171/BEI.POP/09-2025 for 2026), all with volume 0:
+
+- 25 and 26 December 2025, 31 December 2025, 1 January 2026 and 16 January 2026
+  carry a **sentinel price of 999,999.9999** in open, high, low and close (and
+  `adjusted_close` 986,699.92 for RAJA);
+- the other nine (1, 14, 15, 27, 28 May; 1 and 16 June; 17 and 25 August 2026)
+  repeat the previous close with volume 0.
+
+BBCA.JK over the same window has 239 rows, exactly the BEI sessions, and the
+BBCA/BBRI probe of 2026-11-13 had none either. So the behaviour differs by
+symbol, and nothing in the response marks these rows. Yahoo has no such rows
+for either stock. Both vendors have one zero-volume, flat row for MLPT on
+2026-03-27, a normal trading day; whether MLPT was suspended or simply had no
+trade was not checked. A loader using EODHD would have to drop rows on dates
+outside the BEI calendar and reject zero-volume sentinel prices, or a single
+row could break returns, highs and position sizing.
+
+**History depth.** Still unknown. Every `eod` response carries "Data is limited
+by one year as you have free subscription", and EODHD publishes no JK start
+date. The splits endpoint returning a 2016 event shows that corporate-action
+history goes back further, not that prices do. Measuring price depth needs the
+paid plan, which needs the user's purchase approval.
+
+**Disposition.** Split handling is now tested on two cases. EODHD and Yahoo
+agree on split dates and ratios; EODHD keeps raw prices with adjusted volume,
+and Yahoo adjusts both. The holiday rows with sentinel prices are a new
+reason not to use EODHD without calendar filtering. DATA-01 stays open for the
+terms (accuracy disclaimer, no display or redistribution, LLM use not
+addressed), JK price-history depth and corporate-action vintages. No loader,
+fallback entry or env key was added, and IDX backtests stay refused.
