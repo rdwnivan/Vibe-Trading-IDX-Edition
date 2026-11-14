@@ -56,6 +56,12 @@ therefore extends their existing owners and tests parity across them.
   `IDXSessionCalendar` accepts a complete bounded session-date set and refuses
   dates outside coverage. Both are reference primitives; no default historical
   rules/calendar are bundled and they do not enable matching.
+- `src.markets.idx_bar_quality.audit_daily_bars` reports vendor daily-bar
+  hazards without changing the bars: rows on closed or uncovered dates against
+  a supplied calendar, missing sessions, zero-volume bars whose prices differ
+  from the last traded close (placeholder prices), and flat zero-volume days,
+  marked `suspended` only when a supplied `IDXSuspension` record covers them.
+  Without a calendar the calendar findings are `None`. No surface calls it yet.
 - Both runner and direct composite construction reject IDX backtesting until
   the historical rulebook/calendar/action model exists. Mixed IDR/USD/CNY/HKD
   pools are rejected by the existing currency guard.
@@ -138,7 +144,7 @@ Dev tools use the constraints in `pyproject.toml`; no dependency manifest change
 From repository root:
 
 ```powershell
-.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_foundation.py agent/tests/test_market_detection.py agent/tests/test_registry.py agent/tests/test_composite_currency_guard.py agent/tests/test_market_identity_parity.py agent/tests/test_yahoo_loader.py agent/tests/test_yfinance_declared_currency.py agent/tests/test_market_data.py agent/tests/test_market_data_serving_source.py agent/tests/test_loader_retry_helpers.py -q --disable-socket
+.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_foundation.py agent/tests/test_idx_bar_quality.py agent/tests/test_market_detection.py agent/tests/test_registry.py agent/tests/test_composite_currency_guard.py agent/tests/test_market_identity_parity.py agent/tests/test_yahoo_loader.py agent/tests/test_yfinance_declared_currency.py agent/tests/test_market_data.py agent/tests/test_market_data_serving_source.py agent/tests/test_loader_retry_helpers.py -q --disable-socket
 .venv/idx312/Scripts/python.exe -m pytest agent/tests/test_sdk_order_gate.py agent/tests/test_mandate_enforcement.py agent/tests/test_killswitch_blocks_orders.py agent/tests/test_readonly_default.py -q --allow-hosts=127.0.0.1,::1
 git diff --check
 ```
