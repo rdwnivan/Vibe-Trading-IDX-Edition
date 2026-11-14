@@ -1231,8 +1231,9 @@ on Friday 27 March 2026, a normal BEI trading day (previous section).
 **BEI lookup.** One visit to BEI's announcements page
 (`idx.co.id/id/berita/pengumuman/`) in the built-in browser returned **HTTP
 503**: a maintenance page saying the site is being developed and is
-temporarily unavailable. It was not retried. The BEI announcement itself, and
-its number, were therefore not read.
+temporarily unavailable. One later visit the same day, after PR #8 merged,
+got the same 503. The BEI announcement itself, and its number, were therefore
+not read; retry once when the maintenance ends.
 
 **News reports.** Two reports, which quote BEI but cite no announcement number:
 
