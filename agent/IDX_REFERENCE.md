@@ -1586,7 +1586,7 @@ equity trade, each with its own source and start date:
 |---|---|---|---|
 | Exchange fee | 0.018% | II-A chapter XI | (as recorded earlier) |
 | KPEI clearing and guarantee fee | 0.009% | II-5 VIII.1.1 (2022), X.1.1 (2026) | 15 August 2022 |
-| Guarantee-fund contribution | 0.01% | SEOJK 8/2020 II.1; II-5 IX.2 / XI.2; SEOJK 23/2015 II.1 | 26 May 2020; 27 August 2015 per the later SEOJK 23/2015 section |
+| Guarantee-fund contribution | 0.01% | SEOJK 8/2020 II.1; II-5 IX.2 / XI.2; SEOJK 23/2015 II.1 | 26 May 2020; 9 December 2004 per the later SEOJK 23/2015 and III.B.7 sections |
 | KSEI settlement fee | 0.003% of monthly cumulative value | KSEI VI-A 4.6.1 | 26 April 2022 |
 | VAT on fees | dated rates already recorded | UU PPN chain | – |
 
@@ -1781,8 +1781,71 @@ SEOJK 8/2020 from 26 May 2020 at the same rate. The 2020 circular changed only
 the futures rate (0.0006% to 0.0003%). Before 27 August 2015 the contribution
 is unproven; POJK 26/2014 (in force from November 2014) is the legal basis and
 was not read, and no earlier circular or Bapepam-LK rule with a rate was found
-or looked for. Whether brokers passed the contribution to clients is still a
-broker matter and was not checked.
+or looked for. (Both were read later the same day; see
+[the next section](#pojk-262014-and-bapepam-iiib7-guarantee-fund-contribution-from-december-2004-2026-11-14).)
+Whether brokers passed the contribution to clients is still a broker matter
+and was not checked.
+
+No fee model, rulebook JSON or code was added; backtests stay refused.
+
+### POJK 26/2014 and Bapepam III.B.7: guarantee-fund contribution from December 2004, 2026-11-14
+
+**Sources.** Each PDF was fetched once with WebFetch, which saved it to the
+session's tool-results folder under `%USERPROFILE%`; text was extracted with
+the project's `pypdf`. Nothing was saved to the repository.
+
+| Document | Source | Bytes | Pages | SHA-256 |
+|---|---|---|---|---|
+| POJK 26/POJK.04/2014, certified copy | [JDIH BPK download 120731](https://peraturan.bpk.go.id/Download/120731/pojk%2026-2014.pdf) | 321,745 | 31 | `2da1b1194e7140ac467c6e7ddca0963ea28f067904fa47110482bf3905c91a69` |
+| Bapepam Kep-47/PM/2004 with Peraturan III.B.7 | [OJK Bapepam rule library](https://www.ojk.go.id/id/kanal/pasar-modal/regulasi/klasifikasi-bapepam/bursa-efek/Documents/IIIB7_1388731662.pdf) | 14,451 | 5 | `9750e465c38103f8f55cf83084bccb50b5aa386052bf1d0608e0df9fb553c7fe` |
+
+The POJK copy carries "Salinan sesuai dengan aslinya" (Direktur Hukum I). The
+III.B.7 file is a retyped text from OJK's library of former Bapepam rules
+("ttd.", no certification line and no PDF metadata), so it is OJK's published
+text but not a certified copy.
+
+**POJK 26/POJK.04/2014.** Set and promulgated in Jakarta on **19 November
+2014** (State Gazette 2014 No. 361) and in force on promulgation, except
+articles 25 and 26, which applied from 1 January 2016 (article 34). Article 10
+requires clearing members to pay an irrevocable guarantee-fund contribution
+made of an initial contribution and a transaction-value contribution, paid by
+settlement day; the transaction-value rate is left to an OJK circular
+(10(2)(d)). The regulation sets **no rate itself**. Article 35 revokes
+Bapepam Kep-46/PM/2004 (III.B.6) and **Kep-47/PM/2004 (III.B.7)**, except
+**III.B.7 item 3(a)**, which stays in force until the circular under article
+10(2)(d) is issued. That circular is SEOJK 23/2015 (27 August 2015).
+
+**Bapepam III.B.7 (Kep-47/PM/2004).** Set on **9 December 2004** by the acting
+Bapepam chair (Darmin Nasution) and in force on that date; it replaced
+Kep-26/PM/2000 of 30 June 2000. Item 3 requires clearing members to pay an
+irrevocable contribution:
+
+| Item | Scope | Rate |
+|---|---|---|
+| 3(a) | Each exchange transaction whose settlement KPEI guarantees | **0.01%** of value |
+| 3(b) | Futures contracts | 0.005% of value |
+| 3(c) | Bonds | 0.00125% of value |
+| 3(d) | Payment by settlement day | – |
+| 3(e) | Trades for a client: **collected from the client** by the clearing member | – |
+| 3(f) | Trades for the member's own account: paid by the member | – |
+
+**What this settles.** The 0.01% contribution on exchange transactions now has
+an unbroken sourced chain from **9 December 2004**:
+
+| Period | Source |
+|---|---|
+| 9 December 2004 – 18 November 2014 | III.B.7 item 3(a) |
+| 19 November 2014 – 26 August 2015 | III.B.7 item 3(a), kept by POJK 26/2014 article 35 |
+| 27 August 2015 – 25 May 2020 | SEOJK 23/2015 II.1 (equity) |
+| 26 May 2020 onward | SEOJK 8/2020 II.1; KPEI II-5 IX.2 (2022) and XI.2 (2026) |
+
+Item 3(a) applies to every guaranteed exchange transaction, not only equities;
+from 27 August 2015 the circulars name equity securities explicitly. Item 3(e)
+put the contribution on the client for client trades until 19 November 2014.
+POJK 26/2014 revoked 3(e) and kept only 3(a), and neither later circular says
+who bears the charge, so whether it was passed to clients after that date is
+a broker matter and was not checked. Before 9 December 2004 the rate under
+Kep-26/PM/2000 is unproven; that text was not looked for.
 
 No fee model, rulebook JSON or code was added; backtests stay refused.
 
