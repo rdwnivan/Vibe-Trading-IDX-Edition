@@ -1571,7 +1571,8 @@ per-trade charge that the previous section's fee list left out:
   that date) sets the contribution for exchange transactions at 0.01% of each
   transaction's value (section II.1), with lower rates for futures (0.0003%),
   options (0.01% of contract value) and debt securities and sukuk (0.00125%). It
-  revokes **SEOJK 23/SEOJK.04/2015**, which was not read. OJK's summary says
+  revokes **SEOJK 23/SEOJK.04/2015** (read later the same day; see
+  [SEOJK 23/2015](#seojk-232015-guarantee-fund-contribution-before-26-may-2020-2026-11-14)). OJK's summary says
   SEOJK 10/SEOJK.04/2022 later amended it for structured warrants; that text
   was not read.
 - So the 0.01% contribution on equity trades is sourced from 26 May 2020. Before
@@ -1585,7 +1586,7 @@ equity trade, each with its own source and start date:
 |---|---|---|---|
 | Exchange fee | 0.018% | II-A chapter XI | (as recorded earlier) |
 | KPEI clearing and guarantee fee | 0.009% | II-5 VIII.1.1 (2022), X.1.1 (2026) | 15 August 2022 |
-| Guarantee-fund contribution | 0.01% | SEOJK 8/2020 II.1; II-5 IX.2 / XI.2 | 26 May 2020 |
+| Guarantee-fund contribution | 0.01% | SEOJK 8/2020 II.1; II-5 IX.2 / XI.2; SEOJK 23/2015 II.1 | 26 May 2020; 27 August 2015 per the later SEOJK 23/2015 section |
 | KSEI settlement fee | 0.003% of monthly cumulative value | KSEI VI-A 4.6.1 | 26 April 2022 |
 | VAT on fees | dated rates already recorded | UU PPN chain | – |
 
@@ -1740,6 +1741,50 @@ reports not found by search; the Q2 and Q3 2022 quarterly reports were not
 found either); the 2020–2023 notices and their amendments; the original 2024
 notice. No calendar artifact, `complete: true` flag, rulebook JSON or code was
 made; backtests stay refused.
+
+### SEOJK 23/2015: guarantee-fund contribution before 26 May 2020, 2026-11-14
+
+**Source.** OJK's regulation page for
+[SEOJK tentang Kontribusi Dana Jaminan Berdasarkan Nilai Transaksi](https://ojk.go.id/id/regulasi/Pages/SEOJK-tentang-Kontribusi-Dana-Jaminan-Berdasarkan-Nilai-Transaksi.aspx)
+lists number 23/SEOJK.04/2015, in force 27 August 2015, with one attachment.
+Its file name contains "Draft", but the text is headed **SALINAN**, is marked
+"ttd" (signed) and carries the legal department's "Salinan sesuai dengan
+aslinya" certification. The PDF was fetched once with WebFetch, which saved it
+to the session's tool-results folder under `%USERPROFILE%`; text was extracted
+with the project's `pypdf`. Nothing was saved to the repository. The JDIH BPK
+copy was not checked.
+
+| Document | Bytes | Pages | PDF creation date | SHA-256 |
+|---|---|---|---|---|
+| SEOJK 23/SEOJK.04/2015, OJK attachment | 144,071 | 2 | 12 April 2016 | `c4bf112b0462ce8f217abed307bcef22e6c6f3dbb11943bdef432ea016161266` |
+
+**Text.** Addressed to the directors of BEI, KPEI, KSEI and clearing members.
+It implements article 10(2)(a) and (d) of **POJK 26/POJK.04/2014** on
+exchange-transaction settlement guarantees (19 November 2014). Set in Jakarta
+on **27 August 2015** by the Chief Executive of Capital Market Supervision
+(Nurhaida), in force on the date it was set (III). Section II sets the
+contribution a clearing member pays, irrevocably, on transactions whose
+settlement KPEI guarantees:
+
+| Item | Transaction | Rate | Base |
+|---|---|---|---|
+| II.1 | Equity securities | **0.01%** | value of each transaction |
+| II.2 | Stock-index futures | 0.0006% | value of each transaction |
+| II.3 | Debt securities and sukuk | 0.00125% | value of each transaction |
+| II.4 | Equity options | 0.01% | contract value |
+
+The text revokes nothing and names no earlier circular or rate.
+
+**What this changes.** The equity contribution of 0.01% is now sourced from
+**27 August 2015**: SEOJK 23/2015 from 27 August 2015 to 25 May 2020, then
+SEOJK 8/2020 from 26 May 2020 at the same rate. The 2020 circular changed only
+the futures rate (0.0006% to 0.0003%). Before 27 August 2015 the contribution
+is unproven; POJK 26/2014 (in force from November 2014) is the legal basis and
+was not read, and no earlier circular or Bapepam-LK rule with a rate was found
+or looked for. Whether brokers passed the contribution to clients is still a
+broker matter and was not checked.
+
+No fee model, rulebook JSON or code was added; backtests stay refused.
 
 ### Additional public-access checks, 2026-11-03
 
