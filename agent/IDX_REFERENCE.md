@@ -1605,7 +1605,9 @@ does not accept input. Reading it in the page with pdf.js, as was done for
 BEI files on 2026-11-12, was refused by this session's permission check, so it
 was not attempted another way. The calendar notices themselves (for 2023:
 Peng-00252/BEI.POP/10-2022 and Peng-00152/BEI.POP/06-2023) are still found only
-in news reports.
+in news reports. (With the user's approval the statistics were then read with
+pdf.js; see
+[the next section](#bei-trading-days-2020-to-2023-from-published-statistics-2026-11-14).)
 
 **II-A.** One more search found no official text for Kep-00003 (8 April 2025),
 Kep-00136 or Kep-00157. It surfaced a BEI "konsep bersih" (clean draft) of an
@@ -1618,6 +1620,115 @@ before 26 May 2020; BEI calendars and trading-day records for 2020–2023 and th
 original 2024 notice; the II-A texts for Kep-00025, Kep-00196, Kep-00003,
 Kep-00136 and Kep-00157. No fee model, rulebook JSON or code was added; backtests
 stay refused.
+
+### BEI trading days 2020 to 2023 from published statistics, 2026-11-14
+
+**Method.** With the user's approval, BEI's own statistics publications were
+read in the built-in browser with pdf.js 4.4.168 from cdnjs, run on an
+`idx.co.id` page. Each file was fetched once by the page (HTTP 200
+`application/pdf`), hashed, and parsed in memory; nothing was saved. Links for
+2023 come from the official
+[Statistics page](https://www.idx.id/en/market-data/statistical-reports/statistics),
+whose year filter goes back only to 2023. Links for 2020–2022 come from web
+searches limited to `idx.co.id`. No file names or media ids were guessed. BEI's
+site terms prohibit scraping and crawling; this was a one-off read of 26
+published reports, one request each, and should not become a routine.
+
+Some 2022–2023 reports store text in fonts whose character codes are shifted
+by a fixed amount (for example `Itm` for "Jun", or control characters for
+digits). The parser picked the shift for each font that made the most tokens
+read as numbers, dates or month names. It took trading days from two kinds of
+table:
+
+- quarterly and yearly reports: the "Daily Stock Price Index" table, Jakarta
+  Composite Index columns. A day is a trading day when it has an index value,
+  and not one when the cell is "-". Each month passed two checks: every day 1–31
+  had exactly one cell, and the value on the last trading day equals the
+  month's "Close" row;
+- monthly reports: the date rows of the "Daily IDX Indices" table (2021–2022)
+  or "Daily (Stock) Trading by Type of Investor" (July 2022, 2023), which list only
+  trading days.
+
+| Publication (`idx.co.id` path) | Bytes | `Last-Modified` | Pages | Months used | SHA-256 |
+|---|---|---|---|---|---|
+| `media/8571/idx_1st-quarter_2020.pdf` | 3,879,567 | Wed, 22 Apr 2020 07:06:39 GMT | 167 | 2020-01 to 03 | `534c5eda33858343825f676f090de6bab5ae91f9daddeb980ac47a7465113307` |
+| `media/8899/idx_2nd-quarter_2020.pdf` | 5,117,234 | Wed, 29 Jul 2020 10:13:38 GMT | 209 | 2020-04 to 06 | `3d89ae1d65a0acc654f56359a87c8e39c232ad74b60febf7ffb2b1b8271e1fa1` |
+| `media/9288/idx_3rd-quarter-statistic-2020.pdf` | 5,435,912 | Tue, 27 Oct 2020 10:26:09 GMT | 219 | 2020-07 to 09 | `8ee2aa296171abb33450c3182243a653990559163576b0a9583e6d08d3e494b5` |
+| `media/9628/idx_annually-statistic_2020.pdf` | 5,675,312 | Sat, 30 Jan 2021 00:04:54 GMT | 221 | 2020-10 to 12 | `2b4e883f9278b6b9143e1353e9b448c125282085b376714f320f179b1282d0ce` |
+| `media/9668/idx-monthly-january-2021.pdf` | 5,247,277 | Tue, 16 Feb 2021 22:32:14 GMT | 194 | 2021-01 | `a5885ecebc3f5b624b026d78053a5376733d98065122e18a5c1322224cb7e543` |
+| `media/9729/idx-monthly-february-2021.pdf` | 5,601,313 | Sat, 13 Mar 2021 15:29:30 GMT | 200 | 2021-02 | `166564cb4a9a2737510761f806013fd94035be7165a83f9e07129fc9c2fe5a9b` |
+| `media/9826/idx-monthly-mar-2021.pdf` | 5,444,960 | Fri, 09 Apr 2021 02:04:06 GMT | 210 | 2021-03 | `2e6bf22b421dc80e3f56adc8d42e9ce3d254062a75bcf0dc61827c6a1d8e1012` |
+| `media/9881/idx-monthly-apr-2021.pdf` | 5,891,607 | Mon, 17 May 2021 12:21:55 GMT | 205 | 2021-04 | `a7e19d0fca8dfea1b8b9626a3231402aafb439cce699d6eb7a66f8f7e1e2d46d` |
+| `media/9936/idx-monthly-may-2021.pdf` | 3,704,776 | Fri, 18 Jun 2021 03:17:19 GMT | 143 | 2021-05 | `781d115b6c92f476c85b69a7c431f302bcc63a90e6e3b2443e5180d168f5fd4f` |
+| `media/10009/idx-monthly-june-2021.pdf` | 3,665,686 | Tue, 13 Jul 2021 02:07:36 GMT | 145 | 2021-06 | `b37cae4ad6eb180152eee51ed64f7d77d438fa3359a0bb18471f056a9abe1dfa` |
+| `media/10354/idx-3rd-quarter-statistic-2021.pdf` | 5,910,484 | Tue, 26 Oct 2021 07:24:14 GMT | 228 | 2021-07 to 09 | `a3457cef4580364ef2e0794d271605da9beb2441f65d912f065e3ece2cf16281` |
+| `media/10776/idx_annually-statistic_2021.pdf` | 7,388,891 | Thu, 10 Feb 2022 16:28:58 GMT | 229 | 2021-10 to 12 | `e613bd890adcb453e5be7e11c36a4e3a466a9da5cb903b0850c42d2ad6220b69` |
+| `media/11047/idx_1st-quarter_2022.pdf` | 5,911,584 | Wed, 20 Apr 2022 23:08:15 GMT | 181 | none (see below) | `b833e44647b2407d86fbde8fa86ba76ed437e34b6e5a0c1e5b335dc10ad67794` |
+| `media/10883/idx-monthly-febuary-2022.pdf` | 5,552,404 | Wed, 09 Mar 2022 11:22:20 GMT | 144 | 2022-02 | `d536e62db82fe2748ed168792c267e18735ecc24eb3f4738bc1a71601193fbd9` |
+| `media/10967/idx-monthly-march-2022.pdf` | 5,251,053 | Fri, 08 Apr 2022 11:31:18 GMT | 141 | 2022-03 | `44087ee75b5e1db36c69fc629fe306b7b7ef654fc80b4f12b5b885e78e523a10` |
+| `media/11400/idx-monthly-june-2022.pdf` | 5,712,051 | Sun, 10 Jul 2022 01:33:18 GMT | 141 | 2022-06 | `eccca007ca0c14cc7d999ef2b5bc0cbcd8e4d0771946ac2a1c56f086176f7c11` |
+| `media/20220841/idx-monthly-july-2022.pdf` | 10,859,172 | Fri, 26 Aug 2022 07:03:52 GMT | 145 | 2022-07 | `b18993aaa12b30159b89b64b49e637967de9d82d64c85d2f689c160d487a86f7` |
+| `media/20221139/idx-monthly-september2022.pdf` | 8,371,468 | Thu, 13 Oct 2022 23:07:50 GMT | 145 | 2022-09 | `86346d7f9990ce54c96dec6d0ab0c81e14c7b92e288af30f1d8963eba91863ca` |
+| `Media/5pfnt4gg/idx_yearly_statistics_2022.pdf` | 11,240,831 | Fri, 31 Mar 2023 02:20:10 GMT | 231 | 2022-10 to 12 | `bca75dc51498b804729f966c7a5ed4aa0a19680efab4be533e3654577ab52427` |
+| `Media/b3apn0fk/idx_1st-quarter_2023.pdf` | 5,915,272 | Thu, 27 Apr 2023 23:14:21 GMT | 181 | 2023-01 to 03 | `159dff2b385a60a693c62712312ac60d583c6db81cf1c5176418cbcf8620ca0d` |
+| `Media/l1jifw4h/idx_2nd-quarter_2023.pdf` | 7,864,985 | Fri, 28 Jul 2023 07:45:09 GMT | 241 | 2023-04 to 06 | `861032860321b4e89a22583b0dd4b29a279c805287fa2f084df9845ab62cafeb` |
+| `Media/01jh5avw/idx_3rd-quarter_2023.pdf` | 7,905,111 | Fri, 27 Oct 2023 10:39:53 GMT | 260 | none (see below) | `25353d1afac0d578fc8dcd868b59f4311667d6e2352a98d1ce39247d80818ad3` |
+| `Media/pjnpe2a4/idx-monthly-jul-2023.pdf` | 6,250,927 | Mon, 13 May 2024 05:50:09 GMT | 160 | 2023-07 | `98df3621315c51ab5c201a943ae93d91ac5d215f3ffa34a117cfcf21711774cf` |
+| `Media/blxpxyyl/idx-monthly-aug-2023.pdf` | 5,816,200 | Mon, 13 May 2024 04:57:52 GMT | 151 | 2023-08 | `0df9b845e39a3641d0c06ed706167f16db27a6b2e7af5c00aa67ea04c510b9c2` |
+| `Media/d05lx10z/idx-monthly-sep-2023.pdf` | 5,450,078 | Mon, 13 May 2024 05:54:06 GMT | 152 | 2023-09 | `9e189e5d2780ff0d60650caba30156254651faada4c806b3c0747fefa398c714` |
+| `Media/e3ppd3kq/idx_4th-quarter_2023.pdf` | 8,152,299 | Tue, 30 Jan 2024 15:29:27 GMT | 265 | 2023-10 to 12 | `276e04a059a39f262d81bfa1a820dce3491117bf273db2e93a260617e296e22b` |
+
+**Two BEI publications carry the wrong daily table.**
+
+- The **Q1 2022** report (headed "1st QUARTER 2022") has a daily index table
+  whose values are Q1 **2021**. Its January "Close" is 5,862.352, the JCI close
+  of 29 January 2021, and its February rows 29–31 repeat the 1–3 March values.
+  It was not used. January–March 2022 come from the monthly reports and the
+  yearly counts below.
+- The **Q3 2023** report (headed "3rd QUARTER 2023") repeats the April–June 2023
+  table. July–September 2023 come from the monthly reports.
+
+**Cross-check against BEI's own counts.** The "Trading Day" row of the yearly
+highlights gives, by quarter: 2020 63/58/62/59 = 242; 2021 61/59/63/64 = 247;
+2022 61/55/65/65 = 246; 2023 62/52/62/63 = 239. Every quarter that was read in
+full matches these counts. For each complete year, weekdays minus the closures
+below give the same total (2020: 262 − 20; 2021: 261 − 14; 2023: 260 − 21; for 2022 the dated and derived closures sum to 14, and 260 − 14 = 246). No
+weekend date appears as a trading day.
+
+**Weekdays without trading** (day-month):
+
+| Year | Count | Trading days | Dates |
+|---|---|---|---|
+| 2020 | 20 | 242 | 01-01; 25-03; 10-04; 01-05, 07-05, 21-05, 22-05, 25-05; 01-06; 31-07; 17-08, 20-08, 21-08; 28-10, 29-10, 30-10; 09-12, 24-12, 25-12, 31-12 |
+| 2021 | 14 | 247 | 01-01; 12-02; 11-03; 02-04; 12-05, 13-05, 14-05, 26-05; 01-06; 20-07; 11-08, 17-08; 20-10; 31-12 |
+| 2022 | 14 (4 dated) | 246 | months read: 01-02, 28-02, 03-03, 01-06; none in July or September–December. January: none (Q1 count 61 minus February 18 and March 22 leaves 21, which equals January's 21 weekdays). April–May: 9 closures, dates not read (Q2 count 55 minus June 21 leaves 34 of 43 weekdays). August: 1 closure, date not read (Q3 count 65 minus July 21 and September 22 leaves 22 of 23 weekdays) |
+| 2023 | 21 | 239 | 23-01; 22-03, 23-03; 07-04, 19-04, 20-04, 21-04, 24-04, 25-04; 01-05, 18-05; 01-06, 02-06, 28-06, 29-06, 30-06; 19-07; 17-08; 28-09; 25-12, 26-12 |
+
+**What this is and is not.**
+
+- It records the days on which the regular market produced an index value, as
+  BEI published afterwards. It is a record of what happened, which is what a
+  backtest replaying past sessions needs. It is **not** the calendar notices
+  in force on a given date, so it cannot show what traders were told in
+  advance. The notices for 2020–2023 are still unread.
+- A full-day outage or market-wide closure that was not a declared holiday
+  would also show as a weekday without trading. Nothing in these tables tells
+  the two apart. A day with a trading halt but some trades still has an index
+  value and counts as a trading day.
+- The news leads for 2023 agree with the data: the original calendar
+  reportedly had 242 trading days, and BEI's count is 239. The extra closures
+  are the 19–20 April Lebaran days, 28 and 30 June (Idul Adha leave), and
+  28 September (Maulid), which reportedly were added later. These match the
+  data, but they stay leads until the notices are read.
+- Settlement days: the 2024–2027 notices say settlement does not run on
+  exchange holidays. Whether that held for every 2020–2023 closure is not
+  shown by trading data.
+
+**Still open for the calendar:** April, May and August 2022 dates (monthly
+reports not found by search; the Q2 and Q3 2022 quarterly reports were not
+found either); the 2020–2023 notices and their amendments; the original 2024
+notice. No calendar artifact, `complete: true` flag, rulebook JSON or code was
+made; backtests stay refused.
 
 ### Additional public-access checks, 2026-11-03
 
