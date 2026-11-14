@@ -1614,6 +1614,17 @@ Kep-00136 or Kep-00157. It surfaced a BEI "konsep bersih" (clean draft) of an
 II-A change on `idx.co.id/Media/…`, which returned HTTP 403 to WebFetch and was
 not opened; a draft would not show the text in force anyway.
 
+Later the same day, searches by subject and by `signed_…` file name found
+signed II-A files on `idx.co.id` only for older versions (Kep-00061,
+Kep-00055). A catalogue entry for Kep-00196 exists at `wplibrary.co.id/node/798674`.
+It redirects to an "Access denied" page (HTTP 403 in the browser and to
+WebFetch) of a law firm's members-only library, so it was not pursued. Kep-00136
+and Kep-00157 appear only in news reports and the Hukumonline Pro listing. The
+four II-A texts for 9 December 2024 to 19 October 2026 therefore have no public
+copy that was found. The user is requesting them from BEI directly, through the
+contact listed on BEI's
+[Hubungi Kami](https://www.idx.co.id/id/tentang-bei/hubungi-kami/) page.
+
 **Still open:** II-1 (SK-001/KPEI/0399) and the 2018 II-5 (KEP-027/DIR/KPEI/1118)
 texts for KPEI fees before 15 August 2022; SEOJK 23/2015 for the contribution
 before 26 May 2020; BEI calendars and trading-day records for 2020–2023 and the
