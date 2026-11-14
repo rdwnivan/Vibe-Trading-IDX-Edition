@@ -1746,6 +1746,51 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Peringatan harga saat volume nol di riset
+
+Slice **2026-11-14, Asia/Jakarta**, lanjutan [audit bar harian vendor](#data-03--audit-bar-harian-vendor).
+
+**Backend.** [idx_research_tool.py](src/tools/idx_research_tool.py) memanggil
+`audit_daily_bars(code, frame)` pada seluruh observasi yang sudah lolos
+validasi, sebelum dipotong ke `lookback`. Bar pertama jendela dinilai terhadap
+close bertransaksi terakhir sebelum jendela. Item sehat mendapat field baru:
+
+```json
+"bar_audit": {"policy": "idx_daily_bar_audit_v1", "calendar_verified": false, "zero_volume_price_change_dates": ["2026-09-11"]}
+```
+
+Hanya tanggal di dalam jendela analisis yang dikembalikan. Bar, grafik dan
+indikator tidak diubah, jadi harga pengganti vendor tetap memengaruhi
+indikator. Bila ada temuan, log mencatat jumlah bar tanpa nilai harga. Item
+yang ditolak atau tidak tersedia tidak punya `bar_audit`. Field
+`volume_coverage` tidak diubah, sehingga tes yang membandingkan dict persis
+tetap berlaku. API, MCP dan CLI memakai tool yang sama. Deskripsi tool dan
+[skill idx-research](src/skills/idx-research/SKILL.md) menyebut field ini,
+termasuk bahwa kalender tidak diperiksa.
+
+**UI.** Panel "Cakupan volume" di `/research/idx` menampilkan satu baris:
+peringatan tebal dengan jumlah dan tanggal, kalimat bersih bila daftar kosong,
+atau "tidak tersedia" bila field absen atau cacat. Gate presentasi
+`getIDXBarAudit` menolak seluruh field bila ada satu tanggal yang tidak valid,
+tanpa menyaring daftar. Di bawahnya ada keterangan bahwa baris hari libur dan
+suspensi tidak diperiksa tanpa kalender terverifikasi. Teks ditambahkan di 11
+locale (en, id, tr, ar, de, es, fa, ja, ko, pt-BR, zh-CN).
+
+**Verifikasi.**
+
+- [Tes backend](tests/test_idx_research_bar_audit.py): 10 kasus dengan data
+  sintetis. Sebelum tool disambungkan, 7 dari 8 kasus pertama gagal; yang
+  lulus adalah kasus simbol ditolak yang memang tidak punya field.
+- Seluruh `agent/tests/test_idx*.py` plus `test_market_detection.py` dan
+  `test_registry.py`: **1.082 passed** (`--allow-hosts=127.0.0.1,::1`).
+- `test_mcp_new_tools.py` dan `test_research_artifact_store.py`: 68 passed.
+- Ruff lint dan format lulus pada file Python yang diubah.
+- Frontend: tes gate dan render baru ditulis setelah implementasi, jadi tidak
+  ada run merah yang tercatat. `npm run test:run` **1.363 passed** (103 file),
+  termasuk paritas locale/interpolasi. `npm run build` lulus.
+- Suite backend penuh dan probe provider nyata tidak dijalankan. DATA-03 penuh
+  tetap terbuka.
+
 ## DATA-03 — Audit bar harian vendor
 
 Slice **2026-11-14, Asia/Jakarta**. Pemicunya temuan EODHD/Yahoo yang dicatat

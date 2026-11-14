@@ -61,7 +61,10 @@ therefore extends their existing owners and tests parity across them.
   a supplied calendar, missing sessions, zero-volume bars whose prices differ
   from the last traded close (placeholder prices), and flat zero-volume days,
   marked `suspended` only when a supplied `IDXSuspension` record covers them.
-  Without a calendar the calendar findings are `None`. No surface calls it yet.
+  Without a calendar the calendar findings are `None`. The `idx_research` tool
+  (API, MCP, CLI) returns its zero-volume price-change dates for the analyzed
+  window as `bar_audit`, and the research page shows them; no calendar is
+  passed, so holiday and suspension checks do not run there.
 - Both runner and direct composite construction reject IDX backtesting until
   the historical rulebook/calendar/action model exists. Mixed IDR/USD/CNY/HKD
   pools are rejected by the existing currency guard.

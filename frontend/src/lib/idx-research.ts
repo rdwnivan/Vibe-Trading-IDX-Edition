@@ -56,6 +56,19 @@ export function getIDXVolumeCoverage(value: unknown): Partial<NonNullable<IDXRes
   return { bar_count: bars, available_bar_count: available, missing_bar_count: missing, zero_bar_count: zero };
 }
 
+/** Presentation gate only: the backend owns the audit and its verdicts.
+ * Any malformed field makes the whole finding unavailable; never filter or
+ * repair dates here, since a partial list would understate the warning.
+ */
+export function getIDXBarAudit(value: unknown): NonNullable<IDXResearchItem["bar_audit"]> | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const fields = value as Record<string, unknown>;
+  const dates = fields.zero_volume_price_change_dates;
+  if (fields.policy !== "idx_daily_bar_audit_v1" || fields.calendar_verified !== false || !Array.isArray(dates)
+    || !dates.every((day) => typeof day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day) && validSessionDate(day))) return null;
+  return value as NonNullable<IDXResearchItem["bar_audit"]>;
+}
+
 export interface IDXSymbolSearchResponse {
   ok: boolean;
   data: {
@@ -85,6 +98,11 @@ export interface IDXResearchItem {
     available_bar_count: number;
     missing_bar_count: number;
     zero_bar_count: number;
+  } | null;
+  bar_audit?: {
+    policy: "idx_daily_bar_audit_v1";
+    calendar_verified: false;
+    zero_volume_price_change_dates: string[];
   } | null;
   recency?: {
     policy: "calendar_age_warning_v1";

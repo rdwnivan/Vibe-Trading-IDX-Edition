@@ -218,6 +218,67 @@ it.each([
   expect(within(coverage).getByText("Zero volume").nextElementSibling).toHaveTextContent(new RegExp(`^${zero}$`));
 });
 
+it("warns about zero-volume bars whose price differs from the last traded close", async () => {
+  const data = volumeResponse();
+  data.items[0].bar_audit = { policy: "idx_daily_bar_audit_v1", calendar_verified: false, zero_volume_price_change_dates: ["2026-01-12", "2026-01-13"] };
+  const original = structuredClone(data);
+  mock.getIDXResearch.mockResolvedValue(data);
+  render(<IDXResearch />);
+  fireEvent.click(screen.getByRole("button", { name: "Fetch daily data" }));
+  const group = await screen.findByRole("group", { name: "Volume coverage" });
+  const warning = within(group).getByText(/Zero-volume bars with a price different from the last traded close/);
+  expect(warning).toHaveTextContent("(2): 2026-01-12, 2026-01-13.");
+  expect(warning).toHaveClass("font-semibold");
+  expect(within(group).getByText(/holiday rows and suspensions are not checked/)).toBeInTheDocument();
+  // The chart and indicators are kept; the warning does not remove research.
+  expect(screen.getByRole("img")).toBeInTheDocument();
+  expect(screen.getByText("RSI 14")).toBeInTheDocument();
+  expect(data).toEqual(original);
+  fireEvent.click(screen.getByRole("button", { name: /BBRI.JK/ }));
+  expect(screen.queryByText(/Zero-volume bars with a price different/)).not.toBeInTheDocument();
+});
+
+it("states a clean zero-volume price check without warning styling", async () => {
+  const data = volumeResponse();
+  data.items[0].bar_audit = { policy: "idx_daily_bar_audit_v1", calendar_verified: false, zero_volume_price_change_dates: [] };
+  mock.getIDXResearch.mockResolvedValue(data);
+  render(<IDXResearch />);
+  fireEvent.click(screen.getByRole("button", { name: "Fetch daily data" }));
+  const group = await screen.findByRole("group", { name: "Volume coverage" });
+  const clean = within(group).getByText("No zero-volume bar carries a price different from the last traded close.");
+  expect(clean).not.toHaveClass("font-semibold");
+});
+
+it.each([undefined, null, { policy: "idx_daily_bar_audit_v1", calendar_verified: false, zero_volume_price_change_dates: ["2026-02-30"] }])(
+  "marks an absent or malformed bar audit %j unavailable, not clean", async (audit) => {
+    const data = volumeResponse();
+    data.items[0].bar_audit = audit as IDXResearchItem["bar_audit"];
+    mock.getIDXResearch.mockResolvedValue(data);
+    render(<IDXResearch />);
+    fireEvent.click(screen.getByRole("button", { name: "Fetch daily data" }));
+    const group = await screen.findByRole("group", { name: "Volume coverage" });
+    expect(within(group).getByText("Zero-volume price check unavailable.")).toBeInTheDocument();
+    expect(within(group).queryByText(/No zero-volume bar carries/)).not.toBeInTheDocument();
+    expect(within(group).queryByText("2026-02-30", { exact: false })).not.toBeInTheDocument();
+  },
+);
+
+it("shows the zero-volume price warning in Indonesian", async () => {
+  const data = volumeResponse();
+  data.items[0].bar_audit = { policy: "idx_daily_bar_audit_v1", calendar_verified: false, zero_volume_price_change_dates: ["2026-01-12"] };
+  mock.getIDXResearch.mockResolvedValue(data);
+  await act(async () => { await i18n.changeLanguage("id"); });
+  try {
+    render(<IDXResearch />);
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("idxResearch.load") }));
+    const group = await screen.findByRole("group", { name: i18n.t("idxResearch.volumeCoverage") });
+    expect(within(group).getByText(/bar bervolume nol memiliki harga yang berbeda/)).toHaveTextContent("2026-01-12");
+    expect(group).not.toHaveTextContent("idxResearch.");
+  } finally {
+    await act(async () => { await i18n.changeLanguage("en"); });
+  }
+});
+
 it.each([undefined, null])("marks absent volume coverage %s unavailable while retaining the chart", async (coverage) => {
   const data = response();
   data.items[0].volume_coverage = coverage;

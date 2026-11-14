@@ -16,6 +16,7 @@ from backtest.engines._market_hooks import _detect_market
 from backtest.loaders.base import validate_ohlc
 from src.agent.tools import BaseTool
 from src.market_data import fetch_market_data
+from src.markets.idx_bar_quality import audit_daily_bars
 from src.tools.technical_indicator_tool import summarize_technical_data_json
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,8 @@ class IDXResearchTool(BaseTool):
         "regular-share symbols (maximum 8). Returns chart OHLCV, existing technical "
         "indicators and actual serving provenance; unavailable symbols remain visible. "
         "Includes calendar-age recency warnings relative to the requested end date. "
-        "Reports available, missing and zero-volume counts over the analyzed bars. "
+        "Reports available, missing and zero-volume counts over the analyzed bars, "
+        "and lists zero-volume bars whose price differs from the last traded close. "
         "Not an official instrument universe, calendar or backtest."
     )
     parameters = {
@@ -254,7 +256,26 @@ class IDXResearchTool(BaseTool):
                     .all()
                 ):
                     raise ValueError("available volume must be finite and nonnegative")
+                # Audit the whole validated observation so a window-start bar
+                # is judged against the last traded close before the window.
+                # Report only; vendor placeholder prices stay in the bars and
+                # indicators. No calendar is supplied, so none is checked.
+                audit = audit_daily_bars(code, frame)
                 frame = frame.sort_index().tail(lookback)
+                window_start = frame.index[0].date().isoformat()
+                bar_audit = {
+                    "policy": audit["policy"],
+                    "calendar_verified": False,
+                    "zero_volume_price_change_dates": [
+                        day for day in audit["zero_volume_price_change_dates"] if day >= window_start
+                    ],
+                }
+                if bar_audit["zero_volume_price_change_dates"]:
+                    logger.warning(
+                        "IDX research %s zero-volume price change on %d bars",
+                        code,
+                        len(bar_audit["zero_volume_price_change_dates"]),
+                    )
                 bars = [
                     {
                         "date": stamp.date().isoformat(),
@@ -306,7 +327,14 @@ class IDXResearchTool(BaseTool):
                 }
                 if old_observation:
                     logger.warning("IDX research old observation for %s (%s calendar days)", code, age_days)
-                item.update(status="ok", bars=bars, analysis=analysis, recency=recency, volume_coverage=volume_coverage)
+                item.update(
+                    status="ok",
+                    bars=bars,
+                    analysis=analysis,
+                    recency=recency,
+                    volume_coverage=volume_coverage,
+                    bar_audit=bar_audit,
+                )
             except (ValueError, KeyError, TypeError, OverflowError) as exc:
                 logger.warning("IDX research rejected bars for %s (%s; %s)", code, issue_code, type(exc).__name__)
                 item.update(reason="invalid_data_or_metadata", quality_issue={"code": issue_code})
