@@ -1434,7 +1434,7 @@ transactions in equity securities), annex to **Kep-016/DIR/KPEI/0822**, dated
 15 August 2022. The file is
 [Peraturan-KPEI-II-5-(Rev1208).pdf](https://assets-website.idclear.co.id/idclear/storage/32357/Peraturan-KPEI-II-5-(Rev1208).pdf):
 1,302,941 bytes, 16 pages, SHA-256
-`02420b94795724a0701b9ba6c200e3b0f35e6a8c9495cca5ff29f44f25a1038`. Its
+`002420b94795724a0701b9ba6c200e3b0f35e6a8c9495cca5ff29f44f25a1038`. Its
 signature timestamp is 12 August 2022. The extracted text states no separate
 effective date or revoked regulation. Chapter VIII:
 
@@ -1455,7 +1455,7 @@ the newer II-5, but both of its indexed file links return HTTP 404. An undated
 draft change matrix for II-5
 ([Matriks-Perubahan](https://assets-website.idclear.co.id/idclear/storage/32806/Matriks-Perubahan-Peraturan-KPEI-No.-II-5_Clean-Version_v1.pdf),
 49 pages, SHA-256
-`0b97ce22252cd8ced2a30868e62bd2e92f3683b829bd9eaa026bd3efabc41ff`) proposes
+`0b97ce22252cd8ced2a30868e62bd2e92f3683b829bd9eaa026bd3efabc41ff0`) proposes
 only "Penyesuaian Penomoran" (renumbering) for chapter VIII. This fits the
 14 August 2026 negotiated-fee SKB citing the fee as "X.1.2". So 0.009% plausibly
 still holds, but the 2026 text itself has not been read.
@@ -1491,7 +1491,133 @@ and in the browser, and was not pursued.
 **Still open:** the 2026 II-5 text; KPEI fees before August 2022; official BEI
 calendar text for 2020–2023 and the original 2024 notice; and the II-A texts for
 Kep-00025, Kep-00196, Kep-00003, Kep-00136 and Kep-00157. No fee model, rulebook
-JSON or code was added.
+JSON or code was added. (The 2026 II-5 text was found and read the next day; see
+[the next section](#kpei-ii-5-2026-text-guarantee-fund-and-calendar-access-2026-11-14).)
+
+### KPEI II-5 2026 text, guarantee fund and calendar access, 2026-11-14
+
+**How the files were found.** IDClear's directors'-decision page
+(`/id/peraturan/surat-keputusan-direksi`) and its regulation page
+(`/id/peraturan/peraturan-kpei`), opened in the built-in browser, now link the
+2026 II-5 files under new storage ids. The 404 links from web search pointed at
+older ids. Each PDF was fetched with WebFetch, which saved it to the session's
+tool-results folder under `%USERPROFILE%`; text was extracted with the project's
+`pypdf`. Nothing was saved to the repository. WebFetch does not report
+`Last-Modified`, so none is recorded.
+
+| Document | Bytes | Pages | PDF creation date | SHA-256 |
+|---|---|---|---|---|
+| KPEI KEP-031/DIR/KPEI/0626, decision | 275,407 | 3 | 11 June 2026 | `8f7443e436f271344c766f9cb03bdaa01d9ed8d49266fa3d999b8581737eeec7` |
+| Peraturan KPEI II-5, annex to KEP-031 | 386,369 | 19 | 11 June 2026 | `fde25eff86eb35dc0b13f0d90641960210ce450c86128d516573112723543247` |
+| Peraturan KPEI II-5, annex to Kep-016/DIR/KPEI/0822 (re-read) | 1,302,941 | 16 | – | `002420b94795724a0701b9ba6c200e3b0f35e6a8c9495cca5ff29f44f25a1038` |
+| II-5 draft change matrix (re-fetched) | 577,616 | 49 | – | `0b97ce22252cd8ced2a30868e62bd2e92f3683b829bd9eaa026bd3efabc41ff0` |
+| SEOJK 8/SEOJK.04/2020, JDIH BPK download 134856 | 194,512 | 3 | 2 June 2020 | `9e919e25e1031bb4e5a3bc1637cbd678ba38a6811e8bccb71bc300ad1d36bfe2` |
+
+URLs: [KEP-031](https://assets-website.idclear.co.id/idclear/storage/69792/KEP-031-Keputusan-Direksi---Peraturan-KPEI-No.-II-5.pdf),
+[II-5 2026](https://assets-website.idclear.co.id/idclear/storage/69787/Peraturan-KPEI-No.-II-5-tentang-Kliring-dan-Penjaminan-Penyelesaian-Transaksi-Bursa-atas-Efek-Bersifat-Ekuitas.pdf),
+[SEOJK 8/2020](https://peraturan.bpk.go.id/Details/143396/se-ojk-no-8seojk042020).
+
+**Hash correction.** The previous section recorded the SHA-256 of the 2022 II-5
+annex and of the change matrix with 63 hex digits each. Re-fetching both gives
+the 64-digit values above: the 2022 value had lost its leading `0` and the
+matrix value its trailing `0`. The earlier entries were corrected in place;
+byte size (2022 annex) and page count (both) match the earlier record.
+
+**KEP-031/DIR/KPEI/0626.** Issued and in force **15 June 2026**, on OJK approval
+letter S-95/PM.01/2026 (21 April 2026). Its stated reasons are new securities
+account types for clearing members and clients, and an alternative settlement
+mechanism for time-critical disruptions (business continuity, IOSCO/CPMI). It
+sets the annexed II-5 and revokes two rules:
+
+- II-5 annex to Kep-016/DIR/KPEI/0822 (15 August 2022), so the 2022 fee text
+  governs from 15 August 2022 to 14 June 2026;
+- **Peraturan KPEI II-1** (scripless clearing and settlement guarantee services),
+  annex to **SK-001/KPEI/0399 of 11 March 1999**. II-1 was therefore formally in
+  force until 15 June 2026. Its text was not found or read, so whether it carried
+  a fee, and whether that fee applied before August 2022, is unknown.
+
+**II-5 annex, 15 June 2026.** Chapter X (fees) repeats the 2022 chapter VIII
+word for word in substance, renumbered:
+
+- X.1.1: clearing and settlement-guarantee fee, Regular and Cash Markets,
+  **0.009%** of each clearing member's transaction value;
+- X.1.2: Negotiated Market clearing fee 0.009% or as set by KPEI policy (the
+  "X.1.2" cited by the 14 August 2026 negotiated-fee SKB);
+- X.1.3: minimum **Rp10,000,000 per month** per clearing member, also during
+  suspension;
+- X.2 (new wording): any adjustment of X.1 is set by KPEI policy;
+- X.3: the fee is paid for own and client trades, collected through the exchange
+  or another mechanism agreed by KPEI and the exchange;
+- X.4: excludes VAT and income tax, collected by KPEI as withholding agent;
+- X.5–X.8: due by the 12th calendar day of the next month (next exchange day if
+  that is a weekend or holiday), 1% per calendar day late, capped at
+  Rp500,000,000; after 5 exchange days KPEI may use the member's collateral.
+
+Definitions I.10 and I.11 keep Regular-market settlement at **T+2** and the
+Cash Market at **T+0**, matching II-A; I.2 defines an exchange day as Monday to
+Friday except national holidays and days the exchange declares holidays. The
+annex adds an "alternative settlement mechanism" (I.44, chapter VI), which
+changes operations, not trade costs.
+
+**Guarantee-fund contribution (missed earlier).** Both II-5 versions carry a
+per-trade charge that the previous section's fee list left out:
+
+- 2022 annex **IX.2** and 2026 annex **XI.2**: the clearing member pays a
+  guarantee-fund (Dana Jaminan) contribution of **0.01%** of the value of every
+  equity exchange transaction. The 2022 text requires payment by settlement day
+  (IX.3); the 2026 text collects it through the exchange or an agreed mechanism
+  (XI.3).
+- Both cite **SEOJK 8/SEOJK.04/2020**. Its text (set 26 May 2020, in force on
+  that date) sets the contribution for exchange transactions at 0.01% of each
+  transaction's value (section II.1), with lower rates for futures (0.0003%),
+  options (0.01% of contract value) and debt securities and sukuk (0.00125%). It
+  revokes **SEOJK 23/SEOJK.04/2015**, which was not read. OJK's summary says
+  SEOJK 10/SEOJK.04/2022 later amended it for structured warrants; that text
+  was not read.
+- So the 0.01% contribution on equity trades is sourced from 26 May 2020. Before
+  that date it is unproven. Whether a broker passes it to clients is a broker
+  matter and was not checked.
+
+**What this settles for the fee model.** Exchange-side charges on a regular-market
+equity trade, each with its own source and start date:
+
+| Charge | Rate | Source | Sourced from |
+|---|---|---|---|
+| Exchange fee | 0.018% | II-A chapter XI | (as recorded earlier) |
+| KPEI clearing and guarantee fee | 0.009% | II-5 VIII.1.1 (2022), X.1.1 (2026) | 15 August 2022 |
+| Guarantee-fund contribution | 0.01% | SEOJK 8/2020 II.1; II-5 IX.2 / XI.2 | 26 May 2020 |
+| KSEI settlement fee | 0.003% of monthly cumulative value | KSEI VI-A 4.6.1 | 26 April 2022 |
+| VAT on fees | dated rates already recorded | UU PPN chain | – |
+
+The monthly minimums fall on the member, not on each trade. VAT on the
+guarantee-fund contribution was not checked; it is a contribution, not a
+service fee, and is not assumed to carry VAT. KPEI fees before 15 August 2022
+remain unproven: web search named **KEP-027/DIR/KPEI/1118** as the earlier
+II-5 (cited in a BEI–KPEI–KSEI SKB), but no copy of that text was found.
+
+**2020–2023 calendars: official trading-day evidence exists, but was not
+read.** BEI's annual and monthly statistics (for example
+`idx.co.id/media/10776/idx_annually-statistic_2021.pdf`, 229 pages) carry
+daily trading tables, which would show the days that actually traded. That is
+a calendar of what happened, not the notices in force. WebFetch got HTTP 403;
+the browser opens the file, but its built-in PDF viewer exposes no text and
+does not accept input. Reading it in the page with pdf.js, as was done for
+BEI files on 2026-11-12, was refused by this session's permission check, so it
+was not attempted another way. The calendar notices themselves (for 2023:
+Peng-00252/BEI.POP/10-2022 and Peng-00152/BEI.POP/06-2023) are still found only
+in news reports.
+
+**II-A.** One more search found no official text for Kep-00003 (8 April 2025),
+Kep-00136 or Kep-00157. It surfaced a BEI "konsep bersih" (clean draft) of an
+II-A change on `idx.co.id/Media/…`, which returned HTTP 403 to WebFetch and was
+not opened; a draft would not show the text in force anyway.
+
+**Still open:** II-1 (SK-001/KPEI/0399) and the 2018 II-5 (KEP-027/DIR/KPEI/1118)
+texts for KPEI fees before 15 August 2022; SEOJK 23/2015 for the contribution
+before 26 May 2020; BEI calendars and trading-day records for 2020–2023 and the
+original 2024 notice; the II-A texts for Kep-00025, Kep-00196, Kep-00003,
+Kep-00136 and Kep-00157. No fee model, rulebook JSON or code was added; backtests
+stay refused.
 
 ### Additional public-access checks, 2026-11-03
 
