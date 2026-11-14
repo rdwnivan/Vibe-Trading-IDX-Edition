@@ -1621,9 +1621,9 @@ It redirects to an "Access denied" page (HTTP 403 in the browser and to
 WebFetch) of a law firm's members-only library, so it was not pursued. Kep-00136
 and Kep-00157 appear only in news reports and the Hukumonline Pro listing. The
 four II-A texts for 9 December 2024 to 19 October 2026 therefore have no public
-copy that was found. The user is requesting them from BEI directly, through the
-contact listed on BEI's
-[Hubungi Kami](https://www.idx.co.id/id/tentang-bei/hubungi-kami/) page.
+copy that was found. Requesting them from BEI (contact on BEI's
+[Hubungi Kami](https://www.idx.co.id/id/tentang-bei/hubungi-kami/) page) is the
+remaining route; the user has deferred it for now (2026-11-14).
 
 **Still open:** II-1 (SK-001/KPEI/0399) and the 2018 II-5 (KEP-027/DIR/KPEI/1118)
 texts for KPEI fees before 15 August 2022; SEOJK 23/2015 for the contribution
