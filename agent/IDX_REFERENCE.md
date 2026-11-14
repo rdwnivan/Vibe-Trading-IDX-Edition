@@ -1845,7 +1845,10 @@ put the contribution on the client for client trades until 19 November 2014.
 POJK 26/2014 revoked 3(e) and kept only 3(a), and neither later circular says
 who bears the charge, so whether it was passed to clients after that date is
 a broker matter and was not checked. Before 9 December 2004 the rate under
-Kep-26/PM/2000 is unproven; that text was not looked for.
+Kep-26/PM/2000 is unproven. One later search the same day (after PR #9
+merged) found no copy of Kep-26/PM/2000: OJK's former-Bapepam library carries
+only the 2004 III.B.7, and the search turned up only Kep-47/PM/2004's article 2
+revoking it. Search again only with a new lead.
 
 No fee model, rulebook JSON or code was added; backtests stay refused.
 
