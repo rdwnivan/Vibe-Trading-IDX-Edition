@@ -112,21 +112,86 @@
 
 Ubah pertanyaan keuangan menjadi laporan riset, backtest yang dapat dijalankan, dan portofolio simulasi. Anda dapat memberi mandat kepada broker yang didukung untuk bertransaksi sesuai batas yang Anda tetapkan dan menghentikannya kapan saja. Dana tetap berada di broker.
 
-## 🇮🇩 IDX Edition
+## 🇮🇩 IDX Edition — research preview
 
-Fork ini menambahkan riset read-only untuk saham Bursa Efek Indonesia. Simbol
-`XXXX.JK` diarahkan lewat loader Yahoo/yfinance yang sudah ada sebagai `id_equity`
-dalam IDR, dengan tanggal sesi Asia/Jakarta dan volume dalam lembar saham; ticker
-tanpa akhiran tetap pada arti pasarnya semula. Watchlist manual di `/research/idx`
-(juga tersedia untuk agen, MCP dan CLI tanpa LLM) menampilkan chart harian,
-indikator, asal data, peringatan kebaruan data dan cakupan volume, serta tetap
-menampilkan simbol yang tidak tersedia. Skill bawaan `idx-research` mendukung
-pemakaian lewat agen.
+Fork ini menambahkan **riset pribadi read-only** untuk saham Bursa Efek Indonesia.
+Ini pratinjau riset, bukan alat transaksi.
 
-Backtest, paper matching dan live trading IDX **belum tersedia**: semuanya tetap
-ditolak sampai ada rulebook bertanggal, kalender sesi dan model corporate action.
+**Yang tersedia**
+
+- Simbol `XXXX.JK` dikenali sebagai `id_equity` dalam IDR dan diambil lewat loader
+  Yahoo/yfinance yang sudah ada, dengan tanggal sesi Asia/Jakarta dan volume
+  dalam lembar saham. Ticker tanpa akhiran tetap pada arti pasarnya semula.
+- Watchlist manual di `/research/idx` (maksimum 8 saham, data harian): chart close,
+  indikator teknikal, asal data, peringatan kebaruan 14 hari kalender, cakupan
+  volume, dan peringatan bar bervolume nol yang harganya berubah. Simbol yang
+  gagal tetap tampil beserta tahap penolakannya.
+- Riset yang sama tersedia sebagai tool `idx_research` untuk agen dan MCP (skill
+  bawaan `idx-research`), endpoint `POST /api/research/idx`, dan CLI tanpa akun
+  LLM:
+
+  ```bash
+  cd agent
+  python -m src.tools.idx_research_tool BBCA.JK BBRI.JK --lookback 200
+  ```
+
+- Opsional: file kalender sesi dan record peristiwa (suspensi, delisting, aksi
+  korporasi) yang bersumber dan disediakan operator, lewat dua variabel
+  lingkungan:
+
+  ```bash
+  VIBE_TRADING_IDX_CALENDAR_PATH=~/.vibe-trading/idx/bei_sessions_2026.json
+  VIBE_TRADING_IDX_EVENT_RECORDS_PATH=~/.vibe-trading/idx/event_records.json
+  ```
+
+  Server API (`vibe-trading serve`) dan server MCP membaca **satu** file `.env`
+  saat start: yang pertama ada di antara `~/.vibe-trading/.env`, `agent/.env`
+  (checkout source) dan `.env` di direktori kerja. File berikutnya tidak dibaca,
+  dan variabel yang sudah di-`export` di shell tetap menang. CLI
+  `python -m src.tools.idx_research_tool` **tidak** membaca `.env`, jadi
+  `export` kedua variabel itu sebelum menjalankannya. Restart server setelah
+  mengubah `.env`.
+
+  Riset lalu melaporkan bar di hari bursa tutup, sesi tanpa bar, status suspensi,
+  akhir seri dalam hitungan sesi, dan perubahan harga di tanggal ex. Bar tidak
+  diubah. Format file ada di [IDX_FOUNDATION.md](agent/IDX_FOUNDATION.md); contoh
+  kalender BEI 2026 bersumber ada di
+  `agent/tests/fixtures/idx_calendar/bei_sessions_2026.json`. Tidak ada kalender
+  atau daftar peristiwa bawaan.
+
+**Hak data dan pemakaian**
+
+- Preview ini hanya untuk **pemakaian pribadi lokal oleh satu operator**. Tidak
+  ada deployment publik atau multiuser.
+- Bar harga dari Yahoo/yfinance diambil saat riset dijalankan. Bar itu tidak
+  di-commit ke repository, tidak dibundel ke paket, dan tidak boleh
+  diredistribusi. Pemakaian data mengikuti syarat Yahoo dan menjadi tanggung
+  jawab operator.
+- Kalender dan record BEI di repository hanya berisi tanggal dan nomor
+  pengumuman, untuk pemakaian nonkomersial dengan atribusi dan tanggal akses
+  (klausul 6 [syarat situs BEI](https://www.idx.id/id/syarat-penggunaan)); PDF
+  dan teks pengumuman tidak disalin.
+
+**Batas**
+
+- Backtest, paper matching, Shadow Account dan live trading IDX **tidak tersedia**
+  dan tetap ditolak.
+- Data Yahoo/yfinance tertunda dan dapat memuat baris pengganti atau volume yang
+  keliru; temuan audit adalah peringatan, bukan koreksi.
+- Kalender bersumber hanya mencakup tahun yang ada di file operator dan dapat
+  direvisi BEI. Tanpa file, pemeriksaan kalender dan suspensi tidak berjalan.
+- Bukan universe instrumen resmi, bukan rekomendasi investasi.
+
+**Pemulihan**
+
+- File kalender/record yang rusak atau hilang tampil sebagai "tidak tersedia";
+  riset tetap jalan. Perbaiki file atau kosongkan env-nya.
+- Simbol berstatus tidak tersedia menampilkan sumber yang dicoba dan alasannya;
+  coba lagi nanti atau periksa koneksi.
+
 Lihat [arsitektur dan batasan](agent/IDX_FOUNDATION.md),
-[panduan riset pribadi](agent/IDX_PERSONAL_RESEARCH.md) dan
+[panduan riset pribadi](agent/IDX_PERSONAL_RESEARCH.md),
+[keputusan research preview](agent/IDX_RESEARCH_PREVIEW.md) dan
 [rujukan aturan resmi](agent/IDX_REFERENCE.md).
 
 ## ✨ Yang dapat Anda lakukan
