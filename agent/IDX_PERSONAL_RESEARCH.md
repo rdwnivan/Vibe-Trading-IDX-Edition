@@ -1746,6 +1746,46 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Kalender sesi BEI 2026 bersumber
+
+Slice **2026-11-15, Asia/Jakarta**, memakai [loader kalender](#data-03--loader-kalender-sesi-bersumber).
+
+**Sumber.** Hari bursa adalah Senin–Jumat kecuali libur nasional dan hari yang
+dinyatakan libur bursa (II-A Kep-00158/BEI/10-2026, butir I.16, dibaca
+2026-11-12). Hari tutup 2026 adalah 22 hari kerja dalam BEI
+Peng-00171/BEI.POP/09-2025 (23 September 2025), yang sama dengan KSEI
+PENG-0005/DIR/KSEI/1025 dan PENG-0002/DIR/KSEI/0126
+([tabel kalender](IDX_REFERENCE.md#bei-holiday-calendars-2024-to-2027-2026-11-12)).
+Hari kerja dikurangi 22 tanggal itu memberi 239 sesi, sama dengan jumlah
+tahunan yang diterbitkan.
+
+**Cek perubahan.** Satu lookup ke halaman Pengumuman BEI di browser bawaan
+(kata kunci "Libur Bursa", tanpa filter tanggal; indeks menampilkan tiga tahun
+terakhir). Hasilnya tujuh item: kalender 2024 (Peng-00030 dan Peng-00233),
+2025 (Peng-00213 dan Peng-00149), 2026 (hanya Peng-00171/BEI.POP/09-2025) dan
+2027 (Peng-00169 serta koreksi Peng-00171/BEI.POP/09-2026). Tidak ada
+perubahan kalender 2026. Ini ketiadaan di satu indeks, bukan bukti tidak ada
+perubahan; tahun 2026 belum selesai.
+
+**File.** [bei_sessions_2026.json](tests/fixtures/idx_calendar/bei_sessions_2026.json)
+berformat `idx_session_calendar_v1`, cakupan 1 Januari–31 Desember 2026,
+239 sesi. Field `source` menyebut II-A I.16, Peng-00171/BEI.POP/09-2025, kedua
+pengumuman KSEI, hasil lookup 2026-11-15, dan bahwa kalender dapat direvisi.
+Jam sesi, setengah hari dan suspensi per instrumen tidak dicakup. File ini
+rujukan bersumber; tidak ada kode yang memuatnya secara otomatis, dan tidak
+ada kalender tahun lain yang ditambahkan.
+
+**Verifikasi.** [Tes](tests/test_idx_bei_calendar_2026.py): file lolos
+`load_session_calendar`; sesi sama persis dengan hari kerja dikurangi 22
+tanggal; 11 baris libur EODHD yang jatuh di 2026 (dari 14 di
+[riset EODHD](IDX_PROVIDER_RESEARCH.md#eodhd-split-handling-history-depth-and-holiday-rows--2026-11-14))
+tutup, dan tiga sisanya (25, 26, 31 Desember 2025) dilaporkan
+`uncovered_dates`, bukan sesi; 27 Maret 2026 adalah sesi, dan bersama record
+MLPT `audit_daily_bars` melaporkan hari itu `suspended` tanpa temuan kalender.
+Run pertama **6 failed** karena file belum ada; akhir **6 passed**. Fondasi
+dan modul DATA-03 (8 file) **227 passed** (`--disable-socket`), tes IDX
+**1.210 passed** (`--allow-hosts`).
+
 ## DATA-03 — Record suspensi MLPT bersumber
 
 Slice **2026-11-15, Asia/Jakarta**, memakai [loader record](#data-03--loader-record-peristiwa-bersumber).

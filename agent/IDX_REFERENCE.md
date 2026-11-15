@@ -1402,6 +1402,14 @@ returned nothing. So the index holds **no amendment to the 2026 equity calendar*
 issued during 2026 up to today. That is an absence in one index, not proof that
 no change exists.
 
+**Recheck and calendar file, 2026-11-15.** One keyword search for "Libur Bursa"
+on the BEI announcements page (no date filter; the page shows three years)
+listed seven items, the only 2026 one being Peng-00171/BEI.POP/09-2025. Still
+no 2026 amendment. The 2026 weekdays minus its 22 closures are now a sourced
+`idx_session_calendar_v1` file at
+[bei_sessions_2026.json](tests/fixtures/idx_calendar/bei_sessions_2026.json)
+(239 sessions), a reference fixture that nothing loads automatically.
+
 **Register and KPEI retry, 2026-11-13.**
 
 - The Peraturan BEI register (Peraturan Pencatatan tab, read today) lists
