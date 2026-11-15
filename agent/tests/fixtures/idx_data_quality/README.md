@@ -16,5 +16,14 @@ redistributed with the repository.
   local loader reports (`no_data` for a valid empty file, `fetch_failed` for an
   unparseable price).
 
+- `network_provider_cases` cover the network providers: a refused
+  connection, HTTP 429 and an empty chart for Yahoo; a refused connection and
+  an empty chart for yfinance; and the default Yahoo → yfinance chain in both
+  directions. Responses are synthetic Yahoo v8 chart payloads injected beneath
+  each provider (`yahoo_client.throttled_get_json`, `yfinance.data.YfData.get`),
+  so the real yfinance library decides what a failure looks like. A failure
+  must read `fetch_failed`, an empty answer `no_data`. No request leaves the
+  process.
+
 The cases are exercised by `agent/tests/test_idx_data_quality_fixtures.py`.
 Every CSV here must be referenced by the manifest.

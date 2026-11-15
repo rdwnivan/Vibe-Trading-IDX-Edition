@@ -79,6 +79,16 @@ therefore extends their existing owners and tests parity across them.
   pack (made-up `SYN*.JK` codes, January 2030) whose manifest lists the
   findings both audits and the explicit local loader must report for each
   DATA-03 category. Its calendar and records are fixtures, not IDX facts.
+  Its network cases (2026-11-16) inject synthetic Yahoo chart responses
+  beneath Yahoo and the real yfinance library and require `fetch_failed` for
+  a refused connection or HTTP 429 and `no_data` for an empty chart.
+- yfinance for IDX: `yf.download` swallows per-ticker exceptions and returns
+  an empty frame, so a failed request looked like `no_data`. When the bulk
+  download has no bars for an `.JK` symbol, the loader now retries through
+  `Ticker.history(raise_errors=True)`; only `YFPricesMissingError` counts as
+  empty, every other error is `fetch_failed`. Other markets keep the
+  `yf.download` retry. `raise_errors` is deprecated in yfinance, so an upgrade
+  that drops it surfaces as failing network fixture cases.
 - `src.markets.idx_event_records.load_event_records` parses a caller-supplied
   JSON file (`idx_event_records_v1`) of sourced suspensions, delistings and
   corporate actions into those records, refusing the whole file on any

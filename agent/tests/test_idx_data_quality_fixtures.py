@@ -3,6 +3,12 @@
 Every bar, date, calendar and record in ``fixtures/idx_data_quality`` is
 synthetic (year 2030). Nothing comes from a vendor or from BEI, so the pack can
 be shared; the calendar is a fixture, not an IDX calendar.
+
+Network provider cases replace the HTTP layer beneath each provider, not the
+loader: ``yahoo_client.throttled_get_json`` for Yahoo and
+``yfinance.data.YfData.get``/``cache_get`` for yfinance, so the real yfinance
+library decides what a failed or empty response looks like. Responses are
+synthetic Yahoo v8 chart payloads; no request leaves the process.
 """
 
 from datetime import date
@@ -11,8 +17,13 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+import requests
+import yfinance
+from yfinance import cache as yf_cache
+from yfinance import data as yf_data
 
-from backtest.loaders import local_loader
+from backtest.loaders import local_loader, yahoo_client, yahoo_loader, yfinance_loader
+from backtest.loaders.base import NoAvailableSourceError
 from src.market_data import fetch_market_data
 from src.markets.idx_bar_quality import (
     IDXCorporateAction,
@@ -82,6 +93,7 @@ def _read_bars(name):
 
 BAR_CASES = MANIFEST["bar_cases"]
 PROVIDER_CASES = MANIFEST["provider_cases"]
+NETWORK_CASES = MANIFEST.get("network_provider_cases", [])
 
 
 def test_pack_declares_itself_synthetic_and_covers_every_data03_category():
@@ -93,12 +105,18 @@ def test_pack_declares_itself_synthetic_and_covers_every_data03_category():
 
 def test_every_pack_file_is_referenced_and_every_reference_exists():
     referenced = {case["file"] for case in BAR_CASES + PROVIDER_CASES}
+    referenced |= {
+        response["file"]
+        for case in NETWORK_CASES
+        for response in case["responses"].values()
+        if response["kind"] == "bars"
+    }
     on_disk = {path.name for path in PACK.glob("*.csv")}
     assert referenced == on_disk
 
 
 def test_every_record_and_case_symbol_is_a_synthetic_idx_code():
-    symbols = {case["symbol"] for case in BAR_CASES + PROVIDER_CASES}
+    symbols = {case["symbol"] for case in BAR_CASES + PROVIDER_CASES + NETWORK_CASES}
     for group in MANIFEST["records"].values():
         symbols |= {item["symbol"] for item in group}
     assert all(symbol.startswith("SYN") and symbol.endswith(".JK") for symbol in symbols)
@@ -150,3 +168,140 @@ def test_provider_case_is_reported_as_the_manifest_reason(case, monkeypatch):
 
     assert result["_diagnostics"][case["symbol"]]["attempts"] == [{"source": "local", "reason": case["reason"]}]
     assert case["symbol"] not in {key for key in result if not key.startswith("_")}
+
+
+def test_network_cases_cover_failure_and_empty_for_yahoo_and_yfinance():
+    explicit = {(case["source"], case["expect"]["attempts"][0]["reason"]) for case in NETWORK_CASES if case["source"]}
+    assert {
+        ("yahoo", "fetch_failed"),
+        ("yahoo", "no_data"),
+        ("yfinance", "fetch_failed"),
+        ("yfinance", "no_data"),
+    } <= explicit
+    assert any(case["source"] is None for case in NETWORK_CASES), "the default yahoo -> yfinance chain is covered"
+
+
+def _chart_payload(symbol, response):
+    """A synthetic Yahoo v8 chart payload: empty, or the bars of a pack CSV at 09:00 WIB."""
+    meta = {
+        "currency": "IDR",
+        "symbol": symbol,
+        "exchangeName": "JKT",
+        "instrumentType": "EQUITY",
+        "exchangeTimezoneName": "Asia/Jakarta",
+        "timezone": "WIB",
+        "gmtoffset": 25200,
+        "dataGranularity": "1d",
+        "regularMarketPrice": 1000.0,
+    }
+    result = {"meta": meta, "indicators": {"quote": [{}], "adjclose": [{}]}}
+    if response["kind"] == "bars":
+        frame = _read_bars(response["file"])
+        stamps = frame.index.tz_localize("Asia/Jakarta") + pd.Timedelta(hours=9)
+        result["timestamp"] = [int(stamp.timestamp()) for stamp in stamps]
+        result["indicators"] = {
+            "quote": [{column: frame[column].tolist() for column in ("open", "high", "low", "close", "volume")}],
+            "adjclose": [{"adjclose": frame["close"].tolist()}],
+        }
+    return {"chart": {"result": [result], "error": None}}
+
+
+def _http_failure(response):
+    if response["kind"] == "connection_error":
+        return requests.exceptions.ConnectionError("synthetic connection refused")
+    failed = requests.models.Response()
+    failed.status_code = response["status"]
+    return requests.exceptions.HTTPError(f"synthetic HTTP {response['status']}", response=failed)
+
+
+class _NullTzCache:
+    """Keep yfinance's timezone cache off the operator's cache directory."""
+
+    dummy = True
+
+    def lookup(self, _key):
+        return None
+
+    def store(self, _key, _value):
+        return None
+
+
+@pytest.fixture
+def network_responses(monkeypatch):
+    """Install per-provider synthetic HTTP responses; return the setter."""
+    monkeypatch.setattr(yf_cache, "get_tz_cache", lambda: _NullTzCache())
+    monkeypatch.setattr(yahoo_client, "_min_interval", lambda: 0.0)
+
+    def install(symbol, responses):
+        yahoo = responses.get("yahoo")
+        yf = responses.get("yfinance")
+
+        def yahoo_get_json(url, **_kwargs):
+            assert yahoo is not None, "yahoo was not expected to be called"
+            if yahoo["kind"] in ("connection_error", "http_status"):
+                raise _http_failure(yahoo)
+            return _chart_payload(symbol, yahoo)
+
+        def yfinance_get(self, url, params=None, timeout=30, **_kwargs):
+            assert yf is not None, "yfinance was not expected to be called"
+            if yf["kind"] in ("connection_error", "http_status"):
+                raise _http_failure(yf)
+            reply = requests.models.Response()
+            reply.status_code = 200
+            # Like Yahoo, only the dated daily request carries bars; the 5-day
+            # hourly metadata request yfinance makes for the currency gets meta only.
+            dated_daily = (params or {}).get("interval") == "1d" and "period1" in (params or {})
+            reply._content = json.dumps(_chart_payload(symbol, yf if dated_daily else {"kind": "empty_chart"})).encode()
+            reply.headers["Content-Type"] = "application/json"
+            reply.url = url
+            return reply
+
+        monkeypatch.setattr(yahoo_client, "throttled_get_json", yahoo_get_json)
+        monkeypatch.setattr(yf_data.YfData, "get", yfinance_get)
+        monkeypatch.setattr(yf_data.YfData, "cache_get", yfinance_get)
+
+    return install
+
+
+def _network_resolver(case):
+    """Resolve only the providers the case gives a response; the rest of the chain is unavailable."""
+    loaders = {"yahoo": yahoo_loader.DataLoader, "yfinance": yfinance_loader.DataLoader}
+
+    def resolve(source):
+        if source not in case["responses"]:
+            raise NoAvailableSourceError(f"{source} is not part of this network case")
+        return loaders[source]
+
+    return resolve
+
+
+def _provider_attempts(attempts):
+    return [attempt for attempt in attempts if attempt["reason"] != "source_unavailable"]
+
+
+@pytest.mark.parametrize("case", NETWORK_CASES, ids=[case["id"] for case in NETWORK_CASES])
+def test_network_provider_case_is_reported_as_the_manifest_expects(case, network_responses):
+    network_responses(case["symbol"], case["responses"])
+
+    result = fetch_market_data(
+        codes=[case["symbol"]],
+        start_date=case["start"],
+        end_date=case["end"],
+        source=case["source"] or "auto",
+        include_provenance=True,
+        loader_resolver=_network_resolver(case),
+    )
+
+    expect = case["expect"]
+    if expect["served_by"] is None:
+        assert _provider_attempts(result["_diagnostics"][case["symbol"]]["attempts"]) == expect["attempts"]
+        assert case["symbol"] not in {key for key in result if not key.startswith("_")}
+    else:
+        provenance = result["_provenance"][case["symbol"]]
+        assert provenance["source"] == expect["served_by"]
+        assert _provider_attempts(provenance["attempts"]) == expect["attempts"]
+        assert len(result[case["symbol"]]) == len(_read_bars(case["responses"][expect["served_by"]]["file"]))
+
+
+def test_yfinance_is_the_real_library_under_the_network_cases():
+    assert yfinance_loader.yf is yfinance

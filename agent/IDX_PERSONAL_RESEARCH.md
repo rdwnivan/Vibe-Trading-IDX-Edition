@@ -1746,6 +1746,62 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Kegagalan provider jaringan di paket fixture
+
+Slice **2026-11-16, Asia/Jakarta**, menjalankan keputusan C pengguna.
+
+**Kasus.** `network_provider_cases` di
+[manifest](tests/fixtures/idx_data_quality/manifest.json) (simbol sintetis
+`SYNL.JK`–`SYNR.JK`, Januari 2030): Yahoo koneksi ditolak → `fetch_failed`,
+Yahoo HTTP 429 → `fetch_failed`, Yahoo chart kosong → `no_data`, yfinance
+koneksi ditolak → `fetch_failed`, yfinance chart kosong → `no_data`, rantai
+bawaan Yahoo gagal → yfinance menyajikan `normal.csv` (provenance `yfinance`,
+attempt Yahoo `fetch_failed`), dan rantai Yahoo kosong → yfinance gagal
+(`no_data` lalu `fetch_failed`). Respons berupa payload chart Yahoo v8
+sintetis yang disuntik di bawah provider (`yahoo_client.throttled_get_json`
+dan `yfinance.data.YfData.get`/`cache_get`), sehingga library yfinance asli
+yang menentukan bentuk kegagalan. Resolver tes hanya menyediakan provider
+yang punya respons; sisa rantai `source_unavailable` dan tidak dibandingkan.
+Cache timezone yfinance diganti objek kosong agar tidak menulis ke direktori
+cache operator.
+
+**Temuan.** yfinance 1.5.2 `download()` menangkap setiap exception per ticker
+dan mengembalikan frame kosong (diuji empiris dengan `YfData.get` yang
+melempar `ConnectionError`). Akibatnya kegagalan jaringan yfinance untuk IDX
+dilaporkan `no_data`, bukan `fetch_failed`. `Ticker.history(raise_errors=True)`
+melempar exception aslinya, dan melempar `YFPricesMissingError` untuk chart
+kosong.
+
+**Perbaikan.** [yfinance_loader.py](backtest/loaders/yfinance_loader.py):
+`_idx_history` dipakai untuk retry per simbol `.JK` bila bulk download tidak
+memuat bar; hanya `YFPricesMissingError` dianggap kosong, error lain naik dan
+menjadi `fetch_failed`. Pasar lain tetap memakai retry `yf.download`
+(tes kontrol baru di
+[test_idx_yfinance_quality.py](tests/test_idx_yfinance_quality.py)).
+`raise_errors` deprecated di yfinance; peringatan itu diredam lokal, dan bila
+versi baru menghapusnya kasus fixture jaringan akan gagal.
+
+**Kebocoran jaringan di tes lama.** `Ticker.history` memakai `curl_cffi`, yang
+tidak diblokir `pytest-socket`. Pada satu run lokal, dua tes
+`test_idx_research.py` yang hanya mem-mock `yf.download` mengirim permintaan
+chart Yahoo publik untuk BBCA.JK/BBRI.JK (tanpa kredensial) dan gagal karena
+mendapat data. Fixture `chart` kini juga menstub `_idx_history`. Plugin
+pytest sementara (di luar repository) yang memblokir dan mencatat permintaan
+`curl_cffi` mencatat **0** permintaan pada run akhir.
+
+**Verifikasi.** Tes ditulis dulu. Run pertama **7 failed, 16 passed**; lima
+kegagalan ternyata salah susun tes (sumber eksplisit `yahoo` tetap fallback ke
+yfinance; yfinance meminta metadata `5d`/`1h` terpisah), diperbaiki di tes,
+bukan di kode. Sesudahnya kasus jaringan **2 failed, 7 passed**: kedua
+kegagalan adalah koneksi yfinance ditolak yang terlapor `no_data`. Sesudah
+perbaikan: file paket **23 passed** dan paket + fondasi + atribusi **102
+passed** (`--disable-socket`); suite IDX + market detection + registry + 55
+file tes lain yang menyentuh yfinance **2.559 passed, 1 skipped** dengan guard
+`curl_cffi` (0 permintaan). Lokal memakai yfinance 1.5.2; CI memasang versi
+terbaru (1.8.0 pada run PR #23), jadi kasus jaringan juga harus lulus di CI.
+Ruff check lulus; `yfinance_loader.py` sudah tidak sesuai `ruff format`
+sebelum slice ini dan tidak diformat ulang.
+
 ## RELEASE-01 — Gate research preview
 
 Slice **2026-11-15/16, Asia/Jakarta**, menjalankan keputusan B pengguna. Isi

@@ -169,3 +169,28 @@ def test_http_research_exposes_rejected_provider_series(raw_bars, monkeypatch):
     assert item["reason"] == "no_data_or_source_failure"
     assert "bars" not in item
     assert {"source": "yfinance", "reason": "fetch_failed"} in item["diagnostics"]["attempts"]
+
+
+@pytest.mark.parametrize(
+    "code,retry",
+    [("BBCA.JK", "history"), ("AAPL.US", "download")],
+)
+def test_empty_bulk_download_is_retried_per_symbol_through_the_market_specific_path(monkeypatch, code, retry):
+    """IDX retries through Ticker.history (failures raise); other markets keep the yf.download retry."""
+    calls = []
+
+    def download(tickers, *_args):
+        calls.append(("download", tickers))
+        return pd.DataFrame()
+
+    def history(symbol, *_args):
+        calls.append(("history", symbol))
+        return pd.DataFrame()
+
+    monkeypatch.setattr(yfl, "_download_history", download)
+    monkeypatch.setattr(yfl, "_idx_history", history)
+
+    assert yfl.DataLoader().fetch([code], "2030-01-07", "2030-01-18") == {}
+
+    assert calls[0][0] == "download"
+    assert [kind for kind, _ in calls[1:]] == [retry]
