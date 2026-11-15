@@ -102,7 +102,9 @@ therefore extends their existing owners and tests parity across them.
   (`idx_sourced_audit_v1`: calendar findings, suspension status, series end in
   sessions against `end_date`, ex-date moves). Without env nothing changes,
   including `bar_audit` v1 and the 14-day recency. An unreadable or invalid file
-  degrades to `unavailable` without echoing its path or content.
+  degrades to `unavailable` without echoing its path or content. The
+  research page shows these findings, in 11 locales, only when the response
+  carries `sourced_reference`.
 - Both runner and direct composite construction reject IDX backtesting until
   the historical rulebook/calendar/action model exists. Mixed IDR/USD/CNY/HKD
   pools are rejected by the existing currency guard.

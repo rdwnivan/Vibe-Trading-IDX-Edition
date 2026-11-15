@@ -1746,6 +1746,35 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Temuan bersumber di halaman riset
+
+Slice **2026-11-15, Asia/Jakarta**, sesudah [file bersumber di riset](#data-03--file-kalender-dan-record-bersumber-di-riset).
+
+**UI.** Halaman `/research/idx` menampilkan grup "File rujukan bersumber" di
+bawah cakupan volume, **hanya** bila respons memuat `sourced_reference`. Tanpa
+env backend, halaman sama seperti sebelumnya dan teks `bar_audit` v1 (termasuk
+"tanpa kalender bursa terverifikasi") tidak berubah. Isi grup: status file
+kalender (sumber dan cakupan, tidak dikonfigurasi, atau tidak dapat
+dibaca/tidak valid) dan file record (jumlah per jenis); lalu untuk simbol
+terpilih: bar di hari tutup, di luar cakupan, sesi tanpa bar (atau keterangan
+bahwa pemeriksaan kalender tidak dijalankan), bar datar volume nol dengan
+status suspensi/tanpa record, bar bervolume saat suspensi, akhir seri beserta
+jumlah sesi sesudah bar terakhir, bar sesudah delisting dan perubahan close di
+tanggal ex. Teks tersedia di 11 locale (`sourced*`, `sourcedSeries.*`,
+`sourcedKind.*`).
+
+**Batas.** Gate `getIDXSourcedReference` dan `getIDXSourcedAudit` di
+[idx-research.ts](../frontend/src/lib/idx-research.ts) hanya memvalidasi bentuk;
+field cacat membuat seluruh temuan "tidak tersedia", tanpa menyaring atau
+memperbaiki tanggal. UI tidak menghitung kalender, sesi atau verdict sendiri;
+`getIDXBarAudit` tetap hanya menerima `calendar_verified === false`.
+
+**Verifikasi.** Tes lib dan halaman ditulis dulu: merah **43 failed, 369
+passed** (kontrol tanpa `sourced_reference` sudah lulus). Akhir: tiga file
+target **463 passed**; `npm run test:run` **1.407 passed** (103 file);
+`npm run build` lulus; `git diff --check` lulus. Belum dicek manual di browser
+dengan backend nyata.
+
 ## DATA-03 — File kalender dan record bersumber di riset
 
 Slice **2026-11-15, Asia/Jakarta**, sesudah [kalender BEI 2026](#data-03--kalender-sesi-bei-2026-bersumber).

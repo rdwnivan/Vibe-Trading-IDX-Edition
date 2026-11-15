@@ -1,4 +1,4 @@
-import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXBarAudit, getIDXRecency, getIDXVolumeCoverage } from "../idx-research";
+import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXBarAudit, getIDXRecency, getIDXSourcedAudit, getIDXSourcedReference, getIDXVolumeCoverage } from "../idx-research";
 
 function barAudit(dates: unknown = ["2026-01-12", "2026-01-13"]) {
   return { policy: "idx_daily_bar_audit_v1", calendar_verified: false, zero_volume_price_change_dates: dates };
@@ -129,4 +129,75 @@ it.each([undefined, "", "2026-02-30", "2026-01-30T12:00:00", "2026-01-30T00:00:0
 it("accepts a real leap day while rejecting a nonexistent one", () => {
   expect(formatIDXSourceAsOf("2024-02-29T00:00:00")).toBe("2024-02-29");
   expect(formatIDXSourceAsOf("2026-02-29T00:00:00")).toBeNull();
+});
+
+describe("sourced reference gates", () => {
+  function reference() {
+    return {
+      policy: "idx_sourced_reference_v1",
+      calendar: { status: "loaded", source: "BEI Peng-00171/BEI.POP/09-2025", covered_from: "2026-01-01", covered_until: "2026-12-31" },
+      event_records: { status: "loaded", suspension_count: 1, delisting_count: 0, corporate_action_count: 0 },
+    };
+  }
+
+  function audit() {
+    return {
+      policy: "idx_sourced_audit_v1",
+      calendar_verified: true,
+      off_calendar_dates: ["2026-04-03"],
+      uncovered_dates: [],
+      missing_session_dates: [],
+      zero_volume_flat_bars: [{ date: "2026-03-27", status: "suspended" }],
+      traded_during_suspension_dates: [],
+      suspension_sources: ["BEI Peng-SPT-00097/BEI.WAS/03-2026"],
+      series_end: { as_of: "2026-04-30", last_bar_date: "2026-04-24", status: "ended_or_stale", sessions_after_last_bar: 4, delisting_effective_date: null },
+      bars_after_delisting_dates: [],
+      delisting_sources: [],
+      ex_date_moves: [{ ex_date: "2026-04-15", kind: "cash_dividend", source: "s", bar_present: true, previous_bar_date: "2026-04-13", previous_close: 105, close: 100, close_ratio: 0.95, previous_adjustment_factor: null, adjustment_factor: null }],
+    };
+  }
+
+  it("accepts a valid sourced reference unchanged", () => {
+    const value = reference();
+    expect(getIDXSourcedReference(value)).toBe(value);
+    const absent = { ...reference(), calendar: { status: "not_configured" }, event_records: { status: "unavailable", issue: "unreadable_or_invalid" } };
+    expect(getIDXSourcedReference(absent)).toBe(absent);
+  });
+
+  it.each([
+    undefined, null, [], "x",
+    { ...reference(), policy: "idx_sourced_reference_v2" },
+    { ...reference(), calendar: { status: "loaded", source: "", covered_from: "2026-01-01", covered_until: "2026-12-31" } },
+    { ...reference(), calendar: { status: "loaded", source: "s", covered_from: "2026-02-30", covered_until: "2026-12-31" } },
+    { ...reference(), calendar: { status: "unknown" } },
+    { ...reference(), event_records: { status: "loaded", suspension_count: -1, delisting_count: 0, corporate_action_count: 0 } },
+    { ...reference(), event_records: { status: "loaded", suspension_count: 1.5, delisting_count: 0, corporate_action_count: 0 } },
+  ])("marks malformed sourced reference %j unavailable", (value) => {
+    expect(getIDXSourcedReference(value)).toBeNull();
+  });
+
+  it("accepts a valid sourced audit unchanged, including unknown calendar findings", () => {
+    const value = audit();
+    expect(getIDXSourcedAudit(value)).toBe(value);
+    const noCalendar = { ...audit(), calendar_verified: false, off_calendar_dates: null, uncovered_dates: null, missing_session_dates: null,
+      series_end: { ...audit().series_end, status: "unverified", sessions_after_last_bar: null } };
+    expect(getIDXSourcedAudit(noCalendar)).toBe(noCalendar);
+  });
+
+  it.each([
+    undefined, null, [],
+    { policy: "idx_sourced_audit_v1", issue: "audit_failed" },
+    { ...audit(), policy: "idx_sourced_audit_v2" },
+    { ...audit(), off_calendar_dates: null },
+    { ...audit(), calendar_verified: false },
+    { ...audit(), missing_session_dates: ["2026-13-01"] },
+    { ...audit(), zero_volume_flat_bars: [{ date: "2026-03-27", status: "halted" }] },
+    { ...audit(), series_end: { ...audit().series_end, status: "gone" } },
+    { ...audit(), series_end: { ...audit().series_end, sessions_after_last_bar: -1 } },
+    { ...audit(), ex_date_moves: [{ ...audit().ex_date_moves[0], kind: "spinoff" }] },
+    { ...audit(), ex_date_moves: [{ ...audit().ex_date_moves[0], close: "100" }] },
+    { ...audit(), suspension_sources: [1] },
+  ])("marks the whole sourced audit unavailable instead of filtering it: %j", (value) => {
+    expect(getIDXSourcedAudit(value)).toBeNull();
+  });
 });
