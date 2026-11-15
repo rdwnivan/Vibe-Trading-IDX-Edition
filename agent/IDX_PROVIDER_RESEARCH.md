@@ -1266,3 +1266,28 @@ reopening announcements (27 and 30 March 2026), their numbers and market
 scope therefore remain unread; the evidence is still the two Pasardana
 reports. Next time, filter MLPT by the date range 27–30 March 2026 in one
 visit instead of searching titles.
+
+**BEI announcements found, 2026-11-15 (second lookup, with the user's
+approval).** On the announcements page, filtering MLPT to 27–30 March 2026
+returned only an incidental public-expose plan (30 March 2026, 15:47). BEI
+lists suspensions on a separate page, `idx.co.id/id/berita/suspensi/`, where
+the keyword "MLPT" returned 18 rows, including:
+
+| Listed | Announcement | Number | Content |
+|---|---|---|---|
+| 26 Mar 2026 | `20260326-WAS_Suspensi_MLPT.pdf` | **Peng-SPT-00097/BEI.WAS/03-2026**, dated 26 March 2026 | after a significant cumulative price decline, a *cooling down* halt of MLPT **on 27 March 2026**, **in the Regular and Cash Markets**; signed by the acting head of the Trading Surveillance Division |
+| 27 Mar 2026 | `20260327-WAS_Unsuspensi_MLPT.pdf` | **Peng-UPT-00108/BEI.WAS/03-2026** | citing Peng-SPT-00097, the suspension of MLPT in the Regular and Cash Markets is lifted (reopening) on **30 March 2026** |
+
+Both PDFs were read in the built-in browser's PDF viewer. `curl` got HTTP 403
+(a 4,544-byte HTML page) for both, as with other BEI PDFs, so no copy or hash
+was kept and no header was faked. The viewer cut off the right edge of the
+reopening notice, so its exact session wording is not recorded; the number,
+the reference, the markets and the date are visible.
+
+**Result.** The 27 March 2026 zero-volume, flat MLPT row is a sourced
+one-day suspension, now confirmed from BEI's own announcements. The scope
+differs from the news report: BEI names the **Regular and Cash Markets**, not
+all markets (Pasardana wrote "seluruh pasar"), so the negotiated market is not
+named as halted. `IDXSuspension` has no market field; a record built from these
+notices covers the day for daily bars, and the market scope stays in its
+`source` text. A record file is added as a test fixture, not as a default.

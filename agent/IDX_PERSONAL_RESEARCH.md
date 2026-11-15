@@ -1746,6 +1746,34 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Record suspensi MLPT bersumber
+
+Slice **2026-11-15, Asia/Jakarta**, memakai [loader record](#data-03--loader-record-peristiwa-bersumber).
+
+**Sumber.** Dua pengumuman BEI di halaman Suspensi, dibaca di viewer PDF
+browser bawaan ([catatan provider](IDX_PROVIDER_RESEARCH.md#mlpt-zero-volume-row-on-27-march-2026-a-suspension--2026-11-14)):
+Peng-SPT-00097/BEI.WAS/03-2026 (26 Maret 2026) menghentikan sementara
+perdagangan MLPT pada 27 Maret 2026 di Pasar Reguler dan Pasar Tunai;
+Peng-UPT-00108/BEI.WAS/03-2026 (27 Maret 2026) membukanya kembali pada 30
+Maret 2026. Cakupan pasar berbeda dari berita Pasardana ("seluruh pasar").
+`curl` mendapat 403, jadi tidak ada salinan atau hash PDF.
+
+**Record.** [mlpt_2026-03_suspension.json](tests/fixtures/idx_event_records/mlpt_2026-03_suspension.json)
+berformat `idx_event_records_v1`: satu `IDXSuspension` untuk `MLPT.JK`,
+27–27 Maret 2026, dengan kedua nomor pengumuman, cakupan pasar dan tanggal baca
+di `source`. `IDXSuspension` tidak punya field pasar, jadi cakupan Reguler/Tunai
+hanya tercatat di teks sumber. File ini fixture tes, bukan daftar suspensi
+bawaan; tidak ada kode yang memuatnya secara default.
+
+**Verifikasi.** [Tes](tests/test_idx_mlpt_suspension_record.py) memuat file
+lewat `load_event_records` dan memastikan satu record dengan kedua nomor
+pengumuman. Dengan bar sintetis berbentuk sama seperti baris vendor (datar,
+volume nol pada 27 Maret), `audit_daily_bars` melaporkan
+`untraded_or_suspended` tanpa record dan `suspended` dengan record. Run
+pertama gagal karena file belum ada; akhir 2 passed. 257 passed fondasi dan
+modul DATA-03 (`--disable-socket`), 1.204 passed tes IDX (`--allow-hosts`),
+Ruff dan grep gates lulus.
+
 ## DATA-03 — Loader kalender sesi bersumber
 
 Slice **2026-11-15, Asia/Jakarta**, sesudah [loader record peristiwa](#data-03--loader-record-peristiwa-bersumber).
