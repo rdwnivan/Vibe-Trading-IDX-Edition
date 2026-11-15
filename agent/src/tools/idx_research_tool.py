@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 import json
 import logging
 import math
+from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -15,8 +16,12 @@ import pandas as pd
 from backtest.engines._market_hooks import _detect_market
 from backtest.loaders.base import validate_ohlc
 from src.agent.tools import BaseTool
+from src.config.accessor import get_env_config
 from src.market_data import fetch_market_data
-from src.markets.idx_bar_quality import audit_daily_bars
+from src.markets.idx_bar_quality import audit_daily_bars, audit_series_events
+from src.markets.idx_calendar_file import load_session_calendar
+from src.markets.idx_event_records import IDXEventRecords, load_event_records
+from src.markets.idx_rules import IDXSessionCalendar
 from src.tools.technical_indicator_tool import summarize_technical_data_json
 
 logger = logging.getLogger(__name__)
@@ -65,6 +70,100 @@ def _failure(message: str) -> str:
     return json.dumps({"ok": False, "error": message})
 
 
+SOURCED_REFERENCE_POLICY = "idx_sourced_reference_v1"
+SOURCED_AUDIT_POLICY = "idx_sourced_audit_v1"
+_UNAVAILABLE = {"status": "unavailable", "issue": "unreadable_or_invalid"}
+
+
+def _load_sourced_reference() -> tuple[dict[str, Any] | None, IDXSessionCalendar | None, IDXEventRecords | None]:
+    """Load the opt-in calendar and event-record files named by env.
+
+    Returns ``(None, None, None)`` when neither is configured, so the response
+    is unchanged. A file that cannot be read or validated degrades to
+    ``unavailable`` on its own; neither its path nor its content is echoed.
+    """
+    data = get_env_config().data
+    calendar_path = data.vibe_trading_idx_calendar_path.strip()
+    records_path = data.vibe_trading_idx_event_records_path.strip()
+    if not calendar_path and not records_path:
+        return None, None, None
+
+    calendar: IDXSessionCalendar | None = None
+    calendar_state: dict[str, Any] = {"status": "not_configured"}
+    if calendar_path:
+        try:
+            calendar = load_session_calendar(Path(calendar_path).expanduser())
+        except (ValueError, OSError) as exc:
+            logger.warning("IDX research sourced calendar unavailable (%s)", type(exc).__name__)
+            calendar_state = dict(_UNAVAILABLE)
+        else:
+            calendar_state = {
+                "status": "loaded",
+                "source": calendar.source,
+                "covered_from": calendar.covered_from.isoformat(),
+                "covered_until": calendar.covered_until.isoformat(),
+            }
+
+    records: IDXEventRecords | None = None
+    records_state: dict[str, Any] = {"status": "not_configured"}
+    if records_path:
+        try:
+            records = load_event_records(Path(records_path).expanduser())
+        except (ValueError, OSError) as exc:
+            logger.warning("IDX research sourced event records unavailable (%s)", type(exc).__name__)
+            records_state = dict(_UNAVAILABLE)
+        else:
+            records_state = {
+                "status": "loaded",
+                "suspension_count": len(records.suspensions),
+                "delisting_count": len(records.delistings),
+                "corporate_action_count": len(records.corporate_actions),
+            }
+
+    reference = {"policy": SOURCED_REFERENCE_POLICY, "calendar": calendar_state, "event_records": records_state}
+    return reference, calendar, records
+
+
+def _sourced_audit(
+    code: str,
+    frame: pd.DataFrame,
+    window_start: str,
+    end: date,
+    calendar: IDXSessionCalendar | None,
+    records: IDXEventRecords | None,
+) -> dict[str, Any]:
+    """Calendar, suspension, series-end and ex-date findings from supplied files, inside the window."""
+    suspensions = records.suspensions if records is not None else ()
+    daily = audit_daily_bars(code, frame, calendar=calendar, suspensions=suspensions)
+    events = audit_series_events(
+        code,
+        frame,
+        as_of=end,
+        calendar=calendar,
+        suspensions=suspensions,
+        delistings=records.delistings if records is not None else (),
+        corporate_actions=records.corporate_actions if records is not None else (),
+    )
+
+    def windowed(days: list[str] | None) -> list[str] | None:
+        return None if days is None else [day for day in days if day >= window_start]
+
+    return {
+        "policy": SOURCED_AUDIT_POLICY,
+        "calendar_verified": calendar is not None,
+        "off_calendar_dates": windowed(daily["off_calendar_dates"]),
+        "uncovered_dates": windowed(daily["uncovered_dates"]),
+        "missing_session_dates": windowed(daily["missing_session_dates"]),
+        "zero_volume_flat_bars": [bar for bar in daily["zero_volume_flat_bars"] if bar["date"] >= window_start],
+        "traded_during_suspension_dates": windowed(daily["traded_during_suspension_dates"]),
+        "suspension_sources": daily["suspension_sources"],
+        "series_end": events["series_end"],
+        "bars_after_delisting_dates": windowed(events["bars_after_delisting_dates"]),
+        "delisting_sources": events["delisting_sources"],
+        "ex_date_moves": [move for move in events["ex_date_moves"] if move["ex_date"] >= window_start],
+    }
+
+
 class IDXResearchTool(BaseTool):
     """Acquire once, then derive charts and indicators from the same bars."""
 
@@ -76,6 +175,8 @@ class IDXResearchTool(BaseTool):
         "Includes calendar-age recency warnings relative to the requested end date. "
         "Reports available, missing and zero-volume counts over the analyzed bars, "
         "and lists zero-volume bars whose price differs from the last traded close. "
+        "When the operator configures sourced calendar or event-record files, also "
+        "reports calendar findings, suspensions, series end in sessions and ex-date moves. "
         "Not an official instrument universe, calendar or backtest."
     )
     parameters = {
@@ -136,6 +237,10 @@ class IDXResearchTool(BaseTool):
         except Exception as exc:
             logger.warning("IDX research acquisition failed (%s)", type(exc).__name__)
             return _failure("market data acquisition failed; retry later or check loader configuration")
+
+        # Opt-in sourced files are read once per request; without env the
+        # response carries no new field and bar_audit v1 is unchanged.
+        sourced_reference, sourced_calendar, sourced_records = _load_sourced_reference()
 
         items = []
         provenance_by_code = data.get("_provenance")
@@ -261,6 +366,7 @@ class IDXResearchTool(BaseTool):
                 # Report only; vendor placeholder prices stay in the bars and
                 # indicators. No calendar is supplied, so none is checked.
                 audit = audit_daily_bars(code, frame)
+                validated = frame
                 frame = frame.sort_index().tail(lookback)
                 window_start = frame.index[0].date().isoformat()
                 bar_audit = {
@@ -327,6 +433,14 @@ class IDXResearchTool(BaseTool):
                 }
                 if old_observation:
                     logger.warning("IDX research old observation for %s (%s calendar days)", code, age_days)
+                if sourced_reference is not None:
+                    try:
+                        item["sourced_audit"] = _sourced_audit(
+                            code, validated, window_start, end, sourced_calendar, sourced_records
+                        )
+                    except (ValueError, KeyError, TypeError) as exc:
+                        logger.warning("IDX research sourced audit failed for %s (%s)", code, type(exc).__name__)
+                        item["sourced_audit"] = {"policy": SOURCED_AUDIT_POLICY, "issue": "audit_failed"}
                 item.update(
                     status="ok",
                     bars=bars,
@@ -340,20 +454,20 @@ class IDXResearchTool(BaseTool):
                 item.update(reason="invalid_data_or_metadata", quality_issue={"code": issue_code})
             items.append(item)
         available = sum(item["status"] == "ok" for item in items)
-        return json.dumps(
-            {
-                "ok": True,
-                "status": "ok" if available == len(items) else "partial" if available else "unavailable",
-                "requested_start_date": start.isoformat(),
-                "requested_end_date": end.isoformat(),
-                "interval": "1D",
-                "lookback": lookback,
-                "items": items,
-                "calendar_completeness": "not_verified",
-                "backtest_enabled": False,
-            },
-            allow_nan=False,
-        )
+        response: dict[str, Any] = {
+            "ok": True,
+            "status": "ok" if available == len(items) else "partial" if available else "unavailable",
+            "requested_start_date": start.isoformat(),
+            "requested_end_date": end.isoformat(),
+            "interval": "1D",
+            "lookback": lookback,
+            "items": items,
+            "calendar_completeness": "not_verified",
+            "backtest_enabled": False,
+        }
+        if sourced_reference is not None:
+            response["sourced_reference"] = sourced_reference
+        return json.dumps(response, allow_nan=False)
 
 
 def main() -> None:

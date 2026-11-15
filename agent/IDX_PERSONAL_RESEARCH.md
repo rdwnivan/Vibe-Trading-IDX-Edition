@@ -1746,6 +1746,48 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — File kalender dan record bersumber di riset
+
+Slice **2026-11-15, Asia/Jakarta**, sesudah [kalender BEI 2026](#data-03--kalender-sesi-bei-2026-bersumber).
+
+**Konfigurasi.** Dua env opsional di `DataConfig`
+([env_schema.py](src/config/env_schema.py), dibaca lewat `get_env_config()`):
+`VIBE_TRADING_IDX_CALENDAR_PATH` (file `idx_session_calendar_v1`) dan
+`VIBE_TRADING_IDX_EVENT_RECORDS_PATH` (file `idx_event_records_v1`). Kosong
+atau spasi berarti tidak dikonfigurasi; `~` diekspansi. Contoh ada di
+`agent/.env.example`. Tidak ada file yang dimuat tanpa env.
+
+**Perilaku tool `idx_research`** (API/MCP/CLI memakai tool yang sama):
+
+- Tanpa env: respons sama seperti sebelumnya. `bar_audit` v1
+  (`calendar_verified: false`), recency 14 hari kalender dan
+  `calendar_completeness: "not_verified"` tidak berubah.
+- Dengan env: top-level `sourced_reference` (`idx_sourced_reference_v1`)
+  memberi status tiap file: `loaded` (kalender: `source`, `covered_from`,
+  `covered_until`; record: jumlah suspensi/delisting/aksi korporasi),
+  `not_configured`, atau `unavailable` dengan `issue: "unreadable_or_invalid"`.
+  Setiap simbol berstatus `ok` mendapat `sourced_audit` (`idx_sourced_audit_v1`):
+  `calendar_verified`, `off_calendar_dates`, `uncovered_dates`,
+  `missing_session_dates` (`null` tanpa kalender), `zero_volume_flat_bars`
+  (`suspended` hanya dengan record), `traded_during_suspension_dates`,
+  `suspension_sources`, `series_end` terhadap `end_date` (status dan
+  `sessions_after_last_bar`), `bars_after_delisting_dates`,
+  `delisting_sources` dan `ex_date_moves`. Tanggal dibatasi ke jendela analisis;
+  `series_end` memakai bar terakhir.
+- Satu file gagal tidak mematikan file lain. Path dan isi file tidak pernah
+  dikembalikan atau dicatat; log hanya memuat nama tipe exception. Kegagalan
+  audit per simbol menjadi `{"issue": "audit_failed"}` tanpa menggugurkan
+  watchlist. Bar dan indikator tidak diubah.
+
+**Verifikasi.** [Tes](tests/test_idx_research_sourced_audit.py) memakai
+kalender BEI 2026 dan record MLPT bersumber dengan bar sintetis (termasuk baris
+Jumat Agung 3 April 2026). Run merah pertama **16 failed, 4 passed** (empat
+kontrol tanpa env); satu tes jendela lalu diperbaiki karena bar fixture berada
+di luar jendela permintaan. Akhir **21 passed**, termasuk route HTTP dan CLI.
+Tes IDX **1.230 passed** (sebelum tes `~` ditambahkan), modul riset/MCP
+**369 passed**, modul env/MCP terkait **471 passed** (`--allow-hosts`);
+`ci_env_var_gate` exit 0, Ruff dan grep gates lulus.
+
 ## DATA-03 — Kalender sesi BEI 2026 bersumber
 
 Slice **2026-11-15, Asia/Jakarta**, memakai [loader kalender](#data-03--loader-kalender-sesi-bersumber).
