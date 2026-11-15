@@ -1746,6 +1746,49 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Atribusi fakta bersumber BEI
+
+Slice **2026-11-15, Asia/Jakarta**, menjalankan keputusan A pengguna
+([keputusan](IDX_RESEARCH_PREVIEW.md#4-hak-distribusi-fakta-bersumber-bei-data-03)):
+kalender BEI 2026 dan record suspensi MLPT boleh tetap di repository publik
+karena isinya hanya tanggal dan nomor pengumuman, untuk pemakaian nonkomersial
+dengan atribusi dan tanggal akses (klausul 6 syarat situs BEI).
+
+**Perubahan.**
+
+- Field `source` kedua file kini memberi setiap nomor pengumuman BEI tanggal
+  pengumuman dan tanggal baca: Kep-00158/BEI/10-2026 (20 Oct 2026; read
+  2026-11-12), Peng-00171/BEI.POP/09-2025 (23 Sep 2025; read 2026-11-12),
+  Peng-SPT-00097/BEI.WAS/03-2026 (26 Mar 2026; read 2026-11-15) dan
+  Peng-UPT-00108/BEI.WAS/03-2026 (27 Mar 2026; read 2026-11-15). Tanggal baca
+  diambil dari catatan baca yang sudah ada
+  ([kalender](IDX_REFERENCE.md#bei-holiday-calendars-2024-to-2027-2026-11-12),
+  [II-A](IDX_REFERENCE.md#ii-a-kep-00158bei10-2026-read-2026-11-12),
+  [MLPT](#data-03--record-suspensi-mlpt-bersumber)). Sesi dan tanggal suspensi
+  tidak berubah.
+- README baru di [idx_calendar](tests/fixtures/idx_calendar/README.md) dan
+  [idx_event_records](tests/fixtures/idx_event_records/README.md): sumber BEI,
+  atribusi, tanggal akses, sifat nonkomersial, tautan syarat situs, dan
+  pernyataan bahwa PDF/teks tidak disalin serta tidak ada data harga/statistik
+  BEI atau scraping.
+- Tes [test_idx_bei_fixture_attribution.py](tests/test_idx_bei_fixture_attribution.py)
+  (13 kasus): setiap JSON di kedua folder wajib memuat nomor pengumuman BEI,
+  dan setiap nomor wajib diikuti `(<tanggal pengumuman>; read YYYY-MM-DD`
+  dengan tanggal baca tidak sebelum tanggal pengumuman; folder hanya berisi
+  JSON dan README; README memuat unsur wajib dan menyebut setiap file JSON.
+  Lima kasus negatif memastikan aturan menolak sumber tanpa nomor, tanpa
+  tanggal pengumuman, tanpa tanggal baca, nomor kedua tanpa tanggal, atau
+  tanggal baca mustahil.
+
+**Verifikasi.** Tes ditulis dulu: merah **6 failed, 7 passed** (dua `source`
+tanpa tanggal lengkap, dua folder tanpa README; kasus aturan sudah lulus).
+Akhir: file baru bersama tes kalender dan MLPT **21 passed** (`--disable-socket`),
+tes riset bersumber **21 passed**, tes IDX + deteksi pasar + registry
+**1.244 passed** (`--allow-hosts=127.0.0.1,::1`).
+
+**Batas.** Ini kepatuhan atribusi yang diputuskan pengguna, bukan pendapat
+hukum atau izin tertulis BEI. Penggunaan komersial tetap tidak diizinkan.
+
 ## Keputusan research preview dan tinjauan DATA-03
 
 Dokumen **2026-11-15, Asia/Jakarta**, tanpa perubahan kode.

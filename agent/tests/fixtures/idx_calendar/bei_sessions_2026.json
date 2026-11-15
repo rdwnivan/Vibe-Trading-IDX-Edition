@@ -1,6 +1,6 @@
 {
   "schema": "idx_session_calendar_v1",
-  "source": "BEI exchange days 2026: Monday to Friday except national holidays and declared exchange holidays (II-A Kep-00158/BEI/10-2026, I.16, read 2026-11-12), minus the 22 weekday closures in BEI Peng-00171/BEI.POP/09-2025 (23 Sep 2025; matched by KSEI PENG-0005/DIR/KSEI/1025 and PENG-0002/DIR/KSEI/0126). BEI announcement index searched for 'Libur Bursa' on 2026-11-15: no 2026 amendment listed. Revisable by later BEI notice; trading sessions and instrument suspensions are not covered.",
+  "source": "BEI exchange days 2026: Monday to Friday except national holidays and declared exchange holidays (II-A Kep-00158/BEI/10-2026, I.16 (20 Oct 2026; read 2026-11-12)), minus the 22 weekday closures in BEI Peng-00171/BEI.POP/09-2025 (23 Sep 2025; read 2026-11-12; matched by KSEI PENG-0005/DIR/KSEI/1025 and PENG-0002/DIR/KSEI/0126). BEI announcement index searched for 'Libur Bursa' on 2026-11-15: no 2026 amendment listed. Revisable by later BEI notice; trading sessions and instrument suspensions are not covered.",
   "covered_from": "2026-01-01",
   "covered_until": "2026-12-31",
   "sessions": [

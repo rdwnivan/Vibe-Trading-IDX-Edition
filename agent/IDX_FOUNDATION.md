@@ -95,6 +95,14 @@ therefore extends their existing owners and tests parity across them.
   closures of BEI Peng-00171/BEI.POP/09-2025, 239 sessions. It is a reference
   fixture that nothing loads automatically, covers 2026 only and stays
   revisable by later BEI notice.
+- BEI-sourced fixtures (decision of 2026-11-15) may stay in the public
+  repository because they hold only dates and announcement numbers, used
+  noncommercially with attribution and access date. Every BEI number in a
+  `source` field of `idx_calendar/` and `idx_event_records/` must read
+  `<number> (<announcement date>; read YYYY-MM-DD`; each folder has a README
+  and holds only JSON files. `test_idx_bei_fixture_attribution.py` enforces
+  this. Copying BEI PDFs/text, storing BEI prices or statistics, scraping and
+  commercial use remain out of bounds.
 - Opt-in research wiring (2026-11-15): when `VIBE_TRADING_IDX_CALENDAR_PATH`
   and/or `VIBE_TRADING_IDX_EVENT_RECORDS_PATH` name such files, `idx_research`
   adds a top-level `sourced_reference` (`idx_sourced_reference_v1`, per-file
