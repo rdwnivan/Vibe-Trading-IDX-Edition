@@ -1746,6 +1746,76 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Akhir seri, usia sesi dan tanggal ex
+
+Slice **2026-11-15, Asia/Jakarta**, lanjutan [audit bar harian vendor](#data-03--audit-bar-harian-vendor).
+
+**Implementasi.** [idx_bar_quality.py](src/markets/idx_bar_quality.py)
+menambah `audit_series_events(symbol, frame, *, as_of=None, calendar=None,
+suspensions=(), delistings=(), corporate_actions=())` dengan policy
+`idx_series_event_audit_v1`, serta dua record bersumber:
+
+- `IDXDelisting(symbol, source, effective_day)`: `effective_day` adalah hari
+  pertama saham tidak lagi tercatat. Dua record untuk simbol yang sama ditolak.
+- `IDXCorporateAction(symbol, source, kind, ex_day)`: `kind` salah satu label
+  `cash_dividend`, `stock_dividend`, `bonus_shares`, `split`, `reverse_split`,
+  `rights_issue`. Label ini tidak membawa rasio, nilai atau aturan.
+
+`audit_daily_bars` dan kontrak `idx_daily_bar_audit_v1` yang dipakai riset dan
+UI tidak diubah. Fungsi baru tidak membuang, mengisi atau menyesuaikan bar.
+
+| Field | Arti |
+|---|---|
+| `series_end` | `None` tanpa `as_of`; selain itu bar terakhir, `sessions_after_last_bar` (sesi kalender yang disuplai sesudah bar terakhir sampai `as_of`) dan `status` |
+| `bars_after_delisting_dates` | bar pada atau sesudah tanggal delisting yang disuplai (kontradiksi) |
+| `ex_date_moves` | per record aksi korporasi: ada tidaknya bar tanggal ex, close sebelumnya dan close ex, rasionya, serta `adjusted_close`/`close` pada kedua bar bila kolom itu ada |
+
+Status `series_end`, berurutan:
+
+1. `delisted`: hanya dari record delisting yang efektif pada atau sebelum `as_of`.
+2. `no_bars`: tidak ada bar dan tidak ada record.
+3. `unverified`: tanpa kalender; usia sesi `None`.
+4. `uncovered`: bar terakhir atau `as_of` di luar cakupan kalender; usia `None`.
+5. `current`: tidak ada sesi terlewat (akhir pekan dan hari tutup tidak dihitung).
+6. `suspended`: setiap sesi yang terlewat dicakup record suspensi yang disuplai.
+7. `ended_or_stale`: sisanya. Dari bar saja, seri yang sudah berakhir tidak
+   bisa dibedakan dari data basi.
+
+Batasnya:
+
+- `as_of` wajib `date` biasa dan tidak boleh sebelum bar terakhir.
+- Recency `calendar_age_warning_v1` (14 hari kalender) di tool riset tetap
+  seperti semula; usia sesi adalah ukuran terpisah.
+- Lompatan harga tanpa record aksi korporasi tidak dilaporkan. Rasio
+  close/close sebelumnya tidak dibandingkan dengan hak dividen atau rasio
+  split. Seri mentah (seperti OHLC EODHD) menunjukkan lompatan, seri yang sudah
+  disesuaikan tidak; modul hanya melaporkan keduanya apa adanya.
+- Harga NaN atau tak hingga menjadi `None`, jadi laporan tetap JSON ketat.
+
+**Tidak disambungkan ke permukaan riset.** Setiap temuan baru butuh kalender
+bersumber (usia sesi, `current`/`ended_or_stale`) atau record delisting/aksi
+korporasi bersumber. Tool riset tidak punya keduanya, jadi tanpa itu semua
+field akan `unverified` atau kosong. Penyambungan menunggu kalender atau record
+bersumber.
+
+**Verifikasi.** [Tes](tests/test_idx_series_events.py), 42 kasus dengan
+kalender, record dan harga sintetis 2030. Run pertama gagal saat koleksi
+karena simbol belum ada. Sesudah implementasi satu helper tes diperbaiki: frame
+kosong perlu kolom OHLCV eksplisit agar lolos validasi. Hasil akhir:
+
+```powershell
+.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_series_events.py agent/tests/test_idx_bar_quality.py agent/tests/test_idx_foundation.py agent/tests/test_idx_reference.py -q --disable-socket   # 177 passed (42 baru)
+.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx*.py agent/tests/test_market_detection.py agent/tests/test_registry.py -q --allow-hosts=127.0.0.1,::1   # 1.124 passed
+.venv/idx312/Scripts/python.exe -m ruff check agent/src/markets/idx_bar_quality.py agent/tests/test_idx_series_events.py   # lulus
+.venv/idx312/Scripts/python.exe -m ruff format --check agent/src/markets/idx_bar_quality.py agent/tests/test_idx_series_events.py   # lulus
+bash tools/ci_grep_gates.sh   # lulus
+```
+
+Suite penuh, frontend dan probe provider tidak dijalankan; UI tidak disentuh.
+Lookup BEI untuk pengumuman suspensi MLPT 2026-11-15 tidak menemukan
+pengumumannya ([catatan](IDX_PROVIDER_RESEARCH.md#mlpt-zero-volume-row-on-27-march-2026-a-suspension--2026-11-14)).
+DATA-03 penuh tetap terbuka sampai ada kalender bersumber.
+
 ## DATA-03 — Peringatan harga saat volume nol di riset
 
 Slice **2026-11-14, Asia/Jakarta**, lanjutan [audit bar harian vendor](#data-03--audit-bar-harian-vendor).
