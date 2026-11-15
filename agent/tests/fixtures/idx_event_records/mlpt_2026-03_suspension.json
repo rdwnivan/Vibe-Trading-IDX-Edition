@@ -1,0 +1,11 @@
+{
+  "schema": "idx_event_records_v1",
+  "suspensions": [
+    {
+      "symbol": "MLPT.JK",
+      "source": "BEI Peng-SPT-00097/BEI.WAS/03-2026 (26 Mar 2026): halt on 27 Mar 2026 in the Regular and Cash Markets; BEI Peng-UPT-00108/BEI.WAS/03-2026 (27 Mar 2026): reopened 30 Mar 2026; read 2026-11-15",
+      "first_day": "2026-03-27",
+      "last_day": "2026-03-27"
+    }
+  ]
+}
