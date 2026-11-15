@@ -1253,3 +1253,16 @@ suspension from an untraded day from vendor bars alone: it would need BEI's
 suspension announcements as a separate, dated source. This is a further
 reason, alongside the holiday rows, to keep a suspension record (RULE-01,
 DATA-03) apart from the price series. No loader, fixture or code was added.
+
+**BEI lookup retry, 2026-11-15.** One visit to the same announcements page in
+the built-in browser. The 503 maintenance page is gone: the list loads (latest
+item 13 November 2026; BEI notes it shows only the last three years). The
+keyword box matched the ticker: "MLPT" returned 15 pages of MLPT items, whose
+first page reaches back only to 20 July 2026. Keyword searches for "MLPT
+suspensi" and "Penghentian Sementara Perdagangan MLPT" returned "Data
+Pengumuman tidak ditemukan". Paging back to March 2026 or using the date
+filter was not done, to keep this to a single lookup. The suspension and
+reopening announcements (27 and 30 March 2026), their numbers and market
+scope therefore remain unread; the evidence is still the two Pasardana
+reports. Next time, filter MLPT by the date range 27–30 March 2026 in one
+visit instead of searching titles.

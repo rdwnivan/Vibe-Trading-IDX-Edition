@@ -65,6 +65,15 @@ therefore extends their existing owners and tests parity across them.
   (API, MCP, CLI) returns its zero-volume price-change dates for the analyzed
   window as `bar_audit`, and the research page shows them; no calendar is
   passed, so holiday and suspension checks do not run there.
+- `src.markets.idx_bar_quality.audit_series_events` reports, for one symbol,
+  where the series ends relative to a supplied `as_of` date, the number of
+  supplied-calendar sessions after the last bar (`None` without a calendar or
+  outside coverage), and prices around supplied ex dates. `delisted` comes
+  only from a supplied `IDXDelisting` record; a series that stops without one
+  is `ended_or_stale`. `IDXCorporateAction` records give the previous and
+  ex-date closes, their ratio and `adjusted_close`/`close` factors; no price
+  is adjusted and no entitlement is checked. No delisting or corporate-action
+  list is bundled, and no surface calls it yet.
 - Both runner and direct composite construction reject IDX backtesting until
   the historical rulebook/calendar/action model exists. Mixed IDR/USD/CNY/HKD
   pools are rejected by the existing currency guard.
@@ -147,7 +156,7 @@ Dev tools use the constraints in `pyproject.toml`; no dependency manifest change
 From repository root:
 
 ```powershell
-.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_foundation.py agent/tests/test_idx_bar_quality.py agent/tests/test_market_detection.py agent/tests/test_registry.py agent/tests/test_composite_currency_guard.py agent/tests/test_market_identity_parity.py agent/tests/test_yahoo_loader.py agent/tests/test_yfinance_declared_currency.py agent/tests/test_market_data.py agent/tests/test_market_data_serving_source.py agent/tests/test_loader_retry_helpers.py -q --disable-socket
+.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_foundation.py agent/tests/test_idx_bar_quality.py agent/tests/test_idx_series_events.py agent/tests/test_market_detection.py agent/tests/test_registry.py agent/tests/test_composite_currency_guard.py agent/tests/test_market_identity_parity.py agent/tests/test_yahoo_loader.py agent/tests/test_yfinance_declared_currency.py agent/tests/test_market_data.py agent/tests/test_market_data_serving_source.py agent/tests/test_loader_retry_helpers.py -q --disable-socket
 .venv/idx312/Scripts/python.exe -m pytest agent/tests/test_sdk_order_gate.py agent/tests/test_mandate_enforcement.py agent/tests/test_killswitch_blocks_orders.py agent/tests/test_readonly_default.py -q --allow-hosts=127.0.0.1,::1
 git diff --check
 ```
