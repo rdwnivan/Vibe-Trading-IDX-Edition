@@ -1820,6 +1820,60 @@ lulus di Python 3.11 (23.265 passed, 91 skipped) dan 3.14 (23.267 passed,
 Ruff check lulus; `yfinance_loader.py` sudah tidak sesuai `ruff format`
 sebelum slice ini dan tidak diformat ulang.
 
+## DATA-03 — Guard jaringan `curl_cffi` untuk seluruh suite tes
+
+Slice **2026-11-16, Asia/Jakarta**, lanjutan temuan kebocoran di atas: plugin
+sementara diganti guard permanen di repository.
+
+**Guard.** [_curl_cffi_guard.py](tests/_curl_cffi_guard.py) dipasang dari
+[conftest.py](tests/conftest.py) saat conftest diimpor (sebelum koleksi), hanya
+bila `curl_cffi` terpasang. `Session.request`, `Session.ws_connect`,
+`AsyncSession.request`, `AsyncSession.ws_connect` dan `Curl.perform` diganti
+fungsi yang mencatat percobaan dan melempar `CurlCffiNetworkBlocked` dengan
+nama tes (`PYTEST_CURRENT_TEST`) dan URL. Karena yfinance menelan exception
+dan mengembalikan frame kosong, fixture autouse `_block_curl_cffi_network`
+juga menggagalkan tes yang punya percobaan tercatat saat teardown, dan
+melaporkan percobaan dari koleksi/fixture scope lebih luas pada tes pertama
+yang melihatnya. Opt-out eksplisit: marker `allow_curl_cffi_network`; suite
+bawaan tidak memakainya. `requests`/`httpx` tidak dicakup guard ini.
+
+**Bukti guard memblokir.**
+[test_curl_cffi_network_guard.py](tests/test_curl_cffi_network_guard.py)
+(9 kasus): sync/module-level/async/`Curl.perform` diblokir, percobaan yang
+ditelan tetap tercatat, `yf.Ticker("BBCA.JK").history` tidak sampai ke Yahoo,
+marker meneruskan ke fungsi asli dan tanpa marker fungsi asli tidak dipanggil.
+Lulus dengan dan tanpa `--disable-socket`. Uji mutasi sementara (tes yang
+memanggil `yf.download("BBCA.JK")` lalu menelan hasil) gagal saat teardown
+dengan dua percobaan ke `https://fc.yahoo.com`; file itu dihapus.
+
+**Temuan suite penuh.** Run CI-style (`--ignore` e2e, tiga tes pip
+`test_frontend_distribution.py` di-deselect, interpreter `idx312`, worktree
+lokal Windows): **21 failed, 23.074 passed, 231 skipped, 3 deselected, 1
+error** dalam 1:12:56. Guard menangkap **satu** tes:
+`test_alpha_compare_api.py::test_stream_emits_result_then_done` masuk ke
+lifespan app (`with TestClient(...)`), yang menjalankan preflight startup:
+unduhan yfinance AAPL (`curl_cffi`, diblokir) dan panggilan HTTPS ke OKX lewat
+`requests` (tidak dicakup guard; tercatat `SSLError` di output tes). Tes itu
+kini menstub `src.preflight.run_preflight`; file + tes guard **22 passed**,
+preflight tidak berjalan. Sesudah perbaikan, `test_idx*.py` + file itu + tes
+guard **1.107 passed** (`--allow-hosts=127.0.0.1,::1`). Tidak ada tes lain yang memicu guard; berkas lain
+yang memakai `TestClient` sebagai context manager tidak menjalankan preflight
+`api_server` (jika ya, cek yfinance AAPL-nya akan tertangkap).
+
+**21 kegagalan lain bukan dari guard.** Diulang dengan `install()` dinonaktifkan
+sementara di worktree yang sama: **20 failed, 1 passed**; yang lulus
+(`test_rate_limiter_memory.py::test_over_limit_key_with_expired_entries_is_cleaned`)
+flaky berbasis waktu (1 dari 3 run file gagal dengan guard, tanpa jalur
+`curl_cffi`). Penyebab lokal Windows: hak symlink (WinError 1314, 4 tes),
+dekode `cp1252` (4 tes `test_research_cleanup`/`test_swarm_continuation`),
+timeout startup subprocess MCP (8 tes), anggaran performa
+(`test_signal_alignment_perf`, median 88,8 ms > 50 ms), subprocess paper-trade
+(`queue.Empty`), serta `test_reconciled_contracts` dan
+`test_cli_package_bootstrap` yang juga gagal di checkout utama pada commit
+yang sama (`core.autocrlf=true`, editable install menunjuk checkout utama).
+Semuanya di luar cakupan slice ini dan tidak diubah; check wajib CI (Linux)
+yang menjadi bukti hijau.
+
 ## RELEASE-01 — Gate research preview
 
 Slice **2026-11-15/16, Asia/Jakarta**, menjalankan keputusan B pengguna. Isi

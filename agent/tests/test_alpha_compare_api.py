@@ -168,7 +168,11 @@ def test_result_projector_drops_status_keeps_ranking() -> None:
 # ── SSE stream ──────────────────────────────────────────────────────────────
 
 
-def test_stream_emits_result_then_done() -> None:
+def test_stream_emits_result_then_done(monkeypatch: pytest.MonkeyPatch) -> None:
+    # ``with _client()`` enters the app lifespan, whose startup preflight probes
+    # real providers (a yfinance AAPL download over curl_cffi and an OKX HTTPS
+    # call). Stub it: this test is about the stream, not startup health.
+    monkeypatch.setattr("src.preflight.run_preflight", lambda *_a, **_k: [])
     _seed_job(
         "dddd4444",
         status="done",

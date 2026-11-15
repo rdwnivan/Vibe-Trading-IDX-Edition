@@ -102,6 +102,51 @@ if site.ENABLE_USER_SITE and site.USER_SITE and Path(site.USER_SITE).is_dir():
         os.environ["PYTHONPATH"] = os.pathsep.join(part for part in (site.USER_SITE, _prior_path) if part)
 
 
+# curl_cffi (yfinance's transport) opens sockets in C, past pytest-socket, so a
+# test that forgets a stub silently calls Yahoo. Patch it at conftest import time,
+# before collection, so module-level imports and collection-time calls are
+# covered too. See tests/_curl_cffi_guard.py.
+from tests import _curl_cffi_guard as _curl_guard  # noqa: E402 — needs AGENT_DIR above
+
+_curl_guard.install()
+
+
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        f"{_curl_guard.ALLOW_MARKER}: let this test send real requests through curl_cffi "
+        "(blocked by default; the default suite must not need it)",
+    )
+
+
+def _fail_on_curl_attempts(phase: str) -> None:
+    if attempts := _curl_guard.take_attempts():
+        pytest.fail(
+            f"Real network access through curl_cffi was attempted ({phase}); the provider "
+            "call was not stubbed. Blocked attempts:\n  " + "\n  ".join(attempts),
+            pytrace=False,
+        )
+
+
+@pytest.fixture(autouse=True)
+def _block_curl_cffi_network(request):
+    """Fail any test that tried to reach the network through curl_cffi.
+
+    The patched entry points already raise, but yfinance catches broad exceptions
+    and hands back an empty frame, so a leak can still pass. Checking the recorded
+    attempts after the test catches it either way. Attempts recorded before setup
+    (collection, a wider-scoped fixture) are reported on the first test to see them.
+    """
+    _fail_on_curl_attempts("before this test, during collection or a wider-scoped fixture")
+    allowed = request.node.get_closest_marker(_curl_guard.ALLOW_MARKER) is not None
+    _curl_guard.set_allowed(allowed)
+    try:
+        yield
+    finally:
+        _curl_guard.set_allowed(False)
+    _fail_on_curl_attempts("during this test")
+
+
 def _ledger_state() -> dict[str, tuple[int, int] | None]:
     """Return (size, mtime_ns) per real live ledger; None where absent."""
     state: dict[str, tuple[int, int] | None] = {}
