@@ -2,9 +2,9 @@
 
 Dokumen ini mencatat keputusan pengguna untuk sesi 2026-11-15 (Asia/Jakarta):
 tiga keputusan awal, keputusan hak distribusi fakta bersumber BEI (bagian 4),
-dan draf README Bahasa Indonesia untuk scope rilis yang disepakati. Ini **draf**:
-tidak ada tag, rilis, paket atau publikasi yang dibuat, dan README di root belum
-diubah. Status penerimaan tetap dimiliki [PROJECT_STATUS.md](../PROJECT_STATUS.md)
+dan draf README Bahasa Indonesia untuk scope rilis yang disepakati. Tidak ada
+tag, rilis, paket atau publikasi yang dibuat. Draf README diterapkan ke
+[README_id.md](../README_id.md) pada 2026-11-15 (bagian 5). Status penerimaan tetap dimiliki [PROJECT_STATUS.md](../PROJECT_STATUS.md)
 dan [TODO.md](../TODO.md).
 
 ## 1. Disposisi EODHD (DATA-01)
@@ -110,10 +110,178 @@ atau statistik BEI, scraping/crawling situs BEI, dan penggunaan komersial.
 Keputusan ini tidak memberi izin diseminasi komersial dan tidak berlaku untuk
 data harga dari vendor mana pun.
 
+## 5. Gate RELEASE-01: hak data, verifikasi Linux dan README (2026-11-15)
+
+**Hak data Yahoo/yfinance (keputusan pengguna).** Preview hanya untuk pemakaian
+pribadi lokal oleh satu operator. Bar Yahoo tidak di-commit, tidak dibundel ke
+paket dan tidak diredistribusi. README menyatakan bahwa pemakaian data mengikuti
+syarat Yahoo dan menjadi tanggung jawab operator. Tidak ada deployment publik
+atau multiuser.
+
+**Pemuatan `.env` yang terbukti.** Tes
+[test_idx_research_env_file.py](tests/test_idx_research_env_file.py) menjalankan
+lifespan asli `api_server.app` dengan probe jaringan preflight diganti stub dan
+slot `.env` dialihkan ke folder sementara (file `.env` milik operator tidak
+dibaca):
+
+- Startup API (`run_preflight` → `_ensure_dotenv`) membaca **file pertama yang
+  ada** di antara `~/.vibe-trading/.env`, `agent/.env` dan `./.env`.
+  `VIBE_TRADING_IDX_CALENDAR_PATH` di `~/.vibe-trading/.env` membuat
+  `POST /api/research/idx` melaporkan kalender `loaded`; tanpa file home,
+  `agent/.env` dipakai.
+- Bila `~/.vibe-trading/.env` ada tetapi tidak memuat variabel itu, nilai di
+  `agent/.env` **tidak** dibaca.
+- Variabel yang sudah di-export menang atas `.env` (`override=False`).
+- CLI `python -m src.tools.idx_research_tool` tidak membaca `.env` apa pun.
+- Server MCP memanggil `_ensure_dotenv` yang sama di `main()`
+  ([test_mcp_server_dotenv.py](tests/test_mcp_server_dotenv.py)).
+- Lokasi `~` mengikuti `Path.home()` (`%USERPROFILE%` di Windows), bukan
+  `VIBE_TRADING_HOME`.
+
+Tes ini mengunci perilaku yang sudah ada, tanpa perubahan kode; ketujuh kasus
+lulus pada run pertama.
+
+**Bukti tes Linux yang ada.** Check wajib `test / Python 3.11`,
+`test / Python 3.14` dan `frontend` berjalan di `ubuntu-latest` dan menjalankan
+suite penuh (editable install `pip install -e ".[dev,...]"`) serta build/tes
+frontend. `Hash lock / Linux x64` hanya me-resolve lock berhash secara dry-run.
+Semua itu bukti tes di Linux, **bukan** alur bersih install non-editable → riset.
+
+**Rencana smoke test Linux (belum dijalankan di Linux).** Tanpa WSL/Docker dan
+tanpa mengubah workflow CI. Jaringan hanya dipakai di langkah persiapan;
+instalasi dan riset berjalan di namespace tanpa jaringan (`unshare -rn`), dan
+data pasar datang dari fixture sintetis lewat seam `fetch_market_data`.
+
+1. Persiapan (online, sekali), dari checkout commit rilis:
+
+   ```bash
+   python3.12 -m venv /tmp/vt-smoke
+   /tmp/vt-smoke/bin/pip download --require-hashes -r requirements-lock.txt -d /tmp/vt-wheelhouse
+   (cd frontend && npm ci && npm run build)
+   /tmp/vt-smoke/bin/pip wheel --no-deps -w /tmp/vt-dist .
+   ```
+
+   Hasil: wheelhouse berisi wheel Linux untuk seluruh lock, dan satu
+   `vibe_trading_ai-0.1.19-*.whl` di `/tmp/vt-dist`.
+
+2. Instalasi bersih tanpa jaringan:
+
+   ```bash
+   unshare -rn /tmp/vt-smoke/bin/pip install --no-index --find-links /tmp/vt-wheelhouse --require-hashes -r requirements-lock.txt
+   unshare -rn /tmp/vt-smoke/bin/pip install --no-index --no-deps /tmp/vt-dist/vibe_trading_ai-*.whl
+   unshare -rn /tmp/vt-smoke/bin/pip check
+   unshare -rn /tmp/vt-smoke/bin/vibe-trading --version
+   unshare -rn /tmp/vt-smoke/bin/python -I -m src.tools.idx_research_tool --help
+   ```
+
+   Hasil: kedua instalasi sukses, `pip check` melaporkan tidak ada konflik,
+   `--version` mencetak `0.1.19`, `--help` keluar dengan kode 0.
+
+3. Riset tanpa jaringan: simpan skrip di bawah sebagai `/tmp/idx_smoke.py`,
+   lalu jalankan dari root checkout (fixture dibaca dari
+   `agent/tests/fixtures/`, kode dari paket terpasang karena `-I`):
+
+   ```bash
+   unshare -rn /tmp/vt-smoke/bin/python -I /tmp/idx_smoke.py
+   ```
+
+   ```python
+   import json, os, socket
+   from pathlib import Path
+
+   _connect = socket.socket.connect
+
+
+   def _loopback_only(self, address):
+       if isinstance(address, tuple) and address[0] not in ("127.0.0.1", "::1", "localhost"):
+           raise OSError("network disabled for the IDX preview smoke test")
+       return _connect(self, address)
+
+
+   socket.socket.connect = _loopback_only
+
+   import pandas as pd
+   from fastapi import FastAPI
+   from fastapi.testclient import TestClient
+
+   from src.api.idx_research_routes import register_idx_research_routes
+   from src.config.accessor import reset_env_config
+   from src.tools import idx_research_tool
+   import src
+
+   print("0 package:", Path(src.__file__).parent)
+
+   fixtures = Path("agent/tests/fixtures")
+   frame = pd.read_csv(fixtures / "idx_data_quality" / "normal.csv", parse_dates=["date"], index_col="date")
+   provenance = {"source": "fixture", "quote_currency": "IDR", "exchange_timezone": "Asia/Jakarta",
+                 "interval": "1D", "volume_unit": "shares", "adjustment": "unknown", "freshness": "not_evaluated"}
+   idx_research_tool.fetch_market_data = lambda **_k: {"SYNA.JK": frame, "_provenance": {"SYNA.JK": provenance}}
+   request = {"codes": ["SYNA.JK"], "lookback": 20, "end_date": "2030-01-18"}
+
+   for name in ("VIBE_TRADING_IDX_CALENDAR_PATH", "VIBE_TRADING_IDX_EVENT_RECORDS_PATH"):
+       os.environ.pop(name, None)
+   reset_env_config()
+   result = json.loads(idx_research_tool.IDXResearchTool().execute(**request))
+   item = result["items"][0]
+   assert result["status"] == "ok" and item["status"] == "ok", result
+   assert "sourced_reference" not in result
+   print("1 tool ok:", item["symbol"], "bars", item["volume_coverage"]["bar_count"], "bar_audit", item["bar_audit"]["policy"])
+
+   os.environ["VIBE_TRADING_IDX_CALENDAR_PATH"] = str(fixtures / "idx_calendar" / "bei_sessions_2026.json")
+   os.environ["VIBE_TRADING_IDX_EVENT_RECORDS_PATH"] = str(fixtures / "idx_event_records" / "mlpt_2026-03_suspension.json")
+   reset_env_config()
+   app = FastAPI()
+   register_idx_research_routes(app, lambda: None)
+   with TestClient(app) as client:
+       response = client.post("/api/research/idx", json=request)
+   body = response.json()
+   assert response.status_code == 200 and body["status"] == "ok", body
+   reference = body["sourced_reference"]
+   assert reference["calendar"]["status"] == "loaded" and reference["event_records"]["status"] == "loaded", reference
+   print("2 api ok:", response.status_code, "calendar", reference["calendar"]["covered_from"], "..",
+         reference["calendar"]["covered_until"], "records", reference["event_records"]["status"])
+   print("IDX preview smoke passed")
+   ```
+
+   Hasil yang diharapkan: baris `0 package:` menunjuk
+   `/tmp/vt-smoke/lib/python3.12/site-packages/src` (bukan `agent/src`), lalu
+   `1 tool ok: SYNA.JK bars 9 bar_audit idx_daily_bar_audit_v1`,
+   `2 api ok: 200 calendar 2026-01-01 .. 2026-12-31 records loaded` dan
+   `IDX preview smoke passed`, exit 0. Guard socket menolak koneksi non-loopback
+   sebagai lapis kedua selain `unshare`.
+
+**Validasi skrip di Windows (2026-11-15).** Langkah 3 dijalankan di venv
+proyek yang sudah ada (`.venv/idx312`, editable install; **bukan** instalasi
+bersih): keluaran baris 1–2 dan `IDX preview smoke passed` sesuai harapan,
+dengan `0 package:` menunjuk `agent/src` karena editable. Guard terbukti
+menolak `socket.create_connection` ke alamat publik. Langkah 1–2 tidak
+dijalankan karena mengunduh paket.
+
+**Usulan (belum dijalankan, perlu izin pengguna).** Jalankan langkah 1–3 pada
+host Linux milik operator, atau tambahkan job CI Linux yang menjalankan langkah
+yang sama. Workflow CI tidak diubah di sesi ini.
+
+**Tes/build pada HEAD PR ini (Windows, 2026-11-16).** Suite IDX
+(`agent/tests/test_idx*.py` + `test_market_detection.py` + `test_registry.py` +
+`test_mcp_server_dotenv.py`, `--allow-hosts=127.0.0.1,::1`) **1.252 passed**.
+`npm run test:run` dengan timeout bawaan 5 detik **gagal 1–4 tes** per run
+karena timeout (berganti-ganti: `IDXResearch.observations` 500 bar,
+`AgentBackgroundStreamCompletion`, `VolatilitySurfaceGrid`; tes 500 bar juga
+timeout saat dijalankan sendiri). Dengan `npx vitest run --testTimeout=30000`
+ketiga file **28 passed** dan suite penuh **1.407 passed** (103 file), jadi
+penyebabnya waktu di mesin ini, bukan assertion. Frontend tidak berubah di PR
+ini. `npm run build` lulus. Hasil final dicatat ulang pada HEAD sesi terakhir.
+
+**Akibat untuk RELEASE-01.** Alur bersih install → riset di Linux belum
+benar-benar dijalankan, jadi RELEASE-01 **tidak dicentang**.
+
 ## Draf README (Bahasa Indonesia)
 
 Draf pengganti bagian "🇮🇩 IDX Edition" di [README_id.md](../README_id.md). Isinya
-hanya perilaku yang tersedia pada `feature/idx-edition` per 2026-11-15.
+hanya perilaku yang tersedia pada `feature/idx-edition` per 2026-11-15. Versi
+yang diterapkan ke README_id.md (2026-11-15) menambah pernyataan hak data,
+skill `idx-research` dan perilaku `.env` yang terbukti di bagian 5; README_id.md
+adalah versi yang berlaku.
 
 ````markdown
 ## 🇮🇩 IDX Edition — research preview

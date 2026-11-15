@@ -1746,6 +1746,37 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## RELEASE-01 — Gate research preview
+
+Slice **2026-11-15/16, Asia/Jakarta**, menjalankan keputusan B pengguna. Isi
+lengkap ada di
+[keputusan bagian 5](IDX_RESEARCH_PREVIEW.md#5-gate-release-01-hak-data-verifikasi-linux-dan-readme-2026-11-15).
+
+- **README.** Draf diterapkan ke bagian "🇮🇩 IDX Edition — research preview"
+  [README_id.md](../README_id.md), ditambah pernyataan hak data (pemakaian
+  pribadi lokal satu operator; bar Yahoo tidak di-commit, dibundel atau
+  diredistribusi; mengikuti syarat Yahoo dan tanggung jawab operator; tanpa
+  deployment publik/multiuser), atribusi BEI, skill `idx-research`, dan
+  perilaku `.env` yang terbukti.
+- **`.env`.** [test_idx_research_env_file.py](tests/test_idx_research_env_file.py)
+  (7 kasus, lifespan asli `api_server.app`, slot `.env` dialihkan ke folder
+  sementara): API membaca file pertama yang ada (`~/.vibe-trading/.env`,
+  `agent/.env`, `./.env`), file berikutnya tidak dibaca, export menang, CLI
+  mandiri tidak membaca `.env`. Tes mengunci perilaku yang ada; lulus pada run
+  pertama, tanpa perubahan kode. `agent/.env` milik pengguna tidak dibaca.
+- **Linux.** Check wajib `test / Python 3.11`, `test / Python 3.14` dan
+  `frontend` di `ubuntu-latest` adalah bukti tes Linux (editable install).
+  Rencana smoke install bersih → riset tanpa jaringan (`unshare -rn`, fixture
+  sintetis lewat seam `fetch_market_data`) ditulis beserta hasil yang
+  diharapkan. Skrip langkah riset divalidasi di venv Windows yang ada (bukan
+  instalasi bersih); langkah unduh/instalasi tidak dijalankan. Workflow CI dan
+  pengaturan repo tidak diubah.
+- **Tes/build.** Suite IDX 1.252 passed; frontend 1.407 passed dengan
+  `--testTimeout=30000` (timeout bawaan: 1–4 tes timeout per run); build lulus.
+
+**RELEASE-01 tidak dicentang**: alur bersih install → riset belum dijalankan di
+Linux.
+
 ## DATA-03 — Atribusi fakta bersumber BEI
 
 Slice **2026-11-15, Asia/Jakarta**, menjalankan keputusan A pengguna

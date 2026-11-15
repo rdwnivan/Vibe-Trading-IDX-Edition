@@ -119,6 +119,11 @@ therefore extends their existing owners and tests parity across them.
 
 Release scope (2026-11-15) is an "IDX research preview": research, data-quality
 audits and opt-in sourced files only; see [the decision record](IDX_RESEARCH_PREVIEW.md).
+The API server and MCP server read the opt-in paths from the first existing
+dotenv among `~/.vibe-trading/.env`, `agent/.env` and `./.env` (exported
+variables win); the standalone CLI reads none
+(`tests/test_idx_research_env_file.py`). Personal local single-operator use
+only: Yahoo bars are not committed, bundled or redistributed.
 
 ## Official rule observations and open evidence
 
