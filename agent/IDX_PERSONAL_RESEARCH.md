@@ -1746,6 +1746,33 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## Keputusan research preview dan tinjauan DATA-03
+
+Dokumen **2026-11-15, Asia/Jakarta**, tanpa perubahan kode.
+[IDX_RESEARCH_PREVIEW.md](IDX_RESEARCH_PREVIEW.md) mencatat tiga keputusan
+pengguna: disposisi EODHD sebagai rujukan rekonsiliasi pribadi saja (DATA-01
+tetap terbuka), alasan permintaan II-A ke BEI tidak dikirim, dan scope rilis
+"IDX research preview" beserta draf README Bahasa Indonesia. Tidak ada tag,
+rilis atau publikasi; `README_id.md` belum diubah.
+
+**DATA-03 tidak dicentang.** Kriteria yang terpenuhi: paket sintetis mencakup
+normal, bar hilang, volume nol, split/dividen, suspensi, delisting, data basi
+dan kegagalan sumber; kalender BEI 2026 bersumber tersedia dan dipakai riset
+lewat env opt-in; file rusak terdegradasi dengan aman. Yang masih meragukan:
+
+- Kegagalan **provider jaringan** belum punya fixture di paket DATA-03; yang
+  diuji di sana adalah local loader eksplisit (`no_data` vs `fetch_failed`).
+- **Hak distribusi data nyata** belum pasti. Paket sintetis dinyatakan boleh
+  dibagikan. Kalender 2026 dan record MLPT berisi fakta dari pengumuman BEI;
+  syarat situs BEI mengizinkan penggunaan nonkomersial dengan atribusi dan
+  tanggal akses, dan mensyaratkan izin tertulis untuk diseminasi komersial
+  ([bukti](IDX_PRIMARY_INPUT_DISCOVERY.md#official-website-permission-evidence--2026-11-05)).
+  Apakah repository publik termasuk penggunaan yang diizinkan belum
+  diputuskan.
+
+Langkah yang menutupnya: fixture kegagalan provider jaringan di paket, dan
+keputusan tertulis tentang distribusi fakta bersumber BEI di repository publik.
+
 ## DATA-03 — Temuan bersumber di halaman riset
 
 Slice **2026-11-15, Asia/Jakarta**, sesudah [file bersumber di riset](#data-03--file-kalender-dan-record-bersumber-di-riset).
