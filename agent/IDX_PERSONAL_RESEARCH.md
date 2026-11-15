@@ -1746,6 +1746,52 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Loader kalender sesi bersumber
+
+Slice **2026-11-15, Asia/Jakarta**, sesudah [loader record peristiwa](#data-03--loader-record-peristiwa-bersumber).
+
+**Implementasi.** [idx_calendar_file.py](src/markets/idx_calendar_file.py)
+menambah `load_session_calendar(path)`, yang membaca satu file JSON milik
+pemanggil menjadi `IDXSessionCalendar` yang sudah ada. Modul ini tidak membawa
+kalender dan tidak mengasumsikan aturan hari kerja, libur atau setengah hari.
+
+```json
+{
+  "schema": "idx_session_calendar_v1",
+  "source": "...",
+  "covered_from": "YYYY-MM-DD",
+  "covered_until": "YYYY-MM-DD",
+  "sessions": ["YYYY-MM-DD", "..."]
+}
+```
+
+- Kelima field wajib ada dan tidak boleh ada field lain (misalnya daftar
+  `holidays`): hari di dalam cakupan yang tidak tercantum berarti tutup.
+- `sessions` wajib urut naik tanpa duplikat. `frozenset` akan diam-diam
+  menggabungkan duplikat, jadi tanggal ganda atau salah tempat ditolak.
+- Sesi di luar cakupan, cakupan terbalik dan sumber kosong ditolak oleh
+  `IDXSessionCalendar`. Sesi akhir pekan diterima apa adanya, karena tidak ada
+  aturan hari kerja yang diasumsikan. Cakupan tanpa sesi diperbolehkan.
+- Pembaca JSON ketat (key ganda, NaN, BOM, JSON rusak, file hilang) dan
+  pengurai tanggal `YYYY-MM-DD` dipakai bersama dengan loader record: keduanya
+  kini fungsi publik `read_strict_json` dan `parse_iso_day` di
+  `idx_event_records.py`, dengan pesan error yang tidak lagi menyebut "event
+  record". Pesan menyebut indeks sesi, misalnya `sessions[2]`, tanpa nilai
+  mentah.
+
+Belum ada file kalender bersumber dan belum ada permukaan yang memanggil
+loader ini. Begitu kalender BEI bersumber tersedia, file itu dapat diberikan ke
+`audit_daily_bars` dan `audit_series_events`; menyambungkannya ke tool riset
+tetap slice terpisah.
+
+**Verifikasi.** [Tes](tests/test_idx_calendar_file.py), 30 kasus dengan
+kalender sintetis Januari 2030. Run pertama gagal saat koleksi karena modul
+belum ada; sesudah implementasi 30 passed tanpa perubahan tes, dan 34 tes
+loader record tetap lulus sesudah helper dijadikan publik. Fondasi, bar audit,
+fixture dan kedua loader (`--disable-socket`): 255 passed. Seluruh
+`test_idx*.py` plus market detection dan registry (`--allow-hosts`): 1.202
+passed. Ruff lint/format dan `ci_grep_gates.sh` lulus.
+
 ## DATA-03 — Loader record peristiwa bersumber
 
 Slice **2026-11-15, Asia/Jakarta**, sesudah [paket fixture](#data-03--paket-fixture-kualitas-data).
