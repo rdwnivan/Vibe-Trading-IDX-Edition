@@ -1746,6 +1746,54 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Paket fixture kualitas data
+
+Slice **2026-11-15, Asia/Jakarta**, sesudah [akhir seri, usia sesi dan tanggal ex](#data-03--akhir-seri-usia-sesi-dan-tanggal-ex).
+
+**Isi.** [fixtures/idx_data_quality](tests/fixtures/idx_data_quality/README.md)
+berisi 11 CSV sintetis untuk kode buatan `SYNA.JK` sampai `SYNK.JK` pada
+Januari 2030, `manifest.json` dan README. Tidak ada bar dari vendor, BEI atau
+sumber berlisensi, jadi paket ini boleh dibagikan bersama repositori. Kalender
+dan record suspensi/delisting/aksi korporasi di manifest juga fixture, bukan
+fakta atau default IDX.
+
+| Kategori | Kasus | Yang diharapkan |
+|---|---|---|
+| normal | `normal.csv` | semua temuan kosong, `current`, usia 0 sesi |
+| missing_bar | `missing_bar.csv` | `missing_session_dates` 2030-01-15, tidak ada bar dibuat |
+| zero_volume | `zero_volume_flat.csv`, `zero_volume_sentinel.csv` | hari datar `untraded_or_suspended`; sentinel 999.999,9999 di hari tutup sebagai off-calendar dan harga berubah |
+| suspension | `suspension.csv` | dua hari datar `suspended` dari record |
+| delisting | `delisting.csv` | `delisted`, 4 sesi sesudah bar terakhir |
+| stale | `stale.csv` (bar sama dengan delisting, tanpa record) | `ended_or_stale`, 4 sesi |
+| dividend | `dividend_raw.csv` | rasio close 0,95, faktor `adjusted_close` 0,95 → 1,0 |
+| split | `split_raw.csv` | rasio close 0,2, faktor 0,2 → 1,0 |
+| provider_failure | `provider_empty.csv`, `provider_bad_price.csv` | local loader eksplisit: `no_data` untuk file kosong valid, `fetch_failed` untuk harga tak terbaca, tanpa fallback jaringan |
+
+Pasangan `delisting.csv`/`stale.csv` sengaja berisi bar yang sama: bedanya
+hanya record delisting bersumber.
+
+**Verifikasi.** [Tes](tests/test_idx_data_quality_fixtures.py) membaca
+manifest, membangun kalender dan record lewat dataclass yang ada, menjalankan
+`audit_daily_bars` dan `audit_series_events`, lalu membandingkan field yang
+tercantum, memastikan laporan JSON ketat dan frame tidak berubah. Kasus
+provider berjalan lewat `fetch_market_data(source="local")`. Tes juga
+memeriksa bahwa setiap CSV dirujuk manifest, semua kategori DATA-03 ada, dan
+semua simbol berawalan `SYN`.
+
+- Run pertama gagal saat koleksi karena `manifest.json` belum ada; sesudah
+  paket dibuat, 14 passed.
+- Uji mutasi: mengganti status `ended_or_stale` menjadi `delisted` dan alasan
+  `fetch_failed` menjadi `no_data` membuat 2 tes gagal; manifest dipulihkan.
+- Fondasi/reference/bar audit (`--disable-socket`): 191 passed. Seluruh
+  `test_idx*.py` plus market detection dan registry (`--allow-hosts`): 1.138
+  passed. Ruff lint/format dan `ci_grep_gates.sh` lulus. Di
+  `tools/test_ci_private_files_gate.py` satu tes gagal di Windows karena nama
+  file berisi newline, sama seperti sebelumnya.
+
+Kegagalan provider di sini hanya mencakup local loader; provider jaringan
+tidak diuji. Hak distribusi data nyata, kalender bersumber dan penyambungan ke
+riset tetap terbuka, jadi DATA-03 tidak dicentang.
+
 ## DATA-03 — Akhir seri, usia sesi dan tanggal ex
 
 Slice **2026-11-15, Asia/Jakarta**, lanjutan [audit bar harian vendor](#data-03--audit-bar-harian-vendor).
