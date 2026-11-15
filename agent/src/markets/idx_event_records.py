@@ -38,7 +38,7 @@ class IDXEventRecords:
     corporate_actions: tuple[IDXCorporateAction, ...]
 
 
-def _day(value: Any) -> date:
+def parse_iso_day(value: Any) -> date:
     if not isinstance(value, str) or not _ISO_DAY.match(value):
         raise ValueError("dates must be YYYY-MM-DD strings")
     try:
@@ -51,18 +51,20 @@ def _suspension(entry: dict[str, Any]) -> IDXSuspension:
     return IDXSuspension(
         symbol=entry["symbol"],
         source=entry["source"],
-        first_day=_day(entry["first_day"]),
-        last_day=_day(entry["last_day"]),
+        first_day=parse_iso_day(entry["first_day"]),
+        last_day=parse_iso_day(entry["last_day"]),
     )
 
 
 def _delisting(entry: dict[str, Any]) -> IDXDelisting:
-    return IDXDelisting(symbol=entry["symbol"], source=entry["source"], effective_day=_day(entry["effective_day"]))
+    return IDXDelisting(
+        symbol=entry["symbol"], source=entry["source"], effective_day=parse_iso_day(entry["effective_day"])
+    )
 
 
 def _corporate_action(entry: dict[str, Any]) -> IDXCorporateAction:
     return IDXCorporateAction(
-        symbol=entry["symbol"], source=entry["source"], kind=entry["kind"], ex_day=_day(entry["ex_day"])
+        symbol=entry["symbol"], source=entry["source"], kind=entry["kind"], ex_day=parse_iso_day(entry["ex_day"])
     )
 
 
@@ -76,23 +78,23 @@ _GROUPS: dict[str, tuple[frozenset[str], Callable[[dict[str, Any]], Any]]] = {
 def _unique_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     keys = [key for key, _ in pairs]
     if len(keys) != len(set(keys)):
-        raise ValueError("Event-record file has a duplicate JSON key")
+        raise ValueError("File has a duplicate JSON key")
     return dict(pairs)
 
 
 def _refuse_constant(_: str) -> Any:
-    raise ValueError("Event-record file contains a non-finite number")
+    raise ValueError("File contains a non-finite number")
 
 
-def _read(path: Path) -> Any:
+def read_strict_json(path: Path) -> Any:
     try:
         text = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
-        raise ValueError("Event-record file cannot be read as UTF-8") from None
+        raise ValueError("File cannot be read as UTF-8") from None
     try:
         return json.loads(text, object_pairs_hook=_unique_keys, parse_constant=_refuse_constant)
     except json.JSONDecodeError:
-        raise ValueError("Event-record file is not valid JSON") from None
+        raise ValueError("File is not valid JSON") from None
 
 
 def _load_group(name: str, entries: Any) -> tuple[Any, ...]:
@@ -117,7 +119,7 @@ def _load_group(name: str, entries: Any) -> tuple[Any, ...]:
 
 def load_event_records(path: str | Path) -> IDXEventRecords:
     """Parse one event-record file; refuse the whole file on any invalid entry."""
-    document = _read(Path(path))
+    document = read_strict_json(Path(path))
     if not isinstance(document, dict) or document.get("schema") != SCHEMA:
         raise ValueError(f"Event-record file must be an object with schema {SCHEMA}")
     unknown = set(document) - {"schema", *_GROUPS}
