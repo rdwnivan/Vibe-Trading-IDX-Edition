@@ -1,6 +1,7 @@
 # Keputusan IDX Research Preview — 2026-11-15
 
-Dokumen ini mencatat tiga keputusan pengguna untuk sesi 2026-11-15 (Asia/Jakarta)
+Dokumen ini mencatat keputusan pengguna untuk sesi 2026-11-15 (Asia/Jakarta):
+tiga keputusan awal, keputusan hak distribusi fakta bersumber BEI (bagian 4),
 dan draf README Bahasa Indonesia untuk scope rilis yang disepakati. Ini **draf**:
 tidak ada tag, rilis, paket atau publikasi yang dibuat, dan README di root belum
 diubah. Status penerimaan tetap dimiliki [PROJECT_STATUS.md](../PROJECT_STATUS.md)
@@ -78,6 +79,36 @@ tercatat di README, dan keputusan hak data untuk Yahoo/yfinance sesuai
 pemakaian. Backtest tidak masuk scope, jadi kriteria "research → backtest"
 berlaku hanya untuk bagian riset. Packaging atau publish tidak dijalankan dari
 dokumen ini.
+
+## 4. Hak distribusi fakta bersumber BEI (DATA-03)
+
+**Keputusan (2026-11-15, Asia/Jakarta).** Kalender sesi 2026
+([bei_sessions_2026.json](tests/fixtures/idx_calendar/bei_sessions_2026.json))
+dan record suspensi MLPT
+([mlpt_2026-03_suspension.json](tests/fixtures/idx_event_records/mlpt_2026-03_suspension.json))
+**boleh tetap** di repository publik.
+
+**Alasan.** Isinya hanya fakta tanggal dan nomor pengumuman, bukan salinan PDF
+atau data harga BEI. Pemakaiannya nonkomersial dan selalu disertai atribusi
+serta tanggal akses, sesuai klausul 6
+[syarat situs BEI](IDX_PRIMARY_INPUT_DISCOVERY.md#official-website-permission-evidence--2026-11-05).
+
+**Syarat yang diuji.**
+
+- Setiap nomor pengumuman BEI di field `source` file JSON kedua folder diikuti
+  tanggal pengumuman dan tanggal baca, dengan pola
+  `<nomor> (<tanggal pengumuman>; read YYYY-MM-DD`. Tanggal baca tidak boleh
+  lebih awal dari tanggal pengumuman.
+- Kedua folder punya README yang menyebut sumber (BEI), atribusi, tanggal
+  akses, sifat nonkomersial, tautan syarat situs, dan bahwa PDF/teks
+  pengumuman tidak disalin. Selain README, folder hanya boleh berisi JSON.
+- Tes [test_idx_bei_fixture_attribution.py](tests/test_idx_bei_fixture_attribution.py)
+  gagal bila salah satu syarat itu dilanggar.
+
+**Tetap dilarang:** menyalin PDF atau teks pengumuman BEI, menyimpan data harga
+atau statistik BEI, scraping/crawling situs BEI, dan penggunaan komersial.
+Keputusan ini tidak memberi izin diseminasi komersial dan tidak berlaku untuk
+data harga dari vendor mana pun.
 
 ## Draf README (Bahasa Indonesia)
 
