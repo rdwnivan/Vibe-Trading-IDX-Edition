@@ -1,0 +1,191 @@
+{
+  "synthetic": true,
+  "description": "Synthetic DATA-03 bar-quality fixtures. No vendor or BEI data; the calendar and records are fixtures, not IDX facts.",
+  "calendar": {
+    "source": "synthetic fixture calendar (not an IDX calendar)",
+    "covered_from": "2030-01-07",
+    "covered_until": "2030-01-18",
+    "sessions": [
+      "2030-01-07", "2030-01-08", "2030-01-09", "2030-01-11", "2030-01-14",
+      "2030-01-15", "2030-01-16", "2030-01-17", "2030-01-18"
+    ]
+  },
+  "records": {
+    "suspensions": [
+      {"symbol": "SYNE.JK", "source": "synthetic suspension notice", "first_day": "2030-01-14", "last_day": "2030-01-15"}
+    ],
+    "delistings": [
+      {"symbol": "SYNF.JK", "source": "synthetic delisting notice", "effective_day": "2030-01-15"}
+    ],
+    "corporate_actions": [
+      {"symbol": "SYNH.JK", "source": "synthetic dividend notice", "kind": "cash_dividend", "ex_day": "2030-01-15"},
+      {"symbol": "SYNI.JK", "source": "synthetic split notice", "kind": "split", "ex_day": "2030-01-15"}
+    ]
+  },
+  "bar_cases": [
+    {
+      "id": "normal",
+      "category": "normal",
+      "file": "normal.csv",
+      "symbol": "SYNA.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "daily_bar_audit": {
+          "off_calendar_dates": [],
+          "uncovered_dates": [],
+          "missing_session_dates": [],
+          "zero_volume_flat_bars": [],
+          "zero_volume_price_change_dates": [],
+          "traded_during_suspension_dates": []
+        },
+        "series_event_audit": {
+          "series_end": {"as_of": "2030-01-18", "last_bar_date": "2030-01-18", "status": "current", "sessions_after_last_bar": 0, "delisting_effective_date": null},
+          "bars_after_delisting_dates": [],
+          "ex_date_moves": []
+        }
+      }
+    },
+    {
+      "id": "missing_bar",
+      "category": "missing_bar",
+      "file": "missing_bar.csv",
+      "symbol": "SYNB.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "daily_bar_audit": {"missing_session_dates": ["2030-01-15"], "bar_count": 8},
+        "series_event_audit": {"series_end": {"as_of": "2030-01-18", "last_bar_date": "2030-01-18", "status": "current", "sessions_after_last_bar": 0, "delisting_effective_date": null}}
+      }
+    },
+    {
+      "id": "zero_volume_flat_without_record",
+      "category": "zero_volume",
+      "file": "zero_volume_flat.csv",
+      "symbol": "SYNC.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "daily_bar_audit": {
+          "zero_volume_flat_bars": [{"date": "2030-01-11", "status": "untraded_or_suspended"}],
+          "zero_volume_price_change_dates": []
+        }
+      }
+    },
+    {
+      "id": "zero_volume_sentinel_on_closed_days",
+      "category": "zero_volume",
+      "file": "zero_volume_sentinel.csv",
+      "symbol": "SYND.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "daily_bar_audit": {
+          "off_calendar_dates": ["2030-01-10", "2030-01-12"],
+          "zero_volume_price_change_dates": ["2030-01-10", "2030-01-12"],
+          "zero_volume_flat_bars": []
+        }
+      }
+    },
+    {
+      "id": "suspension_with_record",
+      "category": "suspension",
+      "file": "suspension.csv",
+      "symbol": "SYNE.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "daily_bar_audit": {
+          "zero_volume_flat_bars": [
+            {"date": "2030-01-14", "status": "suspended"},
+            {"date": "2030-01-15", "status": "suspended"}
+          ],
+          "suspension_sources": ["synthetic suspension notice"],
+          "traded_during_suspension_dates": []
+        }
+      }
+    },
+    {
+      "id": "delisting_with_record",
+      "category": "delisting",
+      "file": "delisting.csv",
+      "symbol": "SYNF.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "daily_bar_audit": {"missing_session_dates": []},
+        "series_event_audit": {
+          "series_end": {"as_of": "2030-01-18", "last_bar_date": "2030-01-14", "status": "delisted", "sessions_after_last_bar": 4, "delisting_effective_date": "2030-01-15"},
+          "bars_after_delisting_dates": [],
+          "delisting_sources": ["synthetic delisting notice"]
+        }
+      }
+    },
+    {
+      "id": "stale_same_bars_without_record",
+      "category": "stale",
+      "file": "stale.csv",
+      "symbol": "SYNG.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "series_event_audit": {
+          "series_end": {"as_of": "2030-01-18", "last_bar_date": "2030-01-14", "status": "ended_or_stale", "sessions_after_last_bar": 4, "delisting_effective_date": null},
+          "delisting_sources": []
+        }
+      }
+    },
+    {
+      "id": "dividend_raw_with_adjusted_close",
+      "category": "dividend",
+      "file": "dividend_raw.csv",
+      "symbol": "SYNH.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "daily_bar_audit": {"zero_volume_price_change_dates": []},
+        "series_event_audit": {
+          "adjusted_close_supplied": true,
+          "ex_date_moves": [
+            {
+              "ex_date": "2030-01-15", "kind": "cash_dividend", "source": "synthetic dividend notice",
+              "bar_present": true, "previous_bar_date": "2030-01-14", "previous_close": 1000.0, "close": 950.0,
+              "close_ratio": 0.95, "previous_adjustment_factor": 0.95, "adjustment_factor": 1.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "split_raw_with_adjusted_close",
+      "category": "split",
+      "file": "split_raw.csv",
+      "symbol": "SYNI.JK",
+      "as_of": "2030-01-18",
+      "expect": {
+        "series_event_audit": {
+          "adjusted_close_supplied": true,
+          "ex_date_moves": [
+            {
+              "ex_date": "2030-01-15", "kind": "split", "source": "synthetic split notice",
+              "bar_present": true, "previous_bar_date": "2030-01-14", "previous_close": 4600.0, "close": 920.0,
+              "close_ratio": 0.2, "previous_adjustment_factor": 0.2, "adjustment_factor": 1.0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "provider_cases": [
+    {
+      "id": "provider_valid_empty_is_no_data",
+      "category": "provider_failure",
+      "file": "provider_empty.csv",
+      "symbol": "SYNJ.JK",
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "reason": "no_data"
+    },
+    {
+      "id": "provider_bad_price_is_fetch_failed",
+      "category": "provider_failure",
+      "file": "provider_bad_price.csv",
+      "symbol": "SYNK.JK",
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "reason": "fetch_failed"
+    }
+  ]
+}

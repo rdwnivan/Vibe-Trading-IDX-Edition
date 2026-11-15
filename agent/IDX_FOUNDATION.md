@@ -74,6 +74,10 @@ therefore extends their existing owners and tests parity across them.
   ex-date closes, their ratio and `adjusted_close`/`close` factors; no price
   is adjusted and no entitlement is checked. No delisting or corporate-action
   list is bundled, and no surface calls it yet.
+- `agent/tests/fixtures/idx_data_quality/` is a shareable synthetic fixture
+  pack (made-up `SYN*.JK` codes, January 2030) whose manifest lists the
+  findings both audits and the explicit local loader must report for each
+  DATA-03 category. Its calendar and records are fixtures, not IDX facts.
 - Both runner and direct composite construction reject IDX backtesting until
   the historical rulebook/calendar/action model exists. Mixed IDR/USD/CNY/HKD
   pools are rejected by the existing currency guard.
@@ -156,7 +160,7 @@ Dev tools use the constraints in `pyproject.toml`; no dependency manifest change
 From repository root:
 
 ```powershell
-.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_foundation.py agent/tests/test_idx_bar_quality.py agent/tests/test_idx_series_events.py agent/tests/test_market_detection.py agent/tests/test_registry.py agent/tests/test_composite_currency_guard.py agent/tests/test_market_identity_parity.py agent/tests/test_yahoo_loader.py agent/tests/test_yfinance_declared_currency.py agent/tests/test_market_data.py agent/tests/test_market_data_serving_source.py agent/tests/test_loader_retry_helpers.py -q --disable-socket
+.venv/idx312/Scripts/python.exe -m pytest agent/tests/test_idx_foundation.py agent/tests/test_idx_bar_quality.py agent/tests/test_idx_series_events.py agent/tests/test_idx_data_quality_fixtures.py agent/tests/test_market_detection.py agent/tests/test_registry.py agent/tests/test_composite_currency_guard.py agent/tests/test_market_identity_parity.py agent/tests/test_yahoo_loader.py agent/tests/test_yfinance_declared_currency.py agent/tests/test_market_data.py agent/tests/test_market_data_serving_source.py agent/tests/test_loader_retry_helpers.py -q --disable-socket
 .venv/idx312/Scripts/python.exe -m pytest agent/tests/test_sdk_order_gate.py agent/tests/test_mandate_enforcement.py agent/tests/test_killswitch_blocks_orders.py agent/tests/test_readonly_default.py -q --allow-hosts=127.0.0.1,::1
 git diff --check
 ```
