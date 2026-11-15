@@ -1746,6 +1746,22 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## Tinjauan centang DATA-03 — 2026-11-16
+
+**DATA-03 dicentang** atas persetujuan pengguna, sesudah CI PR #24 lulus.
+Kedua hal yang membuat tinjauan 2026-11-15 ragu sudah tertutup:
+
+- Hak distribusi: keputusan A dicatat dan diuji
+  ([atribusi BEI](#data-03--atribusi-fakta-bersumber-bei)).
+- Kegagalan provider jaringan: kasus Yahoo/yfinance `fetch_failed` vs `no_data`
+  ada di paket dan lulus di lokal (yfinance 1.5.2) dan di CI PR #24
+  (yfinance 1.7.0, sama dengan pin `requirements-lock.txt`)
+  ([kasus jaringan](#data-03--kegagalan-provider-jaringan-di-paket-fixture)).
+
+Batas yang tetap ada: klasifikasi yfinance memakai `raise_errors` yang
+deprecated, kalender bersumber hanya mencakup 2026, dan paket ini tidak
+memberi izin atas data harga vendor mana pun.
+
 ## DATA-03 — Kegagalan provider jaringan di paket fixture
 
 Slice **2026-11-16, Asia/Jakarta**, menjalankan keputusan C pengguna.
@@ -1797,8 +1813,10 @@ kegagalan adalah koneksi yfinance ditolak yang terlapor `no_data`. Sesudah
 perbaikan: file paket **23 passed** dan paket + fondasi + atribusi **102
 passed** (`--disable-socket`); suite IDX + market detection + registry + 55
 file tes lain yang menyentuh yfinance **2.559 passed, 1 skipped** dengan guard
-`curl_cffi` (0 permintaan). Lokal memakai yfinance 1.5.2; CI memasang versi
-terbaru (1.8.0 pada run PR #23), jadi kasus jaringan juga harus lulus di CI.
+`curl_cffi` (0 permintaan). Lokal memakai yfinance 1.5.2. CI PR #24 (commit `1df8bbba`) memasang
+yfinance 1.7.0, versi yang juga di-pin `requirements-lock.txt`; suite penuh
+lulus di Python 3.11 (23.265 passed, 91 skipped) dan 3.14 (23.267 passed,
+89 skipped), termasuk kasus jaringan.
 Ruff check lulus; `yfinance_loader.py` sudah tidak sesuai `ruff format`
 sebelum slice ini dan tidak diformat ulang.
 
