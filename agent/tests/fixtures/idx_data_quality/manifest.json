@@ -187,5 +187,173 @@
       "end": "2030-01-18",
       "reason": "fetch_failed"
     }
+  ],
+  "network_provider_cases": [
+    {
+      "id": "yahoo_connection_error_is_fetch_failed",
+      "category": "provider_failure",
+      "symbol": "SYNL.JK",
+      "source": "yahoo",
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "responses": {
+        "yahoo": {
+          "kind": "connection_error"
+        }
+      },
+      "expect": {
+        "attempts": [
+          {
+            "source": "yahoo",
+            "reason": "fetch_failed"
+          }
+        ],
+        "served_by": null
+      }
+    },
+    {
+      "id": "yahoo_http_429_is_fetch_failed",
+      "category": "provider_failure",
+      "symbol": "SYNM.JK",
+      "source": "yahoo",
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "responses": {
+        "yahoo": {
+          "kind": "http_status",
+          "status": 429
+        }
+      },
+      "expect": {
+        "attempts": [
+          {
+            "source": "yahoo",
+            "reason": "fetch_failed"
+          }
+        ],
+        "served_by": null
+      }
+    },
+    {
+      "id": "yahoo_empty_chart_is_no_data",
+      "category": "provider_failure",
+      "symbol": "SYNN.JK",
+      "source": "yahoo",
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "responses": {
+        "yahoo": {
+          "kind": "empty_chart"
+        }
+      },
+      "expect": {
+        "attempts": [
+          {
+            "source": "yahoo",
+            "reason": "no_data"
+          }
+        ],
+        "served_by": null
+      }
+    },
+    {
+      "id": "yfinance_connection_error_is_fetch_failed",
+      "category": "provider_failure",
+      "symbol": "SYNO.JK",
+      "source": "yfinance",
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "responses": {
+        "yfinance": {
+          "kind": "connection_error"
+        }
+      },
+      "expect": {
+        "attempts": [
+          {
+            "source": "yfinance",
+            "reason": "fetch_failed"
+          }
+        ],
+        "served_by": null
+      }
+    },
+    {
+      "id": "yfinance_empty_chart_is_no_data",
+      "category": "provider_failure",
+      "symbol": "SYNP.JK",
+      "source": "yfinance",
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "responses": {
+        "yfinance": {
+          "kind": "empty_chart"
+        }
+      },
+      "expect": {
+        "attempts": [
+          {
+            "source": "yfinance",
+            "reason": "no_data"
+          }
+        ],
+        "served_by": null
+      }
+    },
+    {
+      "id": "chain_yahoo_down_yfinance_serves_bars",
+      "category": "provider_failure",
+      "symbol": "SYNQ.JK",
+      "source": null,
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "responses": {
+        "yahoo": {
+          "kind": "connection_error"
+        },
+        "yfinance": {
+          "kind": "bars",
+          "file": "normal.csv"
+        }
+      },
+      "expect": {
+        "attempts": [
+          {
+            "source": "yahoo",
+            "reason": "fetch_failed"
+          }
+        ],
+        "served_by": "yfinance"
+      }
+    },
+    {
+      "id": "chain_yahoo_empty_yfinance_down",
+      "category": "provider_failure",
+      "symbol": "SYNR.JK",
+      "source": null,
+      "start": "2030-01-07",
+      "end": "2030-01-18",
+      "responses": {
+        "yahoo": {
+          "kind": "empty_chart"
+        },
+        "yfinance": {
+          "kind": "connection_error"
+        }
+      },
+      "expect": {
+        "attempts": [
+          {
+            "source": "yahoo",
+            "reason": "no_data"
+          },
+          {
+            "source": "yfinance",
+            "reason": "fetch_failed"
+          }
+        ],
+        "served_by": null
+      }
+    }
   ]
 }

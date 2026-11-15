@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from collections import defaultdict
 from collections.abc import Mapping
 from typing import Dict, List, Optional, Union
 
 import pandas as pd
 import yfinance as yf
+from yfinance.exceptions import YFPricesMissingError
 
 from backtest.loaders.base import (
     declared_currency_required,
@@ -150,6 +152,40 @@ def _download_history(
         auto_adjust=True,
         progress=False,
     )
+
+
+def _idx_history(symbol: str, start_date: str, end_date: str, interval: str) -> pd.DataFrame:
+    """Download one IDX symbol so a failed request stays apart from an empty one.
+
+    ``yf.download`` catches every per-ticker exception and returns an empty
+    frame, so a refused connection or a rate limit looks like a range without
+    bars. ``Ticker.history(raise_errors=True)`` raises instead. Only
+    ``YFPricesMissingError`` means Yahoo answered without bars; every other
+    error propagates and the caller reports ``fetch_failed``.
+
+    Args:
+        symbol: yfinance symbol (``XXXX.JK``).
+        start_date: Inclusive start date string.
+        end_date: End date string passed directly to yfinance.
+        interval: yfinance interval string.
+
+    Returns:
+        Raw single-symbol dataframe, empty when Yahoo returned no bars.
+    """
+    with warnings.catch_warnings():
+        # raise_errors is deprecated in favour of a process-wide yfinance
+        # config switch; the per-call flag keeps other callers unaffected.
+        warnings.filterwarnings("ignore", message=".*raise_errors.*", category=DeprecationWarning)
+        try:
+            return yf.Ticker(symbol).history(
+                start=start_date,
+                end=end_date,
+                interval=interval,
+                auto_adjust=True,
+                raise_errors=True,
+            )
+        except YFPricesMissingError:
+            return pd.DataFrame()
 
 
 def _flatten_columns(frame: pd.DataFrame, symbol: str) -> pd.DataFrame:
@@ -376,7 +412,11 @@ class DataLoader:
             try:
                 symbol_frame = _extract_symbol_frame(bulk_data, symbol, len(pending))
                 if symbol_frame.empty:
-                    symbol_frame = _download_history(symbol, start_date, yf_end_date, yf_interval)
+                    symbol_frame = (
+                        _idx_history(symbol, start_date, yf_end_date, yf_interval)
+                        if is_idx_share(symbol)
+                        else _download_history(symbol, start_date, yf_end_date, yf_interval)
+                    )
 
                 normalized = _normalize_frame(symbol_frame, requested_interval, idx=is_idx_share(symbol))
                 if normalized.empty:

@@ -38,6 +38,9 @@ def chart(monkeypatch):
     monkeypatch.setattr(yahoo_client, "get_chart", get_chart)
     # Stub the other vendor transport too; exercise real routing without network.
     monkeypatch.setattr(yfinance_loader.yf, "download", lambda *a, **k: pd.DataFrame())
+    # The single-symbol IDX retry goes through Ticker.history over curl_cffi,
+    # which pytest-socket does not block; answer it as "no bars" here.
+    monkeypatch.setattr(yfinance_loader, "_idx_history", lambda *a, **k: pd.DataFrame())
     return calls
 
 
