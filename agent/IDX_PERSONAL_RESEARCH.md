@@ -1746,6 +1746,53 @@ unit volume dan basis adjustment belum memadai untuk kontrak. Lihat
 Tidak ada implementasi metadata dari asumsi atau perubahan kode runtime;
 Local Data Bridge tetap belum diterima riset dan task luas tetap terbuka.
 
+## DATA-03 — Loader record peristiwa bersumber
+
+Slice **2026-11-15, Asia/Jakarta**, sesudah [paket fixture](#data-03--paket-fixture-kualitas-data).
+
+**Implementasi.** [idx_event_records.py](src/markets/idx_event_records.py)
+menambah `load_event_records(path)`, yang membaca satu file JSON milik
+pemanggil menjadi `IDXEventRecords` (tuple `suspensions`, `delistings`,
+`corporate_actions`) memakai record `IDXSuspension`, `IDXDelisting` dan
+`IDXCorporateAction` yang sudah ada. Modul ini tidak membawa record apa pun.
+
+```json
+{
+  "schema": "idx_event_records_v1",
+  "suspensions": [{"symbol": "XXXX.JK", "source": "...", "first_day": "YYYY-MM-DD", "last_day": "YYYY-MM-DD"}],
+  "delistings": [{"symbol": "XXXX.JK", "source": "...", "effective_day": "YYYY-MM-DD"}],
+  "corporate_actions": [{"symbol": "XXXX.JK", "source": "...", "kind": "cash_dividend", "ex_day": "YYYY-MM-DD"}]
+}
+```
+
+Seluruh file ditolak bila ada satu masalah:
+
+- `schema` wajib persis `idx_event_records_v1`; key top-level lain ditolak.
+  Grup yang absen berarti kosong; grup `null` atau bukan list ditolak.
+- Setiap entri wajib punya field persis seperti di atas. Field tambahan
+  (misalnya nilai dividen atau rasio split) ditolak, karena record tidak
+  membawa nilai atau aturan.
+- Tanggal wajib string `YYYY-MM-DD` yang valid. Bentuk ringkas, tanpa nol di
+  depan, datetime, angka dan tanggal mustahil ditolak.
+- Simbol, sumber, `kind` dan urutan suspensi divalidasi oleh dataclass yang ada.
+- Record ganda, dua delisting untuk satu simbol, key JSON ganda, `NaN`, BOM
+  dan JSON rusak ditolak. File yang tidak ada atau bukan UTF-8 ditolak.
+- Pesan error menyebut grup dan indeks entri, misalnya `corporate_actions[1]`,
+  tanpa menggemakan nilai mentah dari file.
+
+Urutan entri dipertahankan. Loader ini belum dipakai permukaan mana pun:
+record dari file dapat diberikan ke `audit_daily_bars` dan
+`audit_series_events` oleh pemanggil. Formatnya hanya JSON, karena ketiga
+jenis record berbeda bentuk dan CSV akan membutuhkan tiga file.
+
+**Verifikasi.** [Tes](tests/test_idx_event_records.py), 34 kasus dengan record
+sintetis `SYN*.JK` 2030. Run pertama gagal saat koleksi karena modul belum
+ada; sesudah implementasi 34 passed tanpa perubahan tes. Fondasi, bar audit,
+fixture dan loader (`--disable-socket`): 225 passed. Seluruh `test_idx*.py`
+plus market detection dan registry (`--allow-hosts`): 1.172 passed. Ruff
+lint/format dan `ci_grep_gates.sh` lulus. Record MLPT belum ditulis, karena
+pengumuman BEI-nya belum terbaca.
+
 ## DATA-03 — Paket fixture kualitas data
 
 Slice **2026-11-15, Asia/Jakarta**, sesudah [akhir seri, usia sesi dan tanggal ex](#data-03--akhir-seri-usia-sesi-dan-tanggal-ex).
