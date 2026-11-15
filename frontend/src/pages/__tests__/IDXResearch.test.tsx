@@ -869,3 +869,105 @@ it("keeps validation rejection separate from acquisition attempts", async () => 
   expect(screen.getByText("Failed validation stage: Price values")).toBeInTheDocument();
   expect(screen.queryByRole("group", { name: "Source attempts" })).not.toBeInTheDocument();
 });
+
+function sourcedResponse(): IDXResearchResponse {
+  const data = volumeResponse();
+  data.items[0].bar_audit = { policy: "idx_daily_bar_audit_v1", calendar_verified: false, zero_volume_price_change_dates: [] };
+  data.sourced_reference = {
+    policy: "idx_sourced_reference_v1",
+    calendar: { status: "loaded", source: "BEI Peng-00171/BEI.POP/09-2025 sessions", covered_from: "2026-01-01", covered_until: "2026-12-31" },
+    event_records: { status: "loaded", suspension_count: 1, delisting_count: 0, corporate_action_count: 1 },
+  };
+  data.items[0].sourced_audit = {
+    policy: "idx_sourced_audit_v1",
+    calendar_verified: true,
+    off_calendar_dates: ["2026-04-03"],
+    uncovered_dates: [],
+    missing_session_dates: ["2026-04-14"],
+    zero_volume_flat_bars: [{ date: "2026-03-27", status: "suspended" }],
+    traded_during_suspension_dates: [],
+    suspension_sources: ["BEI Peng-SPT-00097/BEI.WAS/03-2026"],
+    series_end: { as_of: "2026-04-30", last_bar_date: "2026-04-24", status: "ended_or_stale", sessions_after_last_bar: 4, delisting_effective_date: null },
+    bars_after_delisting_dates: [],
+    delisting_sources: [],
+    ex_date_moves: [{ ex_date: "2026-04-15", kind: "cash_dividend", source: "synthetic", bar_present: true, previous_bar_date: "2026-04-13", previous_close: 105, close: 100, close_ratio: 100 / 105, previous_adjustment_factor: null, adjustment_factor: null }],
+  };
+  return data;
+}
+
+async function openSourced(data: IDXResearchResponse) {
+  mock.getIDXResearch.mockResolvedValue(data);
+  render(<IDXResearch />);
+  fireEvent.click(screen.getByRole("button", { name: i18n.t("idxResearch.load") }));
+  await screen.findByRole("img");
+}
+
+it("shows no sourced section when the backend sends no sourced reference", async () => {
+  await openSourced(volumeResponse());
+  expect(screen.queryByRole("group", { name: "Sourced reference files" })).not.toBeInTheDocument();
+});
+
+it("shows sourced calendar, suspension, series-end and ex-date findings from the backend", async () => {
+  const data = sourcedResponse();
+  const original = structuredClone(data);
+  await openSourced(data);
+  const group = screen.getByRole("group", { name: "Sourced reference files" });
+  expect(within(group).getByText(/Calendar file: BEI Peng-00171\/BEI.POP\/09-2025 sessions/)).toHaveTextContent("2026-01-01 to 2026-12-31");
+  expect(within(group).getByText(/Event-record file: 1 suspensions, 0 delistings, 1 corporate actions/)).toBeInTheDocument();
+  expect(within(group).getByText(/Bars on closed exchange days \(1\): 2026-04-03/)).toHaveClass("font-semibold");
+  expect(within(group).getByText(/Sessions without a bar \(1\): 2026-04-14/)).toBeInTheDocument();
+  expect(within(group).getByText(/2026-03-27 \(suspended per record\)/)).toBeInTheDocument();
+  expect(within(group).getByText(/Series end: ended or stale \(no delisting record\); last bar 2026-04-24, 4 sessions after it up to 2026-04-30/)).toBeInTheDocument();
+  expect(within(group).getByText(/Ex date 2026-04-15 \(cash dividend\): close 105 → 100/)).toBeInTheDocument();
+  // The v1 bar audit copy is unchanged next to the new section.
+  expect(screen.getByText(/holiday rows and suspensions are not checked/)).toBeInTheDocument();
+  expect(data).toEqual(original);
+});
+
+it("states unavailable or unconfigured files and unknown calendar findings", async () => {
+  const data = sourcedResponse();
+  data.sourced_reference = { policy: "idx_sourced_reference_v1", calendar: { status: "unavailable", issue: "unreadable_or_invalid" }, event_records: { status: "not_configured" } };
+  data.items[0].sourced_audit = { ...data.items[0].sourced_audit!, calendar_verified: false, off_calendar_dates: null, uncovered_dates: null, missing_session_dates: null,
+    zero_volume_flat_bars: [{ date: "2026-03-27", status: "untraded_or_suspended" }], suspension_sources: [], ex_date_moves: [],
+    series_end: { as_of: "2026-04-30", last_bar_date: "2026-04-24", status: "unverified", sessions_after_last_bar: null, delisting_effective_date: null } };
+  await openSourced(data);
+  const group = screen.getByRole("group", { name: "Sourced reference files" });
+  expect(within(group).getByText("The calendar file could not be read or is invalid; it was not used.")).toBeInTheDocument();
+  expect(within(group).getByText("No event-record file is configured.")).toBeInTheDocument();
+  expect(within(group).getByText("Calendar checks did not run without a loaded calendar.")).toBeInTheDocument();
+  expect(within(group).getByText(/2026-03-27 \(untraded or suspended; no record\)/)).toBeInTheDocument();
+  expect(within(group).getByText(/Series end: not verified \(no calendar\); last bar 2026-04-24, Unavailable sessions after it/)).toBeInTheDocument();
+});
+
+it.each([{ policy: "idx_sourced_audit_v1", issue: "audit_failed" }, { policy: "idx_sourced_audit_v1", calendar_verified: true }, null])(
+  "marks a failed or malformed sourced audit %j unavailable", async (audit) => {
+    const data = sourcedResponse();
+    data.items[0].sourced_audit = audit as IDXResearchItem["sourced_audit"];
+    await openSourced(data);
+    const group = screen.getByRole("group", { name: "Sourced reference files" });
+    expect(within(group).getByText("Sourced checks are unavailable for this symbol.")).toBeInTheDocument();
+    expect(within(group).queryByText(/Bars on closed exchange days/)).not.toBeInTheDocument();
+  },
+);
+
+it("marks a malformed sourced reference unavailable", async () => {
+  const data = sourcedResponse();
+  data.sourced_reference = { policy: "idx_sourced_reference_v2" } as never;
+  await openSourced(data);
+  const group = screen.getByRole("group", { name: "Sourced reference files" });
+  expect(within(group).getByText("Sourced file status unavailable.")).toBeInTheDocument();
+});
+
+it.each(["id", "en", "tr", "ar", "de", "es", "fa", "ja", "ko", "pt-BR", "zh-CN"])("renders sourced findings in locale %s", async (locale) => {
+  await act(async () => { await i18n.changeLanguage(locale); });
+  try {
+    await openSourced(sourcedResponse());
+    const group = screen.getByRole("group", { name: i18n.t("idxResearch.sourcedTitle") });
+    expect(group).toHaveTextContent("2026-04-03");
+    expect(group).toHaveTextContent("2026-03-27");
+    expect(group).not.toHaveTextContent("idxResearch.");
+    expect(group).not.toHaveTextContent("{{");
+  } finally {
+    await act(async () => { await i18n.changeLanguage("en"); });
+  }
+});

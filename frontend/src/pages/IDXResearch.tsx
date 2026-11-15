@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "@/lib/api";
 import type { IDXBar, IDXResearchResponse, IDXSymbolSearchResponse } from "@/lib/idx-research";
-import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXBarAudit, getIDXRecency, getIDXVolumeCoverage } from "@/lib/idx-research";
+import { formatIDXRetrievedAt, formatIDXSourceAsOf, getIDXBarAudit, getIDXRecency, getIDXSourcedAudit, getIDXSourcedReference, getIDXVolumeCoverage } from "@/lib/idx-research";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
 import { useChartLifecycle } from "@/hooks/useChartLifecycle";
 import { getChartTheme } from "@/lib/chart-theme";
@@ -21,6 +21,26 @@ const qualityStageKeys = {
   price_values: "idxResearch.qualityStages.price_values",
   volume_values: "idxResearch.qualityStages.volume_values",
   indicator_calculation: "idxResearch.qualityStages.indicator_calculation",
+} as const;
+
+// Presentation only: sourced verdicts belong to the backend and the operator's files.
+const seriesStatusKeys = {
+  delisted: "idxResearch.sourcedSeries.delisted",
+  no_bars: "idxResearch.sourcedSeries.no_bars",
+  unverified: "idxResearch.sourcedSeries.unverified",
+  uncovered: "idxResearch.sourcedSeries.uncovered",
+  current: "idxResearch.sourcedSeries.current",
+  suspended: "idxResearch.sourcedSeries.suspended",
+  ended_or_stale: "idxResearch.sourcedSeries.ended_or_stale",
+} as const;
+
+const actionKindKeys = {
+  cash_dividend: "idxResearch.sourcedKind.cash_dividend",
+  stock_dividend: "idxResearch.sourcedKind.stock_dividend",
+  bonus_shares: "idxResearch.sourcedKind.bonus_shares",
+  split: "idxResearch.sourcedKind.split",
+  reverse_split: "idxResearch.sourcedKind.reverse_split",
+  rights_issue: "idxResearch.sourcedKind.rights_issue",
 } as const;
 
 const attemptReasonKeys = {
@@ -120,6 +140,10 @@ export function IDXResearch() {
   const recency = getIDXRecency(item?.recency);
   const volumeCoverage = getIDXVolumeCoverage(item?.volume_coverage);
   const priceChangeDates = getIDXBarAudit(item?.bar_audit)?.zero_volume_price_change_dates ?? null;
+  // The section exists only when the backend reports sourced files (opt-in env).
+  const hasSourcedReference = result !== null && Object.prototype.hasOwnProperty.call(result, "sourced_reference");
+  const sourcedReference = hasSourcedReference ? getIDXSourcedReference(result?.sourced_reference) : null;
+  const sourcedAudit = getIDXSourcedAudit(item?.sourced_audit);
   // Backend hexdigest only; do not derive identity from chart rows or normalize it.
   const rawFingerprint = item?.analysis?.read_identity?.dataset_fingerprint;
   const fingerprint = typeof rawFingerprint === "string" && rawFingerprint.length === 64 && /^[a-f0-9]+$/.test(rawFingerprint)
@@ -258,6 +282,34 @@ export function IDXResearch() {
           </p>
           <p className="mt-1 text-xs text-muted-foreground">{t("idxResearch.barAuditScope")}</p>
         </div>
+        {hasSourcedReference && <div role="group" aria-label={t("idxResearch.sourcedTitle")} className="mt-4 border-t pt-4 text-sm">
+          <h3 className="font-medium">{t("idxResearch.sourcedTitle")}</h3>
+          {sourcedReference ? <ul className="mt-2 space-y-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">
+            <li>{sourcedReference.calendar.status === "loaded"
+              ? t("idxResearch.sourcedCalendarLoaded", { source: sourcedReference.calendar.source, from: sourcedReference.calendar.covered_from, until: sourcedReference.calendar.covered_until })
+              : t(sourcedReference.calendar.status === "unavailable" ? "idxResearch.sourcedCalendarUnavailable" : "idxResearch.sourcedCalendarNotConfigured")}</li>
+            <li>{sourcedReference.event_records.status === "loaded"
+              ? t("idxResearch.sourcedRecordsLoaded", { suspensions: format(sourcedReference.event_records.suspension_count), delistings: format(sourcedReference.event_records.delisting_count), actions: format(sourcedReference.event_records.corporate_action_count) })
+              : t(sourcedReference.event_records.status === "unavailable" ? "idxResearch.sourcedRecordsUnavailable" : "idxResearch.sourcedRecordsNotConfigured")}</li>
+          </ul> : <p className="mt-2 text-xs text-muted-foreground">{t("idxResearch.sourcedReferenceUnavailable")}</p>}
+          {sourcedAudit ? <ul className="mt-3 space-y-1 text-xs [overflow-wrap:anywhere]">
+            {sourcedAudit.calendar_verified ? <>
+              {sourcedAudit.off_calendar_dates?.length ? <li className="font-semibold">{t("idxResearch.sourcedOffCalendar", { bars: format(sourcedAudit.off_calendar_dates.length), dates: sourcedAudit.off_calendar_dates.join(", ") })}</li> : null}
+              {sourcedAudit.uncovered_dates?.length ? <li className="font-semibold">{t("idxResearch.sourcedUncovered", { bars: format(sourcedAudit.uncovered_dates.length), dates: sourcedAudit.uncovered_dates.join(", ") })}</li> : null}
+              {sourcedAudit.missing_session_dates?.length ? <li className="font-semibold">{t("idxResearch.sourcedMissing", { bars: format(sourcedAudit.missing_session_dates.length), dates: sourcedAudit.missing_session_dates.join(", ") })}</li> : null}
+              {!sourcedAudit.off_calendar_dates?.length && !sourcedAudit.uncovered_dates?.length && !sourcedAudit.missing_session_dates?.length
+                && <li className="text-muted-foreground">{t("idxResearch.sourcedCalendarClean")}</li>}
+            </> : <li className="text-muted-foreground">{t("idxResearch.sourcedCalendarSkipped")}</li>}
+            {sourcedAudit.zero_volume_flat_bars.length > 0 && <li>{t("idxResearch.sourcedFlatBars", { bars: sourcedAudit.zero_volume_flat_bars.map((bar) => t(bar.status === "suspended" ? "idxResearch.sourcedFlatSuspended" : "idxResearch.sourcedFlatUntraded", { date: bar.date })).join(", ") })}</li>}
+            {sourcedAudit.traded_during_suspension_dates.length > 0 && <li className="font-semibold">{t("idxResearch.sourcedTradedHalted", { dates: sourcedAudit.traded_during_suspension_dates.join(", ") })}</li>}
+            <li>{t("idxResearch.sourcedSeriesEnd", { status: t(seriesStatusKeys[sourcedAudit.series_end.status]), date: sourcedAudit.series_end.last_bar_date ?? t("idxResearch.unknown"), sessions: format(sourcedAudit.series_end.sessions_after_last_bar), asOf: sourcedAudit.series_end.as_of })}</li>
+            {sourcedAudit.bars_after_delisting_dates.length > 0 && <li className="font-semibold">{t("idxResearch.sourcedAfterDelisting", { dates: sourcedAudit.bars_after_delisting_dates.join(", ") })}</li>}
+            {sourcedAudit.ex_date_moves.map((move) => <li key={`${move.ex_date}-${move.kind}`}>{move.bar_present
+              ? t("idxResearch.sourcedExDate", { date: move.ex_date, kind: t(actionKindKeys[move.kind]), previous: format(move.previous_close), close: format(move.close) })
+              : t("idxResearch.sourcedExDateNoBar", { date: move.ex_date, kind: t(actionKindKeys[move.kind]) })}</li>)}
+          </ul> : <p className="mt-3 text-xs">{t("idxResearch.sourcedAuditUnavailable")}</p>}
+          <p className="mt-2 text-xs text-muted-foreground">{t("idxResearch.sourcedScope")}</p>
+        </div>}
         <div role="status" className="mt-4 border-y py-3 text-sm">
           <h3 className="font-medium">{t("idxResearch.recencyTitle")}</h3>
           {recency ? <>
