@@ -280,6 +280,11 @@ class DataConfig(_EnvBase):
     )
     vibe_trading_data_cache: EnvBool = Field(alias="VIBE_TRADING_DATA_CACHE", default=False)
     vibe_trading_data_cache_root: str = Field(alias="VIBE_TRADING_DATA_CACHE_ROOT", default="")
+    # Opt-in, caller-supplied IDX reference files for the idx_research tool:
+    # an idx_session_calendar_v1 file and an idx_event_records_v1 file. Empty
+    # = not configured; no calendar or event list is built in.
+    vibe_trading_idx_calendar_path: str = Field(alias="VIBE_TRADING_IDX_CALENDAR_PATH", default="")
+    vibe_trading_idx_event_records_path: str = Field(alias="VIBE_TRADING_IDX_EVENT_RECORDS_PATH", default="")
     aliyun_iqs_api_key: str = Field(alias="ALIYUN_IQS_API_KEY", default="")
     tickerall_api_key: str = Field(alias="TICKERALL_API_KEY", default="")
     tickerall_account_id: str = Field(alias="TICKERALL_ACCOUNT_ID", default="")

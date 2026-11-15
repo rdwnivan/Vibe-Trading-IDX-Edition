@@ -73,7 +73,8 @@ therefore extends their existing owners and tests parity across them.
   is `ended_or_stale`. `IDXCorporateAction` records give the previous and
   ex-date closes, their ratio and `adjusted_close`/`close` factors; no price
   is adjusted and no entitlement is checked. No delisting or corporate-action
-  list is bundled, and no surface calls it yet.
+  list is bundled; `idx_research` calls it only when sourced files are
+  configured (below).
 - `agent/tests/fixtures/idx_data_quality/` is a shareable synthetic fixture
   pack (made-up `SYN*.JK` codes, January 2030) whose manifest lists the
   findings both audits and the explicit local loader must report for each
@@ -81,18 +82,27 @@ therefore extends their existing owners and tests parity across them.
 - `src.markets.idx_event_records.load_event_records` parses a caller-supplied
   JSON file (`idx_event_records_v1`) of sourced suspensions, delistings and
   corporate actions into those records, refusing the whole file on any
-  invalid entry without echoing raw values. It ships no records and no
-  surface calls it yet.
+  invalid entry without echoing raw values. It ships no records;
+  `idx_research` uses it only through the opt-in env below.
 - `src.markets.idx_calendar_file.load_session_calendar` parses a
   caller-supplied JSON file (`idx_session_calendar_v1`: source, coverage and
   strictly ascending sessions) into `IDXSessionCalendar`. It assumes no
-  weekday or holiday rule, ships no calendar, and no surface calls it yet.
+  weekday or holiday rule and ships no calendar; `idx_research` uses it only
+  through the opt-in env below.
 - `agent/tests/fixtures/idx_calendar/bei_sessions_2026.json` (2026-11-15) is
   a sourced BEI 2026 session calendar in that format: Monday to Friday
   exchange days (II-A Kep-00158/BEI/10-2026, I.16) minus the 22 weekday
   closures of BEI Peng-00171/BEI.POP/09-2025, 239 sessions. It is a reference
   fixture that nothing loads automatically, covers 2026 only and stays
   revisable by later BEI notice.
+- Opt-in research wiring (2026-11-15): when `VIBE_TRADING_IDX_CALENDAR_PATH`
+  and/or `VIBE_TRADING_IDX_EVENT_RECORDS_PATH` name such files, `idx_research`
+  adds a top-level `sourced_reference` (`idx_sourced_reference_v1`, per-file
+  `loaded`/`not_configured`/`unavailable`) and a per-symbol `sourced_audit`
+  (`idx_sourced_audit_v1`: calendar findings, suspension status, series end in
+  sessions against `end_date`, ex-date moves). Without env nothing changes,
+  including `bar_audit` v1 and the 14-day recency. An unreadable or invalid file
+  degrades to `unavailable` without echoing its path or content.
 - Both runner and direct composite construction reject IDX backtesting until
   the historical rulebook/calendar/action model exists. Mixed IDR/USD/CNY/HKD
   pools are rejected by the existing currency guard.
