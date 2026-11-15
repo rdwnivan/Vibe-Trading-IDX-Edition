@@ -1632,7 +1632,12 @@ and Kep-00157 appear only in news reports and the Hukumonline Pro listing. The
 four II-A texts for 9 December 2024 to 19 October 2026 therefore have no public
 copy that was found. Requesting them from BEI (contact on BEI's
 [Hubungi Kami](https://www.idx.co.id/id/tentang-bei/hubungi-kami/) page) is the
-remaining route; the user has deferred it for now (2026-11-14).
+remaining route; the user has deferred it for now (2026-11-14). **Decision,
+2026-11-15:** the request is not sent, because the annex of II-A
+Kep-00158/BEI/10-2026 is publicly readable and suffices for the research-preview
+scope. The earlier texts stay unread, so no rulebook covers dates before
+20 October 2026 and IDX backtests stay refused
+([decision](IDX_RESEARCH_PREVIEW.md#2-permintaan-ii-a-ke-bei-tidak-dikirim)).
 
 **Still open:** II-1 (SK-001/KPEI/0399) and the 2018 II-5 (KEP-027/DIR/KPEI/1118)
 texts for KPEI fees before 15 August 2022; SEOJK 23/2015 for the contribution

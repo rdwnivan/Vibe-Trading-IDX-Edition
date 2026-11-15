@@ -109,6 +109,9 @@ therefore extends their existing owners and tests parity across them.
   the historical rulebook/calendar/action model exists. Mixed IDR/USD/CNY/HKD
   pools are rejected by the existing currency guard.
 
+Release scope (2026-11-15) is an "IDX research preview": research, data-quality
+audits and opt-in sourced files only; see [the decision record](IDX_RESEARCH_PREVIEW.md).
+
 ## Official rule observations and open evidence
 
 Observed 2026-11-03: [IDX trading mechanism](https://www.idx.id/id/produk-layanan/jam-dan-mekanisme-perdagangan)

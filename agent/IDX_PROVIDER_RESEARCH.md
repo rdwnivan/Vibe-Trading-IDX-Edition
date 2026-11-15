@@ -1291,3 +1291,14 @@ all markets (Pasardana wrote "seluruh pasar"), so the negotiated market is not
 named as halted. `IDXSuspension` has no market field; a record built from these
 notices covers the day for daily bars, and the market scope stays in its
 `source` text. A record file is added as a test fixture, not as a default.
+
+### EODHD disposition — 2026-11-15
+
+User decision: EODHD is **not** a loader, primary source or fallback. It is a
+private reconciliation reference only, used outside the repository. Reasons:
+its terms forbid display and redistribution (every research surface displays or
+forwards bars), carry an accuracy disclaimer and do not address use with LLMs;
+the holiday rows with sentinel prices and the unknown `.JK` price-history depth
+add to that. No loader, fallback, env key or EODHD-derived fixture exists, and
+paid plans stay deferred. DATA-01 stays open because no provider has passed.
+See [the decision record](IDX_RESEARCH_PREVIEW.md#1-disposisi-eodhd-data-01).
