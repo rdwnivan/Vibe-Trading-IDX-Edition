@@ -281,7 +281,8 @@ Draf pengganti bagian "🇮🇩 IDX Edition" di [README_id.md](../README_id.md).
 hanya perilaku yang tersedia pada `feature/idx-edition` per 2026-11-15. Versi
 yang diterapkan ke README_id.md (2026-11-15) menambah pernyataan hak data,
 skill `idx-research` dan perilaku `.env` yang terbukti di bagian 5; README_id.md
-adalah versi yang berlaku.
+adalah versi yang berlaku. Terjemahan Inggrisnya diterapkan ke
+[README.md](../README.md) pada 2026-11-21.
 
 ````markdown
 ## 🇮🇩 IDX Edition — research preview
