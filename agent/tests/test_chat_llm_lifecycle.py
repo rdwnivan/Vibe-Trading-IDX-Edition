@@ -120,9 +120,11 @@ def test_close_keeps_langchain_cached_transport_open_for_a_sibling_adapter() -> 
     first = ChatOpenAIWithReasoning(model="m", api_key="sk-test", base_url=base_url)
     second = ChatOpenAIWithReasoning(model="m", api_key="sk-test", base_url=base_url)
 
-    # Premise: the default transports really are shared between instances.
+    # Premise: the default sync transport really is shared between instances.
+    # langchain-openai 1.8.5 stopped sharing the async one (a model's async
+    # connections belong to the event loop that opened them); older releases
+    # still share it. Either way the sibling's async client must stay open.
     assert first.root_client._client is second.root_client._client
-    assert first.root_async_client._client is second.root_async_client._client
 
     _wrapper(first).close()
 
