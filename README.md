@@ -112,20 +112,85 @@
 
 Vibe-Trading turns finance questions into research reports, runnable backtests and paper portfolios. You can also authorize a supported broker to execute live trades within a mandate you set and can halt. Your funds stay with the broker.
 
-## 🇮🇩 IDX Edition
+## 🇮🇩 IDX Edition — research preview
 
-This fork adds read-only research for Indonesia Stock Exchange shares. `XXXX.JK`
-symbols route through the existing Yahoo/yfinance loaders as `id_equity` in IDR,
-with Asia/Jakarta session dates and share volume; bare tickers keep their existing
-market meaning. The manual watchlist at `/research/idx` (also available to the
-agent, MCP and a no-LLM CLI) shows daily charts, indicators, data provenance,
-recency warnings and volume coverage, and keeps unavailable symbols visible. The
-bundled `idx-research` skill covers agent-assisted use.
+This fork adds **read-only personal research** for Indonesia Stock Exchange
+(Bursa Efek Indonesia) shares. It is a research preview, not a trading tool.
 
-IDX backtesting, paper matching and live trading are **not available**: they stay
-refused until a dated rulebook, session calendar and corporate-action model exist.
+**What is available**
+
+- `XXXX.JK` symbols are classified as `id_equity` in IDR and fetched through the
+  existing Yahoo/yfinance loaders, with Asia/Jakarta session dates and volume in
+  shares. Bare tickers keep their existing market meaning.
+- A manual watchlist at `/research/idx` (up to 8 shares, daily data): close chart,
+  technical indicators, data provenance, a 14-calendar-day recency warning,
+  volume coverage, and a warning for zero-volume bars whose price changed.
+  Symbols that fail stay visible with the stage that rejected them.
+- The same research is available as the `idx_research` tool for the agent and
+  MCP (bundled `idx-research` skill), the `POST /api/research/idx` endpoint, and
+  a CLI that needs no LLM account:
+
+  ```bash
+  cd agent
+  python -m src.tools.idx_research_tool BBCA.JK BBRI.JK --lookback 200
+  ```
+
+- Optional: a sourced session-calendar file and an event-record file
+  (suspensions, delistings, corporate actions) supplied by the operator, named
+  by two environment variables:
+
+  ```bash
+  VIBE_TRADING_IDX_CALENDAR_PATH=~/.vibe-trading/idx/bei_sessions_2026.json
+  VIBE_TRADING_IDX_EVENT_RECORDS_PATH=~/.vibe-trading/idx/event_records.json
+  ```
+
+  The API server (`vibe-trading serve`) and the MCP server read **one** `.env`
+  file at startup: the first that exists among `~/.vibe-trading/.env`,
+  `agent/.env` (source checkout) and `.env` in the working directory. Later files
+  are not read, and variables already exported in the shell win. The CLI
+  `python -m src.tools.idx_research_tool` does **not** read `.env`, so export
+  both variables before running it. Restart the server after editing `.env`.
+
+  Research then reports bars on exchange-closed days, sessions without a bar,
+  suspension status, the series end in sessions, and price moves on ex-dates.
+  Bars are never changed. The file formats are in
+  [IDX_FOUNDATION.md](agent/IDX_FOUNDATION.md); a sourced BEI 2026 calendar is at
+  `agent/tests/fixtures/idx_calendar/bei_sessions_2026.json`. No calendar or
+  event list is built in.
+
+**Data rights and use**
+
+- The preview is for **personal local use by a single operator** only. There is
+  no public or multi-user deployment.
+- Yahoo/yfinance price bars are fetched when research runs. They are not
+  committed to the repository, not bundled into the package, and must not be
+  redistributed. Use of that data follows Yahoo's terms and is the operator's
+  responsibility.
+- The BEI calendar and records in the repository hold only dates and
+  announcement numbers, for noncommercial use with attribution and access date
+  (clause 6 of the [BEI website terms](https://www.idx.id/id/syarat-penggunaan));
+  announcement PDFs and text are not copied.
+
+**Limits**
+
+- IDX backtesting, paper matching, Shadow Account and live trading are **not
+  available** and stay refused.
+- Yahoo/yfinance data is delayed and can carry placeholder rows or wrong volume;
+  audit findings are warnings, not corrections.
+- A sourced calendar covers only the years in the operator's file and can be
+  revised by BEI. Without the file, calendar and suspension checks do not run.
+- Not an official instrument universe and not investment advice.
+
+**Recovery**
+
+- A broken or missing calendar/record file is reported as unreadable or invalid
+  and is not used; research still runs. Fix the file or clear its variable.
+- An unavailable symbol shows the sources tried and why each failed; retry later
+  or check the connection.
+
 See the [architecture and limits](agent/IDX_FOUNDATION.md),
-[personal research usage](agent/IDX_PERSONAL_RESEARCH.md) and
+[personal research guide](agent/IDX_PERSONAL_RESEARCH.md) (Indonesian),
+[research preview decisions](agent/IDX_RESEARCH_PREVIEW.md) (Indonesian) and
 [official rule references](agent/IDX_REFERENCE.md).
 
 ## ✨ What You Can Do
